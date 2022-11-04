@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# intellij-plugin-experiments Changelog
+# Apollo Kotlin IntelliJ Plugin Changelog
 
 ## [Unreleased]
 ### Added

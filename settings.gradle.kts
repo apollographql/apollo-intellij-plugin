@@ -1,1 +1,1 @@
-rootProject.name = "intellij-plugin-experiments"
+rootProject.name = "apollo-kotlin-intellij-plugin"

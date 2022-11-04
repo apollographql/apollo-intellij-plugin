@@ -1,20 +1,18 @@
-package com.github.bod.intellijpluginexperiments
+package com.apollographql.akip
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-private const val BUNDLE = "messages.MyBundle"
+private const val BUNDLE = "messages.AkipBundle"
 
-object MyBundle : DynamicBundle(BUNDLE) {
-
-    @Suppress("SpreadOperator")
+@Suppress("SpreadOperator", "unused")
+object AkipBundle : DynamicBundle(BUNDLE) {
     @JvmStatic
     fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =
         getMessage(key, *params)
 
-    @Suppress("SpreadOperator", "unused")
     @JvmStatic
     fun messagePointer(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =
         getLazyMessage(key, *params)

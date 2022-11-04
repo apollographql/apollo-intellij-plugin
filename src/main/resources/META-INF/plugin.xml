@@ -1,18 +1,26 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.github.bod.intellijpluginexperiments</id>
-    <name>intellij-plugin-experiments</name>
-    <vendor>bod</vendor>
+    <id>com.apollographql.akip</id>
+    <name>Apollo Kotlin IntelliJ Plugin</name>
+    <vendor>Apollo GraphQL</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.bod.intellijpluginexperiments.services.MyApplicationService"/>
-        <projectService serviceImplementation="com.github.bod.intellijpluginexperiments.services.MyProjectService"/>
+        <applicationService serviceImplementation="com.apollographql.akip.services.AkipApplicationService"/>
+        <projectService
+                serviceInterface="com.apollographql.akip.services.ApolloProjectService"
+                serviceImplementation="com.apollographql.akip.services.internal.ApolloProjectServiceImpl"
+        />
+
+        <codeInsight.lineMarkerProvider language="UAST"
+                                        implementationClass="com.apollographql.akip.navigation.OperationUsageMarkerProvider"/>
+
     </extensions>
 
     <applicationListeners>
-        <listener class="com.github.bod.intellijpluginexperiments.listeners.MyProjectManagerListener"
+        <listener class="com.apollographql.akip.listeners.AkipProjectManagerListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 </idea-plugin>
