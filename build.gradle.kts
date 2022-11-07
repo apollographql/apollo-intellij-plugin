@@ -97,6 +97,14 @@ tasks {
         systemProperty("ide.mac.message.dialogs.as.sheets", "false")
         systemProperty("jb.privacy.policy.text", "<!--999.999-->")
         systemProperty("jb.consents.confirmation.enabled", "false")
+
+        // Enables debug logging for the plugin
+        systemProperty("idea.log.debug.categories", "ApolloKotlin")
+    }
+
+    runIde {
+        // Enables debug logging for the plugin
+        systemProperty("idea.log.debug.categories", "ApolloKotlin")
     }
 
     signPlugin {

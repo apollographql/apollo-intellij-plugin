@@ -1,9 +1,9 @@
 package com.apollographql.akip.services
 
-import com.apollographql.akip.AkipBundle
+import com.apollographql.akip.util.log.logd
 
 class AkipApplicationService {
     init {
-        println(AkipBundle.message("applicationService"))
+        logd("AkipApplicationService init")
     }
 }

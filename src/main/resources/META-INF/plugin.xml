@@ -6,12 +6,13 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.plugins.gradle</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.apollographql.akip.services.AkipApplicationService"/>
         <projectService
-                serviceInterface="com.apollographql.akip.services.ApolloProjectService"
-                serviceImplementation="com.apollographql.akip.services.internal.ApolloProjectServiceImpl"
+                serviceInterface="com.apollographql.akip.services.AkipProjectService"
+                serviceImplementation="com.apollographql.akip.services.internal.AkipProjectServiceImpl"
         />
 
         <codeInsight.lineMarkerProvider language="UAST"
