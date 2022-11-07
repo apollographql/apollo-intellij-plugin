@@ -1,6 +1,6 @@
-# Apollo Kotlin IntelliJ Plugin
+# Apollo IntelliJ Plugin
 
-WIP!!!
+> THIS IS A WORK IN PROGRESS!!!
 
 ![Build](https://github.com/BoD/apollo-kotlin-intellij-plugin/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)

@@ -1,7 +1,7 @@
-package com.apollographql.akip.navigation
+package com.apollographql.ijplugin.navigation
 
-import com.apollographql.akip.AkipBundle
-import com.apollographql.akip.services.apolloProjectService
+import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.services.apolloProjectService
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
@@ -50,7 +50,7 @@ class OperationUsageMarkerProvider : RelatedItemLineMarkerProvider() {
             val builder =
                 NavigationGutterIconBuilder.create(gutterIcon)
                     .setTargets(element)
-                    .setTooltipText(AkipBundle.message("navigation.operation.tooltip"))
+                    .setTooltipText(ApolloBundle.message("navigation.operation.tooltip"))
                     .createLineMarkerInfo(psiLeaf)
             result.add(builder)
         }

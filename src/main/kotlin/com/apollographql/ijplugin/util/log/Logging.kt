@@ -1,50 +1,50 @@
-package com.apollographql.akip.util.log
+package com.apollographql.ijplugin.util.log
 
 import com.intellij.openapi.diagnostic.Logger
 
-// To see debug logs, in the embedded IntelliJ app, go to Help / Diagnostic Tools / Debug Log Settings and add "ApolloKotlin"
+// To see debug logs, in the embedded IntelliJ app, go to Help / Diagnostic Tools / Debug Log Settings and add "Apollo"
 // or pass -Didea.log.debug.categories=ApolloKotlin to the VM.
 // See https://plugins.jetbrains.com/docs/intellij/ide-infrastructure.html#logging
 // and https://plugins.jetbrains.com/docs/intellij/testing-faq.html#how-to-enable-debugtrace-logging
-private val logger = Logger.getInstance("ApolloKotlin")
+private val logger = Logger.getInstance("Apollo")
 
 fun logd(message: String) {
-    logger.debug(message)
+  logger.debug(message)
 }
 
 fun logd(any: Any) {
-    logger.debug(any.toString())
+  logger.debug(any.toString())
 }
 
 fun logd(throwable: Throwable) {
-    logger.debug(throwable)
+  logger.debug(throwable)
 }
 
 fun logd(throwable: Throwable, message: String) {
-    logger.debug(message, throwable)
+  logger.debug(message, throwable)
 }
 
 fun logd(throwable: Throwable, any: Any) {
-    logger.debug(any.toString(), throwable)
+  logger.debug(any.toString(), throwable)
 }
 
 fun logw(message: String) {
-    logger.warn(message)
+  logger.warn(message)
 }
 
 fun logw(any: Any) {
-    logger.warn(any.toString())
+  logger.warn(any.toString())
 }
 
 fun logw(throwable: Throwable) {
-    logger.warn(throwable)
+  logger.warn(throwable)
 }
 
 fun logw(throwable: Throwable, message: String) {
-    logger.warn(message, throwable)
+  logger.warn(message, throwable)
 }
 
 fun logw(throwable: Throwable, any: Any) {
-    logger.warn(any.toString(), throwable)
+  logger.warn(any.toString(), throwable)
 }
 

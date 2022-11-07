@@ -1,14 +1,14 @@
-package com.apollographql.akip
+package com.apollographql.ijplugin
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-private const val BUNDLE = "messages.AkipBundle"
+private const val BUNDLE = "messages.ApolloBundle"
 
 @Suppress("SpreadOperator", "unused")
-object AkipBundle : DynamicBundle(BUNDLE) {
+object ApolloBundle : DynamicBundle(BUNDLE) {
     @JvmStatic
     fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =
         getMessage(key, *params)

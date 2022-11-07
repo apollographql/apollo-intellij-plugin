@@ -99,12 +99,12 @@ tasks {
         systemProperty("jb.consents.confirmation.enabled", "false")
 
         // Enables debug logging for the plugin
-        systemProperty("idea.log.debug.categories", "ApolloKotlin")
+        systemProperty("idea.log.debug.categories", "Apollo")
     }
 
     runIde {
         // Enables debug logging for the plugin
-        systemProperty("idea.log.debug.categories", "ApolloKotlin")
+        systemProperty("idea.log.debug.categories", "Apollo")
     }
 
     signPlugin {
