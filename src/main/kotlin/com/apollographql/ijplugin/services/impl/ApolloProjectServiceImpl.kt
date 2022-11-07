@@ -1,12 +1,14 @@
-package com.apollographql.ijplugin.services.internal
+package com.apollographql.ijplugin.services.impl
 
 import com.apollographql.ijplugin.services.ApolloProjectService
-import com.apollographql.ijplugin.util.log.logd
-import com.apollographql.ijplugin.util.log.logw
+import com.apollographql.ijplugin.util.getGradleName
+import com.apollographql.ijplugin.util.logd
+import com.apollographql.ijplugin.util.logw
 import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.lang.jsgraphql.GraphQLFileType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.task.TaskCallback
@@ -37,7 +39,7 @@ class ApolloProjectServiceImpl(
   }
 
   init {
-    logd("ApolloProjectServiceImpl init project=${project.name}")
+    logd("ApolloProjectServiceImpl init project=${project.name} isApolloProject=$isApolloProject")
     if (isApolloProject) observeVfsChanges()
   }
 
@@ -46,29 +48,44 @@ class ApolloProjectServiceImpl(
       VirtualFileManager.VFS_CHANGES,
       object : BulkFileListener {
         override fun after(events: MutableList<out VFileEvent>) {
-          var generateApolloSources = false
-          for (it in events) {
-            if (it.file?.fileType is GraphQLFileType) {
-              generateApolloSources = true
-              break
+          val gradleModuleNames = mutableSetOf<String>()
+          for (event in events) {
+            val vFile = event.file!!
+            if (vFile.fileType !is GraphQLFileType) {
+              // Only care for GraphQL files
+              continue
             }
+            val moduleForFile = project.service<ProjectRootManager>().fileIndex.getModuleForFile(vFile)
+            logd("moduleForFile=${moduleForFile}")
+            if (moduleForFile == null) {
+              // A file from an external project: ignore
+              continue
+            }
+            val moduleGradleName = moduleForFile.getGradleName()
+            logd("moduleGradleName=$moduleGradleName")
+            if (moduleGradleName == null) {
+              // Could not get Gradle module name: ignore
+              continue
+            }
+            gradleModuleNames += moduleGradleName
           }
-          if (generateApolloSources) {
-            generateApolloSources()
+          if (gradleModuleNames.isNotEmpty()) {
+            generateApolloSources(gradleModuleNames)
           }
         }
       },
     )
   }
 
-  private fun generateApolloSources() {
-    logd("generateApolloSources")
+  private fun generateApolloSources(gradleModuleNames: Set<String>) {
+    logd("generateApolloSources gradleModuleNames=$gradleModuleNames")
     ApplicationManager.getApplication().runWriteAction {
       val taskSettings = ExternalSystemTaskExecutionSettings().apply {
         externalProjectPath = project.basePath
-        taskNames = listOf("generateApolloSourcesz")
+        taskNames = gradleModuleNames.map { if (it == "") "generateApolloSources" else "$it:generateApolloSources" }
         externalSystemIdString = GradleConstants.SYSTEM_ID.id
       }
+      logd("taskNames=${taskSettings.taskNames}")
 
       ExternalSystemUtil.runTask(
         taskSettings,

@@ -1,4 +1,4 @@
-package com.apollographql.ijplugin.util.log
+package com.apollographql.ijplugin.util
 
 import com.intellij.openapi.diagnostic.Logger
 

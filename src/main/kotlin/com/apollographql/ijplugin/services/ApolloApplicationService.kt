@@ -1,9 +1,9 @@
 package com.apollographql.ijplugin.services
 
-import com.apollographql.ijplugin.util.log.logd
+import com.apollographql.ijplugin.util.logd
 
 class ApolloApplicationService {
-    init {
-        logd("ApolloApplicationService init")
-    }
+  init {
+    logd("ApolloApplicationService init")
+  }
 }

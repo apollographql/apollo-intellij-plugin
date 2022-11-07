@@ -14,9 +14,9 @@ import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.toUElement
 
 private val APOLLO_OPERATION_TYPES = arrayOf(
-    "com.apollographql.apollo3.api.Query",
-    "com.apollographql.apollo3.api.Mutation",
-    "com.apollographql.apollo3.api.Subscription"
+  "com.apollographql.apollo3.api.Query",
+  "com.apollographql.apollo3.api.Mutation",
+  "com.apollographql.apollo3.api.Subscription"
 )
 
 /**
@@ -25,34 +25,34 @@ private val APOLLO_OPERATION_TYPES = arrayOf(
  * TODO: for now the icon appears but navigation to the definition is not yet implemented.
  */
 class OperationUsageMarkerProvider : RelatedItemLineMarkerProvider() {
-    private val gutterIcon by lazy { IconLoader.getIcon("/icons/gutter-operation.svg", this::class.java) }
+  private val gutterIcon by lazy { IconLoader.getIcon("/icons/gutter-operation.svg", this::class.java) }
 
-    override fun collectNavigationMarkers(
-        element: PsiElement,
-        result: MutableCollection<in RelatedItemLineMarkerInfo<*>>,
-    ) {
-        val apolloProjectService = element.project.apolloProjectService()
-        if (!apolloProjectService.isApolloProject) return
+  override fun collectNavigationMarkers(
+    element: PsiElement,
+    result: MutableCollection<in RelatedItemLineMarkerInfo<*>>,
+  ) {
+    val apolloProjectService = element.project.apolloProjectService()
+    if (!apolloProjectService.isApolloProject) return
 
-        val uElement = element.toUElement()
-        if (uElement !is UCallExpression || uElement.kind != UastCallKind.CONSTRUCTOR_CALL) return
+    val uElement = element.toUElement()
+    if (uElement !is UCallExpression || uElement.kind != UastCallKind.CONSTRUCTOR_CALL) return
 
-        val isApolloOperation = (uElement.resolve() as? PsiMember)
-            ?.containingClass
-            ?.implementsList
-            ?.referencedTypes
-            ?.any { classType ->
-                classType.resolve()?.qualifiedName in APOLLO_OPERATION_TYPES
-            } == true
+    val isApolloOperation = (uElement.resolve() as? PsiMember)
+      ?.containingClass
+      ?.implementsList
+      ?.referencedTypes
+      ?.any { classType ->
+        classType.resolve()?.qualifiedName in APOLLO_OPERATION_TYPES
+      } == true
 
-        if (isApolloOperation) {
-            val psiLeaf = PsiTreeUtil.getDeepestFirst(element)
-            val builder =
-                NavigationGutterIconBuilder.create(gutterIcon)
-                    .setTargets(element)
-                    .setTooltipText(ApolloBundle.message("navigation.operation.tooltip"))
-                    .createLineMarkerInfo(psiLeaf)
-            result.add(builder)
-        }
+    if (isApolloOperation) {
+      val psiLeaf = PsiTreeUtil.getDeepestFirst(element)
+      val builder =
+        NavigationGutterIconBuilder.create(gutterIcon)
+          .setTargets(element)
+          .setTooltipText(ApolloBundle.message("navigation.operation.tooltip"))
+          .createLineMarkerInfo(psiLeaf)
+      result.add(builder)
     }
+  }
 }

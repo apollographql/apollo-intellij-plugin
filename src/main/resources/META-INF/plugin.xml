@@ -15,7 +15,7 @@
         <applicationService serviceImplementation="com.apollographql.ijplugin.services.ApolloApplicationService"/>
         <projectService
                 serviceInterface="com.apollographql.ijplugin.services.ApolloProjectService"
-                serviceImplementation="com.apollographql.ijplugin.services.internal.ApolloProjectServiceImpl"
+                serviceImplementation="com.apollographql.ijplugin.services.impl.ApolloProjectServiceImpl"
         />
 
         <codeInsight.lineMarkerProvider language="UAST"
