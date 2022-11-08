@@ -32,7 +32,7 @@ class OperationUsageMarkerProvider : RelatedItemLineMarkerProvider() {
     result: MutableCollection<in RelatedItemLineMarkerInfo<*>>,
   ) {
     val apolloProjectService = element.project.apolloProjectService()
-    if (!apolloProjectService.isApolloProject) return
+    if (!apolloProjectService.isApolloKotlin3Project) return
 
     val uElement = element.toUElement()
     if (uElement !is UCallExpression || uElement.kind != UastCallKind.CONSTRUCTOR_CALL) return

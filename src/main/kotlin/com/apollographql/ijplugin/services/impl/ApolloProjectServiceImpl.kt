@@ -2,6 +2,8 @@ package com.apollographql.ijplugin.services.impl
 
 import com.apollographql.ijplugin.services.ApolloProjectService
 import com.apollographql.ijplugin.util.getGradleName
+import com.apollographql.ijplugin.util.isApolloAndroid2Project
+import com.apollographql.ijplugin.util.isApolloKotlin3Project
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.intellij.execution.executors.DefaultRunExecutor
@@ -20,27 +22,18 @@ import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import org.jetbrains.plugins.gradle.util.GradleConstants
 
-
 class ApolloProjectServiceImpl(
   private val project: Project,
 ) : ApolloProjectService, Disposable {
 
-  override val isApolloProject: Boolean by lazy {
-    var isApolloProject = false
-    ProjectRootManager.getInstance(project).orderEntries().librariesOnly().forEachLibrary { library ->
-      if (library.name?.contains("com.apollographql.apollo3") == true) {
-        isApolloProject = true
-        false
-      } else {
-        true
-      }
-    }
-    isApolloProject
-  }
+  // TODO: This is initialized only once, but this could actually change during the project's lifecycle
+  // TODO: find a way to invalidate this whenever project's dependencies change
+  override val isApolloAndroid2Project by lazy { project.isApolloAndroid2Project }
+  override val isApolloKotlin3Project by lazy { project.isApolloKotlin3Project }
 
   init {
-    logd("ApolloProjectServiceImpl init project=${project.name} isApolloProject=$isApolloProject")
-    if (isApolloProject) observeVfsChanges()
+    logd("ApolloProjectServiceImpl init project=${project.name} isApolloKotlin3Project=$isApolloKotlin3Project")
+    if (isApolloKotlin3Project) observeVfsChanges()
   }
 
   private fun observeVfsChanges() {
@@ -82,7 +75,7 @@ class ApolloProjectServiceImpl(
     ApplicationManager.getApplication().runWriteAction {
       val taskSettings = ExternalSystemTaskExecutionSettings().apply {
         externalProjectPath = project.basePath
-        taskNames = gradleModuleNames.map { if (it == "") "generateApolloSources" else "$it:generateApolloSources" }
+        taskNames = gradleModuleNames.map { if (it == "") "generateApolloSources" else ":$it:generateApolloSources" }
         externalSystemIdString = GradleConstants.SYSTEM_ID.id
       }
       logd("taskNames=${taskSettings.taskNames}")
