@@ -7,11 +7,13 @@ import com.apollographql.ijplugin.util.isApolloKotlin3Project
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.intellij.execution.executors.DefaultRunExecutor
+import com.intellij.execution.impl.ExecutionManagerImpl
 import com.intellij.lang.jsgraphql.GraphQLFileType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemProcessHandler
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.task.TaskCallback
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
@@ -22,10 +24,11 @@ import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import org.jetbrains.plugins.gradle.util.GradleConstants
 
+private const val CODEGEN_GRADLE_TASK_NAME = "generateApolloSources"
+
 class ApolloProjectServiceImpl(
   private val project: Project,
 ) : ApolloProjectService, Disposable {
-
   // TODO: This is initialized only once, but this could actually change during the project's lifecycle
   // TODO: find a way to invalidate this whenever project's dependencies change
   override val isApolloAndroid2Project by lazy { project.isApolloAndroid2Project }
@@ -63,40 +66,61 @@ class ApolloProjectServiceImpl(
             gradleModuleNames += moduleGradleName
           }
           if (gradleModuleNames.isNotEmpty()) {
-            generateApolloSources(gradleModuleNames)
+            triggerCodegen(gradleModuleNames)
           }
         }
       },
     )
   }
 
-  private fun generateApolloSources(gradleModuleNames: Set<String>) {
-    logd("generateApolloSources gradleModuleNames=$gradleModuleNames")
-    ApplicationManager.getApplication().runWriteAction {
-      val taskSettings = ExternalSystemTaskExecutionSettings().apply {
-        externalProjectPath = project.basePath
-        taskNames = gradleModuleNames.map { if (it == "") "generateApolloSources" else ":$it:generateApolloSources" }
-        externalSystemIdString = GradleConstants.SYSTEM_ID.id
+  private fun triggerCodegen(gradleModuleNames: Set<String>) {
+    logd("triggerCodegen gradleModuleNames=$gradleModuleNames")
+    with(ApplicationManager.getApplication()) {
+      invokeLater {
+        runWriteAction {
+          stopCodegenIfOngoing()
+
+          val taskSettings = ExternalSystemTaskExecutionSettings().apply {
+            externalProjectPath = project.basePath
+            taskNames = gradleModuleNames.map { if (it == "") CODEGEN_GRADLE_TASK_NAME else ":$it:$CODEGEN_GRADLE_TASK_NAME" }
+            externalSystemIdString = GradleConstants.SYSTEM_ID.id
+          }
+          logd("taskNames=${taskSettings.taskNames}")
+
+          ExternalSystemUtil.runTask(
+            taskSettings,
+            DefaultRunExecutor.EXECUTOR_ID,
+            project,
+            GradleConstants.SYSTEM_ID,
+            object : TaskCallback {
+              override fun onSuccess() {
+                logd("triggerCodegen onSuccess")
+              }
+
+              override fun onFailure() {
+                logw("triggerCodegen onFailure")
+              }
+            },
+            ProgressExecutionMode.IN_BACKGROUND_ASYNC,
+            false,
+          )
+        }
       }
-      logd("taskNames=${taskSettings.taskNames}")
+    }
+  }
 
-      ExternalSystemUtil.runTask(
-        taskSettings,
-        DefaultRunExecutor.EXECUTOR_ID,
-        project,
-        GradleConstants.SYSTEM_ID,
-        object : TaskCallback {
-          override fun onSuccess() {
-            logd("generateApolloSources onSuccess")
-          }
-
-          override fun onFailure() {
-            logw("generateApolloSources onFailure")
-          }
-        },
-        ProgressExecutionMode.IN_BACKGROUND_ASYNC,
-        false,
-      )
+  private fun stopCodegenIfOngoing() {
+    val allDescriptors = ExecutionManagerImpl.getAllDescriptors(project)
+    logd("descriptors=$allDescriptors")
+    for (descriptor in allDescriptors) {
+      val processHandler = descriptor.processHandler
+      if (processHandler is ExternalSystemProcessHandler
+        && processHandler.executionName.contains(CODEGEN_GRADLE_TASK_NAME)
+        && !processHandler.isProcessTerminated && !processHandler.isProcessTerminating
+      ) {
+        logd("Codegen is ongoing: stopping it")
+        ExecutionManagerImpl.stopProcess(descriptor)
+      }
     }
   }
 
