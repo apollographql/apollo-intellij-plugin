@@ -33,10 +33,6 @@ jobs:
       changelog: ${{ steps.properties.outputs.changelog }}
     steps:
 
-      - name: Diagnostics 1
-        run: |
-          df -h
-
       # Check out current repository
       - name: Fetch Sources
         uses: actions/checkout@v2.4.0
@@ -52,10 +48,6 @@ jobs:
           distribution: zulu
           java-version: 11
           cache: gradle
-
-      - name: Diagnostics 2
-        run: |
-          df -h
 
       # Set environment variables
       - name: Export Properties
@@ -108,14 +100,6 @@ jobs:
           name: pluginVerifier-result
           path: ${{ github.workspace }}/plugin/build/reports/pluginVerifier
 
-      - name: Diagnostics 3
-        run: |
-          df -h
-
-      # Run Qodana inspections
-      #      - name: Qodana - Code Inspection
-      #        uses: JetBrains/qodana-action@v4.2.5
-
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
         id: artifact
@@ -133,10 +117,6 @@ jobs:
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./plugin/build/distributions/content/*/*
-
-      - name: Diagnostics 4
-        run: |
-          df -h
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
