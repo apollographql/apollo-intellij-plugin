@@ -1,10 +1,12 @@
 package com.apollographql.ijplugin.refactoring
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.util.logd
 import com.intellij.history.LocalHistory
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.GeneratedSourcesFilter
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiElement
@@ -15,6 +17,7 @@ import com.intellij.psi.codeStyle.JavaCodeStyleManager
 import com.intellij.psi.impl.migration.PsiMigrationManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.BaseRefactoringProcessor
+import com.intellij.refactoring.migration.MigrationUtil
 import com.intellij.refactoring.ui.UsageViewDescriptorAdapter
 import com.intellij.usageView.UsageInfo
 
@@ -34,7 +37,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
   }
 
-  private val psiMigrationManager = PsiMigrationManager.getInstance(myProject)
+  private val migrationManager = PsiMigrationManager.getInstance(myProject)
+  private var migration: PsiMigration? = null
   private val searchScope = GlobalSearchScope.projectScope(project)
   private val refsToShorten = mutableListOf<SmartPsiElementPointer<PsiElement>>()
   private val smartPointerManager = SmartPointerManager.getInstance(myProject)
@@ -50,18 +54,36 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   override fun createUsageViewDescriptor(usages: Array<out UsageInfo>) = usageViewDescriptor
 
   private fun startMigration(): PsiMigration {
-    return psiMigrationManager.startMigration()
+    return migrationManager.startMigration()
   }
 
   private fun finishMigration() {
-    psiMigrationManager?.currentMigration?.finish()
+    migrationManager?.currentMigration?.finish()
+  }
+
+  override fun doRun() {
+    logd()
+    migration = startMigration()
+    // This will create classes / packages that we're finding references to in case they don't exist.
+    // It must be done in doRun() as this is called from the EDT whereas findUsages() is not.
+    for (migrationItem in migrationItems) {
+      migrationItem.findUsages(myProject, migration!!, searchScope)
+    }
+    super.doRun()
   }
 
   override fun findUsages(): Array<UsageInfo> {
-    val migration = startMigration()
+    logd()
     try {
       return migrationItems.flatMap { migrationItem ->
-        migrationItem.findUsages(myProject, migration, searchScope)
+        migrationItem.findUsages(myProject, migration!!, searchScope)
+          .filterNot { usageInfo ->
+            // Filter out all generated code usages. We don't want generated code to come up in findUsages.
+            // TODO: how to mark Apollo generated code as generated per this method?
+            usageInfo.virtualFile?.let {
+              GeneratedSourcesFilter.isGeneratedSourceByAnyFilter(it, myProject)
+            } == true
+          }
           .map { usageInfo ->
             MigrationItemUsageInfo(
               source = usageInfo,
@@ -75,7 +97,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     }
   }
 
-  override fun preprocessUsages(refUsages: Ref<Array<UsageInfo?>>): Boolean {
+  override fun preprocessUsages(refUsages: Ref<Array<UsageInfo>>): Boolean {
+    logd()
     if (refUsages.get().isEmpty()) {
       Messages.showInfoMessage(
         myProject,
@@ -89,12 +112,14 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   }
 
   override fun performRefactoring(usages: Array<UsageInfo>) {
-    val migration = startMigration()
+    logd()
+    finishMigration()
+    migration = startMigration()
     refsToShorten.clear()
     val action = LocalHistory.getInstance().startAction(commandName)
     try {
       for (usage in usages) {
-        val element = (usage as MigrationItemUsageInfo).migrationItem.performRefactoring(myProject, migration, usage)
+        val element = (usage as MigrationItemUsageInfo).migrationItem.performRefactoring(myProject, migration!!, usage)
         if (element != null) {
           refsToShorten += smartPointerManager.createSmartPsiElementPointer(element)
         }
@@ -106,6 +131,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   }
 
   override fun performPsiSpoilingRefactoring() {
+    logd()
     // TODO: this works only for Java, not Kotlin
     // for Kotlin, we need to depend on a more recent version of the platform.
     // See https://github.com/JetBrains/intellij-community/blob/7c17222938b93877bf62b7448766c7f821a7180a/java/java-impl-refactorings/src/com/intellij/refactoring/migration/MigrationProcessor.java#L164
@@ -128,7 +154,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       val newName: String,
     ) : MigrationItem {
       override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-        return findPackageUsages(project, oldName, searchScope)
+        return MigrationUtil.findPackageUsages(project, migration, oldName, searchScope)
       }
 
       override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
@@ -144,7 +170,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       val newName: String,
     ) : MigrationItem {
       override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-        return findClassUsages(project, oldName, searchScope)
+        return MigrationUtil.findClassUsages(project, migration, oldName, searchScope)
       }
 
       override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
