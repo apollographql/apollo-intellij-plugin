@@ -11,6 +11,8 @@
     <depends>com.intellij.gradle</depends>
     <depends>com.intellij.lang.jsgraphql</depends>
 
+    <resource-bundle>messages.ApolloBundle</resource-bundle>
+
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.apollographql.ijplugin.services.ApolloApplicationService"/>
         <projectService
@@ -27,4 +29,10 @@
         <listener class="com.apollographql.ijplugin.listeners.ApolloProjectManagerListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
+
+    <actions>
+        <action id="ApolloV2ToV3MigrationAction" class="com.apollographql.ijplugin.refactoring.ApolloV2ToV3MigrationAction">
+            <add-to-group group-id="RefactoringMenu"/>
+        </action>
+    </actions>
 </idea-plugin>
