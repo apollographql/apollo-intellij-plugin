@@ -4,6 +4,6 @@ import com.apollographql.ijplugin.util.logd
 
 class ApolloApplicationService {
   init {
-    logd("ApolloApplicationService init")
+    logd()
   }
 }

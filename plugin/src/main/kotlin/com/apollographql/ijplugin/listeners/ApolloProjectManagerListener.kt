@@ -7,6 +7,6 @@ import com.intellij.openapi.project.ProjectManagerListener
 
 internal class ApolloProjectManagerListener : ProjectManagerListener {
   override fun projectOpened(project: Project) {
-    logd("ApolloProjectManagerListener projectOpened isApolloKotlin3Project=" + project.apolloProjectService().isApolloKotlin3Project)
+    logd("isApolloKotlin3Project=" + project.apolloProjectService().isApolloKotlin3Project)
   }
 }

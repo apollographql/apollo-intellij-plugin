@@ -35,7 +35,7 @@ class ApolloProjectServiceImpl(
   override val isApolloKotlin3Project by lazy { project.isApolloKotlin3Project }
 
   init {
-    logd("ApolloProjectServiceImpl init project=${project.name} isApolloKotlin3Project=$isApolloKotlin3Project")
+    logd("project=${project.name} isApolloKotlin3Project=$isApolloKotlin3Project")
     if (isApolloKotlin3Project) observeVfsChanges()
   }
 
@@ -74,7 +74,7 @@ class ApolloProjectServiceImpl(
   }
 
   private fun triggerCodegen(gradleModuleNames: Set<String>) {
-    logd("triggerCodegen gradleModuleNames=$gradleModuleNames")
+    logd("gradleModuleNames=$gradleModuleNames")
     with(ApplicationManager.getApplication()) {
       invokeLater {
         runWriteAction {
@@ -94,7 +94,7 @@ class ApolloProjectServiceImpl(
             GradleConstants.SYSTEM_ID,
             object : TaskCallback {
               override fun onSuccess() {
-                logd("triggerCodegen onSuccess")
+                logd()
               }
 
               override fun onFailure() {
@@ -125,6 +125,6 @@ class ApolloProjectServiceImpl(
   }
 
   override fun dispose() {
-    logd("ApolloProjectServiceImpl dispose project=${project.name}")
+    logd("project=${project.name}")
   }
 }

@@ -8,12 +8,16 @@ import com.intellij.openapi.diagnostic.Logger
 // and https://plugins.jetbrains.com/docs/intellij/testing-faq.html#how-to-enable-debugtrace-logging
 private val logger = Logger.getInstance("Apollo")
 
-fun logd(message: String) {
-  logger.debug(message)
+fun logd() {
+  logger.debug(prefix(null))
 }
 
-fun logd(any: Any) {
-  logger.debug(any.toString())
+fun logd(message: String?) {
+  logger.debug(prefix(message))
+}
+
+fun logd(any: Any?) {
+  logger.debug(prefix(any?.toString()))
 }
 
 fun logd(throwable: Throwable) {
@@ -21,11 +25,11 @@ fun logd(throwable: Throwable) {
 }
 
 fun logd(throwable: Throwable, message: String) {
-  logger.debug(message, throwable)
+  logger.debug(prefix(message), throwable)
 }
 
 fun logd(throwable: Throwable, any: Any) {
-  logger.debug(any.toString(), throwable)
+  logger.debug(prefix(any.toString()), throwable)
 }
 
 fun logw(message: String) {
@@ -48,3 +52,17 @@ fun logw(throwable: Throwable, any: Any) {
   logger.warn(any.toString(), throwable)
 }
 
+private fun getClassAndMethodName(): String {
+  val stackTrace = Thread.currentThread().stackTrace
+  val className = stackTrace[3].className.substringAfterLast('.')
+  return className + " " + stackTrace[3].methodName
+}
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun prefix(message: String?): String {
+  return if (message == null) {
+    getClassAndMethodName()
+  } else {
+    "${getClassAndMethodName()} - $message"
+  }
+}
