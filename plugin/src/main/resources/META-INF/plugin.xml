@@ -8,6 +8,7 @@
     <!-- See https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html#declaring-plugin-dependencies -->
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
     <depends>com.intellij.gradle</depends>
     <depends>com.intellij.lang.jsgraphql</depends>
 

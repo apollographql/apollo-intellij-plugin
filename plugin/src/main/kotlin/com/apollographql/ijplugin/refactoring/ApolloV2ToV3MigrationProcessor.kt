@@ -22,6 +22,8 @@ import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.migration.MigrationUtil
 import com.intellij.refactoring.ui.UsageViewDescriptorAdapter
 import com.intellij.usageView.UsageInfo
+import org.jetbrains.kotlin.idea.core.ShortenReferences
+import org.jetbrains.kotlin.psi.KtElement
 
 /**
  * Migrations of Apollo Android v2 to Apollo Kotlin v3.
@@ -144,13 +146,19 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
   override fun performPsiSpoilingRefactoring() {
     logd()
-    // TODO: this works only for Java, not Kotlin
-    // for Kotlin, we need to depend on a more recent version of the platform.
+    // TODO: this doesn't seem to work for Kotlin
+    // In more recent versions of the platform, there's a new way to do this.
     // See https://github.com/JetBrains/intellij-community/blob/7c17222938b93877bf62b7448766c7f821a7180a/java/java-impl-refactorings/src/com/intellij/refactoring/migration/MigrationProcessor.java#L164
     val styleManager = JavaCodeStyleManager.getInstance(myProject)
     for (pointer in refsToShorten) {
       pointer.element?.let {
-        styleManager.shortenClassReferences(it)
+        if (it is KtElement) {
+          // Kotlin
+          ShortenReferences.DEFAULT.process(it)
+        } else {
+          // Java
+          styleManager.shortenClassReferences(it)
+        }
       }
     }
     refsToShorten.clear()
@@ -173,7 +181,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         val element = usage.element
         if (element == null || !element.isValid) return null
         val newPackage = findOrCreatePackage(project, migration, newName)
-        return element.bindReferencesToElement(newPackage)
+        element.bindReferencesToElement(newPackage)
+        return null
       }
     }
 
