@@ -8,7 +8,9 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.PsiPackage
+import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.refactoring.rename.RenamePsiElementProcessor
 
 fun findOrCreatePackage(project: Project, migration: PsiMigration, qName: String): PsiPackage {
   val aPackage = JavaPsiFacade.getInstance(project).findPackage(qName)
@@ -33,4 +35,14 @@ fun PsiElement.bindReferencesToElement(element: PsiElement): PsiElement? {
     }
   }
   return null
+}
+
+fun findMethodReferences(project: Project, className: String, methodName: String): Collection<PsiReference> {
+  val psiLookupClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project)) ?: return emptyList()
+  val methods = psiLookupClass.findMethodsByName(methodName, true)
+  if (methods.isEmpty()) return emptyList()
+  return methods.flatMap { method ->
+    val processor = RenamePsiElementProcessor.forElement(method)
+    processor.findReferences(methods[0], GlobalSearchScope.projectScope(project), false)
+  }
 }

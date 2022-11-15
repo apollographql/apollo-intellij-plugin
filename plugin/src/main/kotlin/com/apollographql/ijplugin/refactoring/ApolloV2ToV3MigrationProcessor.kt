@@ -9,7 +9,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.GeneratedSourcesFilter
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Ref
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
@@ -32,6 +34,16 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     private val migrationItems = arrayOf(
       MigrationItem.Package("com.apollographql.apollo", "com.apollographql.apollo3"),
       MigrationItem.Class("com.apollographql.apollo.api.Response", "com.apollographql.apollo3.api.ApolloResponse"),
+      MigrationItem.MethodName(
+        className = "com.apollographql.apollo.ApolloClient",
+        oldMethodName = "mutate",
+        newMethodName = "mutation"
+      ),
+      MigrationItem.MethodName(
+        className = "com.apollographql.apollo.ApolloClient",
+        oldMethodName = "subscribe",
+        newMethodName = "subscription"
+      ),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
@@ -178,6 +190,32 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         if (element == null || !element.isValid) return null
         val newClass = findOrCreateClass(project, migration, newName)
         return element.bindReferencesToElement(newClass)
+      }
+    }
+
+    class MethodName(
+      val className: String,
+      val oldMethodName: String,
+      val newMethodName: String,
+    ) : MigrationItem {
+      override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
+        return findMethodReferences(project = project, className = className, methodName = oldMethodName).map { UsageInfo(it) }
+          .toTypedArray()
+      }
+
+      override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+        val element = usage.element
+        if (element == null || !element.isValid) return null
+        val newMethodReference = JavaPsiFacade.getInstance(project).elementFactory.createExpressionFromText(newMethodName, null)
+        val methodIdentifier = element.children.firstOrNull { it is PsiIdentifier && it.text == oldMethodName }
+        if (methodIdentifier != null) {
+          // Java
+          methodIdentifier.replace(newMethodReference)
+        } else {
+          // Kotlin
+          element.replace(newMethodReference)
+        }
+        return null
       }
     }
   }
