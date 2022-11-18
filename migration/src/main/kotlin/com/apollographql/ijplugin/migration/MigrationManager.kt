@@ -13,6 +13,10 @@ class MigrationManager(
     migrationSteps.add(step)
   }
 
+  fun addSteps(vararg steps: MigrationStep) {
+    migrationSteps.addAll(steps)
+  }
+
   fun process() {
     for (migrationStep in migrationSteps) {
       migrationStep.process()

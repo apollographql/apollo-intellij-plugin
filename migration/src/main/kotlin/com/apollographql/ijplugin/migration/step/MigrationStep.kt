@@ -1,11 +1,12 @@
 package com.apollographql.ijplugin.migration.step
 
+import com.apollographql.ijplugin.migration.KotlinEnvironment
 import com.apollographql.ijplugin.migration.MigrationManager
-import com.apollographql.ijplugin.migration.createBindingContext
-import com.apollographql.ijplugin.migration.createKtPsiFactory
 import com.apollographql.ijplugin.migration.logd
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import com.apollographql.ijplugin.migration.util.getFilesWithExtension
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.resolve.BindingContext
 import java.io.File
 
 interface MigrationStep {
@@ -29,26 +30,29 @@ abstract class ProjectFilesMigrationStep(
 
 abstract class KotlinFilesMigrationStep(
   final override val migrationManager: MigrationManager,
-  kotlinCoreEnvironment: KotlinCoreEnvironment,
+  private val classpath: List<String>,
 ) : MigrationStep {
-  protected val ktPsiFactory = createKtPsiFactory(kotlinCoreEnvironment)
-  private val ktFiles = migrationManager.projectRoot.getFilesWithExtension(setOf("kt")).map { file ->
-    ktPsiFactory.createPhysicalFile(file.path, file.readText())
-  }
-  protected val bindingContext = createBindingContext(kotlinCoreEnvironment, ktFiles)
+  private lateinit var kotlinEnvironment: KotlinEnvironment
+
+  protected val bindingContext: BindingContext
+    get() = kotlinEnvironment.bindingContext
+
+  protected val ktPsiFactory: KtPsiFactory
+    get() = kotlinEnvironment.ktPsiFactory
 
   override fun process() {
-    for (ktFile in ktFiles) {
+    kotlinEnvironment = KotlinEnvironment(listOf(migrationManager.projectRoot), classpath)
+    for (ktFile in kotlinEnvironment.ktFiles) {
       logd("Processing file${if (migrationManager.dryRun) " (dry run)" else ""}: ${ktFile.virtualFilePath}")
       processKtFile(ktFile)
-      logd("File processed")
-      logd(ktFile.text)
+      if (migrationManager.dryRun) {
+        logd(ktFile.text)
+      } else {
+        File(ktFile.virtualFilePath).writeText(ktFile.text)
+        logd("Wrote file: ${ktFile.virtualFilePath}")
+      }
     }
   }
 
   abstract fun processKtFile(ktFile: KtFile)
-}
-
-private fun File.getFilesWithExtension(extensions: Set<String>): List<File> {
-  return walk().filter { it.isFile && it.extension in extensions }.toList()
 }

@@ -1,11 +1,15 @@
 package com.apollographql.ijplugin.migration
 
-import com.apollographql.ijplugin.migration.step.RenameMethodsKotlinFilesMigrationStep
-import org.jetbrains.kotlin.config.JvmTarget
+import com.apollographql.ijplugin.migration.step.RenameClassesStep
+import com.apollographql.ijplugin.migration.step.RenameMethodsStep
+import com.apollographql.ijplugin.migration.step.RenamePackagesStep
 import java.io.File
 
 fun main() {
+  // TODO include test project in this project
   val projectRootDir = File("/Users/bod/gitrepo/apollo-android-v2-sample-for-intellij-plugin/app/src/main/kotlin")
+
+  // TODO don't have these hard-coded
   val classpath = listOf(
     "/Users/bod/.gradle/caches/modules-2/files-2.1/com.apollographql.apollo/apollo-coroutines-support/2.5.13/17b37d884f177dceb7c7432c0f89b18cddf8bedb/apollo-coroutines-support-2.5.13.jar",
     "/Users/bod/.gradle/caches/modules-2/files-2.1/com.apollographql.apollo/apollo-runtime/2.5.13/de77cfcebe49afde6472535b7423d85053008bf5/apollo-runtime-2.5.13.jar",
@@ -15,22 +19,33 @@ fun main() {
     "/Users/bod/.gradle/caches/modules-2/files-2.1/com.apollographql.apollo/apollo-api-jvm/2.5.13/73b7b3a005a753e9d86d0d22c09fc6ae136728d6/apollo-api-jvm-2.5.13.jar",
   )
 
-  val dirsToAnalyze = listOf(projectRootDir)
-  val kotlinCoreEnvironment = createKotlinCoreEnvironment(
-    dirsToAnalyze = dirsToAnalyze,
-    classpath = classpath,
-    languageVersion = null,
-    jvmTarget = JvmTarget.JVM_1_8,
-    jdkHome = null
-  )
+  val migrationManager = MigrationManager(projectRootDir, dryRun = false)
+  migrationManager.addSteps(
+    RenameMethodsStep(
+      migrationManager = migrationManager,
+      classpath = classpath,
+      methodsToRename = setOf(
+        RenameMethodsStep.MethodName("com.apollographql.apollo.ApolloClient", "mutate", "mutation"),
+        RenameMethodsStep.MethodName("com.apollographql.apollo.ApolloClient", "subscribe", "subscription"),
+      )
+    ),
 
-  val migrationManager = MigrationManager(projectRootDir)
-  migrationManager.addStep(
-    RenameMethodsKotlinFilesMigrationStep(
-      migrationManager,
-      kotlinCoreEnvironment,
-      setOf(RenameMethodsKotlinFilesMigrationStep.MethodToRename("com.apollographql.apollo.ApolloClient", "mutate", "mutation"))
-    )
+    RenameClassesStep(
+      migrationManager = migrationManager,
+      classpath = classpath,
+      classesToRename = setOf(
+        RenameClassesStep.ClassName("com.apollographql.apollo.api.Response", "ApolloResponse"),
+      )
+    ),
+
+    // Renaming packages as the last step as previous steps depend on imports being correct
+    RenamePackagesStep(
+      migrationManager = migrationManager,
+      classpath = classpath,
+      packagesToRename = setOf(
+        RenamePackagesStep.PackageName("com.apollographql.apollo", "com.apollographql.apollo3"),
+      )
+    ),
   )
 
   migrationManager.process()
