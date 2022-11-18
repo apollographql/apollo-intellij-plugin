@@ -59,3 +59,16 @@ abstract class KotlinFilesMigrationStep(
 
   abstract fun processKtFile(ktFile: KtFile)
 }
+
+class CompositeKotlinFilesMigrationStep(
+  migrationManager: MigrationManager,
+  kotlinEnvironment: KotlinEnvironment,
+  private val steps: List<KotlinFilesMigrationStep>,
+) : KotlinFilesMigrationStep(migrationManager, kotlinEnvironment) {
+  override fun processKtFile(ktFile: KtFile) {
+    for (step in steps) {
+      logd("Processing step: ${step.javaClass.simpleName}")
+      step.processKtFile(ktFile)
+    }
+  }
+}
