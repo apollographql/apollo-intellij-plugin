@@ -20,7 +20,8 @@ class RenameMethodsStep(
     val newMethodName: String,
   )
 
-  override fun processKtFile(ktFile: KtFile) {
+  override fun processKtFile(ktFile: KtFile): Boolean {
+    var changed = false
     ktFile.accept(
       object : KtTreeVisitorVoid() {
         override fun visitCallExpression(expression: KtCallExpression) {
@@ -33,6 +34,7 @@ class RenameMethodsStep(
               if (containingDeclarationName == methodToRename.className) {
                 logi("Found method to rename: ${methodToRename.className}.${methodToRename.oldMethodName} -> ${methodToRename.newMethodName} in ${ktFile.name} at ${expression.textOffset}")
                 expression.calleeExpression?.replace(ktPsiFactory.createExpression(methodToRename.newMethodName))
+                changed = true
                 break
               }
             }
@@ -40,5 +42,6 @@ class RenameMethodsStep(
         }
       }
     )
+    return changed
   }
 }

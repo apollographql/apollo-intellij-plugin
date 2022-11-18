@@ -24,7 +24,8 @@ class RenameClassesStep(
     val newSimpleName: String,
   )
 
-  override fun processKtFile(ktFile: KtFile) {
+  override fun processKtFile(ktFile: KtFile): Boolean {
+    var changed = false
     ktFile.accept(
       object : KtTreeVisitorVoid() {
         override fun visitTypeReference(typeReference: KtTypeReference) {
@@ -36,6 +37,7 @@ class RenameClassesStep(
             if (typeFqn == classToRename.oldFQName) {
               logi("Found class to rename: ${classToRename.oldFQName} -> ${classToRename.newSimpleName} in ${ktFile.name} at ${typeReference.textOffset}")
               (typeReference.typeElement as? KtUserType)?.referenceExpression?.replace(ktPsiFactory.createType(classToRename.newSimpleName))
+              changed = true
               break
             }
           }
@@ -53,6 +55,7 @@ class RenameClassesStep(
                 logi("Found class to rename: ${classToRename.oldFQName} -> ${classToRename.newSimpleName} in ${ktFile.name} at ${importDirective.textOffset}")
                 val newFqName = importPath.fqName.parent().child(Name.identifier(classToRename.newSimpleName))
                 importDirective.replace(ktPsiFactory.createImportDirective(importPath.copy(newFqName)))
+                changed = true
                 break
               }
             }
@@ -60,5 +63,6 @@ class RenameClassesStep(
         }
       }
     )
+    return changed
   }
 }

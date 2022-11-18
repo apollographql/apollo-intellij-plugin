@@ -237,6 +237,7 @@ class KotlinEnvironment(
     environment: KotlinCoreEnvironment,
     files: List<KtFile>,
   ): BindingContext {
+    logd("Analyzing the project (may take a while)...")
     val messageCollector = object : MessageCollector by MessageCollector.NONE {
       override fun report(severity: CompilerMessageSeverity, message: String, location: CompilerMessageSourceLocation?) {
         logd("KotlinCompiler - ${severity.presentableName} - ${location?.toString()}: $message")

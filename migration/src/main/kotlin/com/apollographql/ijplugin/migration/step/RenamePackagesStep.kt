@@ -17,7 +17,8 @@ class RenamePackagesStep(
     val newName: String,
   )
 
-  override fun processKtFile(ktFile: KtFile) {
+  override fun processKtFile(ktFile: KtFile): Boolean {
+    var changed = false
     ktFile.accept(
       object : KtTreeVisitorVoid() {
         override fun visitImportList(importList: KtImportList) {
@@ -29,6 +30,7 @@ class RenamePackagesStep(
                 logi("Found package to rename: ${packageToRename.oldName} -> ${packageToRename.newName} in ${ktFile.name} at ${importDirective.textOffset}")
                 val newFqName = FqName(importPath.fqName.asString().replaceFirst(packageToRename.oldName, packageToRename.newName))
                 importDirective.replace(ktPsiFactory.createImportDirective(importPath.copy(newFqName)))
+                changed = true
                 break
               }
             }
@@ -36,5 +38,6 @@ class RenamePackagesStep(
         }
       }
     )
+    return changed
   }
 }

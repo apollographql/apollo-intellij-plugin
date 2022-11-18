@@ -44,15 +44,17 @@ abstract class KotlinFilesMigrationStep(
     kotlinEnvironment = KotlinEnvironment(listOf(migrationManager.projectRoot), classpath)
     for (ktFile in kotlinEnvironment.ktFiles) {
       logd("Processing file${if (migrationManager.dryRun) " (dry run)" else ""}: ${ktFile.virtualFilePath}")
-      processKtFile(ktFile)
-      if (migrationManager.dryRun) {
-        logd(ktFile.text)
-      } else {
-        File(ktFile.virtualFilePath).writeText(ktFile.text)
-        logd("Wrote file: ${ktFile.virtualFilePath}")
+      val changed = processKtFile(ktFile)
+      if (changed) {
+        if (migrationManager.dryRun) {
+          logd(ktFile.text)
+        } else {
+          File(ktFile.virtualFilePath).writeText(ktFile.text)
+          logd("Wrote file: ${ktFile.virtualFilePath}")
+        }
       }
     }
   }
 
-  abstract fun processKtFile(ktFile: KtFile)
+  abstract fun processKtFile(ktFile: KtFile): Boolean
 }
