@@ -1,7 +1,9 @@
 package com.apollographql.ijplugin.migration.step
 
+import com.apollographql.ijplugin.migration.KotlinEnvironment
 import com.apollographql.ijplugin.migration.MigrationManager
 import com.apollographql.ijplugin.migration.logi
+import com.apollographql.ijplugin.migration.util.change
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtImportList
@@ -9,16 +11,15 @@ import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 
 class RenamePackagesStep(
   migrationManager: MigrationManager,
-  classpath: List<String>,
+  kotlinEnvironment: KotlinEnvironment,
   private val packagesToRename: Collection<PackageName>,
-) : KotlinFilesMigrationStep(migrationManager, classpath) {
+) : KotlinFilesMigrationStep(migrationManager, kotlinEnvironment) {
   class PackageName(
     val oldName: String,
     val newName: String,
   )
 
-  override fun processKtFile(ktFile: KtFile): Boolean {
-    var changed = false
+  override fun processKtFile(ktFile: KtFile) {
     ktFile.accept(
       object : KtTreeVisitorVoid() {
         override fun visitImportList(importList: KtImportList) {
@@ -29,8 +30,7 @@ class RenamePackagesStep(
               if (importPath.pathStr.startsWith(packageToRename.oldName)) {
                 logi("Found package to rename: ${packageToRename.oldName} -> ${packageToRename.newName} in ${ktFile.name} at ${importDirective.textOffset}")
                 val newFqName = FqName(importPath.fqName.asString().replaceFirst(packageToRename.oldName, packageToRename.newName))
-                importDirective.replace(ktPsiFactory.createImportDirective(importPath.copy(newFqName)))
-                changed = true
+                importDirective.change(ktPsiFactory.createImportDirective(importPath.copy(newFqName)))
                 break
               }
             }
@@ -38,6 +38,5 @@ class RenamePackagesStep(
         }
       }
     )
-    return changed
   }
 }

@@ -8,6 +8,7 @@ import java.io.File
 fun main() {
   // TODO include test project in this project
   val projectRootDir = File("/Users/bod/gitrepo/apollo-android-v2-sample-for-intellij-plugin/app/src/main/kotlin")
+//  val projectRootDir = File("/Users/bod/gitrepo/HedvigInsurance/app")
 
   // TODO don't have these hard-coded
   val classpath = listOf(
@@ -19,11 +20,13 @@ fun main() {
     "/Users/bod/.gradle/caches/modules-2/files-2.1/com.apollographql.apollo/apollo-api-jvm/2.5.13/73b7b3a005a753e9d86d0d22c09fc6ae136728d6/apollo-api-jvm-2.5.13.jar",
   )
 
-  val migrationManager = MigrationManager(projectRootDir, dryRun = false)
+  val kotlinEnvironment = KotlinEnvironment(listOf(projectRootDir), classpath)
+
+  val migrationManager = MigrationManager(projectRootDir, dryRun = true)
   migrationManager.addSteps(
     RenameMethodsStep(
       migrationManager = migrationManager,
-      classpath = classpath,
+      kotlinEnvironment = kotlinEnvironment,
       methodsToRename = setOf(
         RenameMethodsStep.MethodName("com.apollographql.apollo.ApolloClient", "mutate", "mutation"),
         RenameMethodsStep.MethodName("com.apollographql.apollo.ApolloClient", "subscribe", "subscription"),
@@ -32,7 +35,7 @@ fun main() {
 
     RenameClassesStep(
       migrationManager = migrationManager,
-      classpath = classpath,
+      kotlinEnvironment = kotlinEnvironment,
       classesToRename = setOf(
         RenameClassesStep.ClassName("com.apollographql.apollo.api.Response", "ApolloResponse"),
       )
@@ -41,7 +44,7 @@ fun main() {
     // Renaming packages as the last step as previous steps depend on imports being correct
     RenamePackagesStep(
       migrationManager = migrationManager,
-      classpath = classpath,
+      kotlinEnvironment = kotlinEnvironment,
       packagesToRename = setOf(
         RenamePackagesStep.PackageName("com.apollographql.apollo", "com.apollographql.apollo3"),
       )

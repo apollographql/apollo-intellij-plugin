@@ -4,7 +4,7 @@ import com.apollographql.ijplugin.migration.step.MigrationStep
 import java.io.File
 
 class MigrationManager(
-  val projectRoot: File,
+  val projectRootDir: File,
   val dryRun: Boolean = true,
 ) {
   private val migrationSteps = mutableListOf<MigrationStep>()

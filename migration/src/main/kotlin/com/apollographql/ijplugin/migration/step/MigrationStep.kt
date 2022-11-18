@@ -4,6 +4,7 @@ import com.apollographql.ijplugin.migration.KotlinEnvironment
 import com.apollographql.ijplugin.migration.MigrationManager
 import com.apollographql.ijplugin.migration.logd
 import com.apollographql.ijplugin.migration.util.getFilesWithExtension
+import com.apollographql.ijplugin.migration.util.isDirty
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -19,7 +20,7 @@ abstract class ProjectFilesMigrationStep(
   private val fileExtensions: Set<String>,
 ) : MigrationStep {
   override fun process() {
-    for (file in migrationManager.projectRoot.getFilesWithExtension(fileExtensions)) {
+    for (file in migrationManager.projectRootDir.getFilesWithExtension(fileExtensions)) {
       logd("Processing file${if (migrationManager.dryRun) " (dry run)" else ""}: $file")
       processFile(file)
     }
@@ -30,10 +31,8 @@ abstract class ProjectFilesMigrationStep(
 
 abstract class KotlinFilesMigrationStep(
   final override val migrationManager: MigrationManager,
-  private val classpath: List<String>,
+  private val kotlinEnvironment: KotlinEnvironment,
 ) : MigrationStep {
-  private lateinit var kotlinEnvironment: KotlinEnvironment
-
   protected val bindingContext: BindingContext
     get() = kotlinEnvironment.bindingContext
 
@@ -41,20 +40,22 @@ abstract class KotlinFilesMigrationStep(
     get() = kotlinEnvironment.ktPsiFactory
 
   override fun process() {
-    kotlinEnvironment = KotlinEnvironment(listOf(migrationManager.projectRoot), classpath)
     for (ktFile in kotlinEnvironment.ktFiles) {
       logd("Processing file${if (migrationManager.dryRun) " (dry run)" else ""}: ${ktFile.virtualFilePath}")
-      val changed = processKtFile(ktFile)
-      if (changed) {
+      processKtFile(ktFile)
+      if (ktFile.isDirty()) {
         if (migrationManager.dryRun) {
+          logd("Changed contents:")
           logd(ktFile.text)
         } else {
           File(ktFile.virtualFilePath).writeText(ktFile.text)
           logd("Wrote file: ${ktFile.virtualFilePath}")
         }
+      } else {
+        logd("No changes")
       }
     }
   }
 
-  abstract fun processKtFile(ktFile: KtFile): Boolean
+  abstract fun processKtFile(ktFile: KtFile)
 }

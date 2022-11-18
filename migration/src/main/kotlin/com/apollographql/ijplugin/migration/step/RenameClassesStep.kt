@@ -1,7 +1,9 @@
 package com.apollographql.ijplugin.migration.step
 
+import com.apollographql.ijplugin.migration.KotlinEnvironment
 import com.apollographql.ijplugin.migration.MigrationManager
 import com.apollographql.ijplugin.migration.logi
+import com.apollographql.ijplugin.migration.util.change
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtFile
@@ -16,16 +18,15 @@ import org.jetbrains.kotlin.types.TypeUtils
 
 class RenameClassesStep(
   migrationManager: MigrationManager,
-  classpath: List<String>,
+  kotlinEnvironment: KotlinEnvironment,
   private val classesToRename: Collection<ClassName>,
-) : KotlinFilesMigrationStep(migrationManager, classpath) {
+) : KotlinFilesMigrationStep(migrationManager, kotlinEnvironment) {
   class ClassName(
     val oldFQName: String,
     val newSimpleName: String,
   )
 
-  override fun processKtFile(ktFile: KtFile): Boolean {
-    var changed = false
+  override fun processKtFile(ktFile: KtFile) {
     ktFile.accept(
       object : KtTreeVisitorVoid() {
         override fun visitTypeReference(typeReference: KtTypeReference) {
@@ -36,8 +37,7 @@ class RenameClassesStep(
           for (classToRename in classesToRename) {
             if (typeFqn == classToRename.oldFQName) {
               logi("Found class to rename: ${classToRename.oldFQName} -> ${classToRename.newSimpleName} in ${ktFile.name} at ${typeReference.textOffset}")
-              (typeReference.typeElement as? KtUserType)?.referenceExpression?.replace(ktPsiFactory.createType(classToRename.newSimpleName))
-              changed = true
+              (typeReference.typeElement as? KtUserType)?.referenceExpression?.change(ktPsiFactory.createType(classToRename.newSimpleName))
               break
             }
           }
@@ -54,8 +54,7 @@ class RenameClassesStep(
               if (importPath.pathStr == classToRename.oldFQName) {
                 logi("Found class to rename: ${classToRename.oldFQName} -> ${classToRename.newSimpleName} in ${ktFile.name} at ${importDirective.textOffset}")
                 val newFqName = importPath.fqName.parent().child(Name.identifier(classToRename.newSimpleName))
-                importDirective.replace(ktPsiFactory.createImportDirective(importPath.copy(newFqName)))
-                changed = true
+                importDirective.change(ktPsiFactory.createImportDirective(importPath.copy(newFqName)))
                 break
               }
             }
@@ -63,6 +62,5 @@ class RenameClassesStep(
         }
       }
     )
-    return changed
   }
 }

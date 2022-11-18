@@ -1,7 +1,9 @@
 package com.apollographql.ijplugin.migration.step
 
+import com.apollographql.ijplugin.migration.KotlinEnvironment
 import com.apollographql.ijplugin.migration.MigrationManager
 import com.apollographql.ijplugin.migration.logi
+import com.apollographql.ijplugin.migration.util.change
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
@@ -11,17 +13,16 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 
 class RenameMethodsStep(
   migrationManager: MigrationManager,
-  classpath: List<String>,
+  kotlinEnvironment: KotlinEnvironment,
   private val methodsToRename: Collection<MethodName>,
-) : KotlinFilesMigrationStep(migrationManager, classpath) {
+) : KotlinFilesMigrationStep(migrationManager, kotlinEnvironment) {
   class MethodName(
     val className: String,
     val oldMethodName: String,
     val newMethodName: String,
   )
 
-  override fun processKtFile(ktFile: KtFile): Boolean {
-    var changed = false
+  override fun processKtFile(ktFile: KtFile) {
     ktFile.accept(
       object : KtTreeVisitorVoid() {
         override fun visitCallExpression(expression: KtCallExpression) {
@@ -33,8 +34,7 @@ class RenameMethodsStep(
               val containingDeclarationName = resolvedCall.resultingDescriptor.containingDeclaration.fqNameSafe.asString()
               if (containingDeclarationName == methodToRename.className) {
                 logi("Found method to rename: ${methodToRename.className}.${methodToRename.oldMethodName} -> ${methodToRename.newMethodName} in ${ktFile.name} at ${expression.textOffset}")
-                expression.calleeExpression?.replace(ktPsiFactory.createExpression(methodToRename.newMethodName))
-                changed = true
+                expression.calleeExpression?.change(ktPsiFactory.createExpression(methodToRename.newMethodName))
                 break
               }
             }
@@ -42,6 +42,5 @@ class RenameMethodsStep(
         }
       }
     )
-    return changed
   }
 }
