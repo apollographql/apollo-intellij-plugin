@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.migration
 
+import com.apollographql.ijplugin.migration.step.MigrationStep
 import java.io.File
 
 class MigrationManager(

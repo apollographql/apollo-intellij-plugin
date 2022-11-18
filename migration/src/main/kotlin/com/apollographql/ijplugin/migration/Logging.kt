@@ -38,6 +38,22 @@ fun logw(message: String) {
   logger.warn(message)
 }
 
+fun logi(any: Any) {
+  logger.info(any.toString())
+}
+
+fun logi(throwable: Throwable) {
+  logger.info("", throwable)
+}
+
+fun logi(throwable: Throwable, message: String) {
+  logger.info(message, throwable)
+}
+
+fun logi(throwable: Throwable, any: Any) {
+  logger.info(any.toString(), throwable)
+}
+
 fun logw(any: Any) {
   logger.warn(any.toString())
 }
