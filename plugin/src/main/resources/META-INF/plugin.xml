@@ -32,7 +32,7 @@
     </applicationListeners>
 
     <actions>
-        <action id="ApolloV2ToV3MigrationAction" class="com.apollographql.ijplugin.refactoring.ApolloV2ToV3MigrationAction">
+        <action id="ApolloV2ToV3MigrationAction" class="com.apollographql.ijplugin.refactoring.migration.ApolloV2ToV3MigrationAction">
             <add-to-group group-id="RefactoringMenu"/>
         </action>
     </actions>

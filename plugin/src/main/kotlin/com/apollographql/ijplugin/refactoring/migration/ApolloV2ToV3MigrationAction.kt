@@ -1,4 +1,4 @@
-package com.apollographql.ijplugin.refactoring
+package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.util.logd
 import com.intellij.openapi.actionSystem.ActionPlaces

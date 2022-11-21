@@ -1,4 +1,4 @@
-package com.apollographql.ijplugin.refactoring
+package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.util.logd
@@ -9,9 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.GeneratedSourcesFilter
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Ref
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
@@ -19,7 +17,6 @@ import com.intellij.psi.codeStyle.JavaCodeStyleManager
 import com.intellij.psi.impl.migration.PsiMigrationManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.BaseRefactoringProcessor
-import com.intellij.refactoring.migration.MigrationUtil
 import com.intellij.refactoring.ui.UsageViewDescriptorAdapter
 import com.intellij.usageView.UsageInfo
 import org.jetbrains.kotlin.idea.core.ShortenReferences
@@ -33,19 +30,31 @@ import org.jetbrains.kotlin.psi.KtElement
  */
 class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcessor(project) {
   private companion object {
+    private const val apollo2 = "com.apollographql.apollo"
+    private const val apollo3 = "com.apollographql.apollo3"
+
     private val migrationItems = arrayOf(
-      MigrationItem.Package("com.apollographql.apollo", "com.apollographql.apollo3"),
-      MigrationItem.Class("com.apollographql.apollo.api.Response", "com.apollographql.apollo3.api.ApolloResponse"),
-      MigrationItem.MethodName(
-        className = "com.apollographql.apollo.ApolloClient",
+      UpdatePackageName(apollo2, apollo3),
+      UpdateClassName("$apollo2.api.Response", "$apollo3.api.ApolloResponse"),
+      UpdateMethodName(
+        className = "$apollo2.ApolloClient",
         oldMethodName = "mutate",
         newMethodName = "mutation"
       ),
-      MigrationItem.MethodName(
-        className = "com.apollographql.apollo.ApolloClient",
+      UpdateMethodName(
+        className = "$apollo2.ApolloClient",
         oldMethodName = "subscribe",
         newMethodName = "subscription"
       ),
+      UpdateMethodName(
+        className = "$apollo2.ApolloClient",
+        oldMethodName = "builder",
+        newMethodName = "Builder"
+      ),
+      RemoveMethodCall(
+        containingDeclarationName = "$apollo2.coroutines.CoroutinesExtensionsKt",
+        methodName = "await",
+      )
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
@@ -163,70 +172,6 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     }
     refsToShorten.clear()
     finishMigration()
-  }
-
-  private sealed interface MigrationItem {
-    fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo>
-    fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement?
-
-    class Package(
-      val oldName: String,
-      val newName: String,
-    ) : MigrationItem {
-      override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-        return MigrationUtil.findPackageUsages(project, migration, oldName, searchScope)
-      }
-
-      override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
-        val element = usage.element
-        if (element == null || !element.isValid) return null
-        val newPackage = findOrCreatePackage(project, migration, newName)
-        element.bindReferencesToElement(newPackage)
-        return null
-      }
-    }
-
-    class Class(
-      val oldName: String,
-      val newName: String,
-    ) : MigrationItem {
-      override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-        return MigrationUtil.findClassUsages(project, migration, oldName, searchScope)
-      }
-
-      override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
-        val element = usage.element
-        if (element == null || !element.isValid) return null
-        val newClass = findOrCreateClass(project, migration, newName)
-        return element.bindReferencesToElement(newClass)
-      }
-    }
-
-    class MethodName(
-      val className: String,
-      val oldMethodName: String,
-      val newMethodName: String,
-    ) : MigrationItem {
-      override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-        return findMethodReferences(project = project, className = className, methodName = oldMethodName).map { UsageInfo(it) }
-          .toTypedArray()
-      }
-
-      override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
-        val element = usage.element
-        if (element == null || !element.isValid) return null
-        val newMethodReference = JavaPsiFacade.getInstance(project).elementFactory.createExpressionFromText(newMethodName, null)
-        val methodIdentifier = element.children.firstOrNull { it is PsiIdentifier && it.text == oldMethodName }
-        if (methodIdentifier != null) {
-          // Java
-          methodIdentifier.replace(newMethodReference)
-        } else {
-          // Kotlin
-          element.replace(newMethodReference)
-        }
-        return null
-      }
-    }
   }
 
   private class MigrationItemUsageInfo(
