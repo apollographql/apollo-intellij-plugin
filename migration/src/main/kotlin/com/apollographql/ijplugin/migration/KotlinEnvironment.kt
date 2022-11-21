@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin.migration
 
 import com.apollographql.ijplugin.migration.util.getFilesWithExtension
+import com.apollographql.ijplugin.migration.util.logd
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback

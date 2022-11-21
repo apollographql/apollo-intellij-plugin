@@ -2,9 +2,9 @@ package com.apollographql.ijplugin.migration.step
 
 import com.apollographql.ijplugin.migration.KotlinEnvironment
 import com.apollographql.ijplugin.migration.MigrationManager
-import com.apollographql.ijplugin.migration.logd
 import com.apollographql.ijplugin.migration.util.getFilesWithExtension
 import com.apollographql.ijplugin.migration.util.isDirty
+import com.apollographql.ijplugin.migration.util.logd
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.BindingContext

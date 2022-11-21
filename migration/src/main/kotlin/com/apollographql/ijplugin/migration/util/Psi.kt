@@ -7,10 +7,16 @@ import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 
 private val DIRTY = Key<Boolean>("DIRTY")
 
-fun PsiElement.change(element: PsiElement) {
-  markContainingKtFileDirty()
+fun PsiElement.replace(element: PsiElement, markDirty: Boolean) {
+  if (markDirty) markContainingKtFileDirty()
   replace(element)
 }
+
+fun PsiElement.delete(markDirty: Boolean) {
+  if (markDirty) markContainingKtFileDirty()
+  delete()
+}
+
 
 fun PsiElement.markContainingKtFileDirty() {
   containingKtFile()?.putUserData(DIRTY, true)

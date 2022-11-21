@@ -1,4 +1,4 @@
-package com.apollographql.ijplugin.migration
+package com.apollographql.ijplugin.migration.util
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -7,6 +7,8 @@ import org.slf4j.simple.SimpleLogger
 private val logger: Logger = run {
   System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE")
   System.setProperty(SimpleLogger.LOG_FILE_KEY, "System.out")
+  System.setProperty(SimpleLogger.SHOW_DATE_TIME_KEY, "true")
+  System.setProperty(SimpleLogger.DATE_TIME_FORMAT_KEY, "yyyy-MM-dd HH:mm:ss")
   LoggerFactory.getLogger("Apollo")
 }
 

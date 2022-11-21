@@ -2,8 +2,8 @@ package com.apollographql.ijplugin.migration.step
 
 import com.apollographql.ijplugin.migration.KotlinEnvironment
 import com.apollographql.ijplugin.migration.MigrationManager
-import com.apollographql.ijplugin.migration.logi
-import com.apollographql.ijplugin.migration.util.change
+import com.apollographql.ijplugin.migration.util.logi
+import com.apollographql.ijplugin.migration.util.replace
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtImportList
@@ -30,7 +30,7 @@ class RenamePackagesStep(
               if (importPath.pathStr.startsWith(packageToRename.oldName)) {
                 logi("Found package to rename: ${packageToRename.oldName} -> ${packageToRename.newName} in ${ktFile.name} at ${importDirective.textOffset}")
                 val newFqName = FqName(importPath.fqName.asString().replaceFirst(packageToRename.oldName, packageToRename.newName))
-                importDirective.change(ktPsiFactory.createImportDirective(importPath.copy(newFqName)))
+                importDirective.replace(ktPsiFactory.createImportDirective(importPath.copy(newFqName)), true)
                 break
               }
             }
