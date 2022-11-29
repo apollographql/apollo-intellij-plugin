@@ -51,10 +51,15 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         oldMethodName = "builder",
         newMethodName = "Builder"
       ),
-      RemoveMethodCall(
+      UpdateMethodName(
+        className = "$apollo2.coroutines.CoroutinesExtensionsKt",
+        oldMethodName = "await",
+        newMethodName = "execute"
+      ),
+      RemoveMethodImport(
         containingDeclarationName = "$apollo2.coroutines.CoroutinesExtensionsKt",
         methodName = "await",
-      )
+      ),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")

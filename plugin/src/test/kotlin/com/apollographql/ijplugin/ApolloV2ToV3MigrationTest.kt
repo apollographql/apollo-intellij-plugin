@@ -10,7 +10,6 @@ import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import com.intellij.testFramework.fixtures.MavenDependencyUtil
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -43,10 +42,14 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   }
 
   @Test
-  @Ignore
-  fun testImports() {
-    runMigration()
-  }
+  fun testUpdatePackageName() = runMigration()
+
+  @Test
+  fun testUpdateMethodName() = runMigration()
+
+  @Test
+  fun testUpdateClassName() = runMigration()
+
 
   private fun runMigration() {
     myFixture.configureByFile(getTestName(false) + "_before.kt")

@@ -80,9 +80,10 @@ class UpdateMethodName(
   }
 }
 
-class RemoveMethodCall(
+open class RemoveMethodCall(
   private val containingDeclarationName: String,
   private val methodName: String,
+  private val removeImportsOnly: Boolean,
 ) : MigrationItem {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
     return findMethodReferences(project = project, className = containingDeclarationName, methodName = methodName).map { UsageInfo(it) }
@@ -97,6 +98,7 @@ class RemoveMethodCall(
       // Reference is an import
       importDirective.delete()
     } else {
+      if (removeImportsOnly) return null
       val dotQualifiedExpression = element.parentOfType<KtDotQualifiedExpression>()
       if (dotQualifiedExpression != null) {
         // Reference is a method call
@@ -107,3 +109,8 @@ class RemoveMethodCall(
     return null
   }
 }
+
+class RemoveMethodImport(
+  containingDeclarationName: String,
+  methodName: String,
+) : RemoveMethodCall(containingDeclarationName, methodName, removeImportsOnly = true)
