@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.refactoring.bindReferencesToElement
+import com.apollographql.ijplugin.refactoring.findFieldReferences
 import com.apollographql.ijplugin.refactoring.findMethodReferences
 import com.apollographql.ijplugin.refactoring.findOrCreateClass
 import com.apollographql.ijplugin.refactoring.findOrCreatePackage
@@ -83,7 +84,7 @@ class UpdateMethodName(
 open class RemoveMethodCall(
   private val containingDeclarationName: String,
   private val methodName: String,
-  private val removeImportsOnly: Boolean,
+  private val removeImportsOnly: Boolean = false,
 ) : MigrationItem {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
     return findMethodReferences(project = project, className = containingDeclarationName, methodName = methodName).map { UsageInfo(it) }
@@ -114,3 +115,29 @@ class RemoveMethodImport(
   containingDeclarationName: String,
   methodName: String,
 ) : RemoveMethodCall(containingDeclarationName, methodName, removeImportsOnly = true)
+
+class UpdateFieldName(
+  private val className: String,
+  private val oldFieldName: String,
+  private val newFieldName: String,
+) : MigrationItem {
+  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
+    return findFieldReferences(project = project, className = className, fieldName = oldFieldName).map { UsageInfo(it) }
+      .toTypedArray()
+  }
+
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+    val element = usage.element
+    if (element == null || !element.isValid) return null
+    val newFieldReference = JavaPsiFacade.getInstance(project).elementFactory.createExpressionFromText(newFieldName, null)
+    val fieldIdentifier = element.children.firstOrNull { it is PsiIdentifier && it.text == oldFieldName }
+    if (fieldIdentifier != null) {
+      // Java
+      fieldIdentifier.replace(newFieldReference)
+    } else {
+      // Kotlin
+      element.replace(newFieldReference)
+    }
+    return null
+  }
+}

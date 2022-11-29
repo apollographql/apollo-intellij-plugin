@@ -36,30 +36,22 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     private val migrationItems = arrayOf(
       UpdatePackageName(apollo2, apollo3),
       UpdateClassName("$apollo2.api.Response", "$apollo3.api.ApolloResponse"),
-      UpdateMethodName(
-        className = "$apollo2.ApolloClient",
-        oldMethodName = "mutate",
-        newMethodName = "mutation"
-      ),
-      UpdateMethodName(
-        className = "$apollo2.ApolloClient",
-        oldMethodName = "subscribe",
-        newMethodName = "subscription"
-      ),
-      UpdateMethodName(
-        className = "$apollo2.ApolloClient",
-        oldMethodName = "builder",
-        newMethodName = "Builder"
-      ),
-      UpdateMethodName(
-        className = "$apollo2.coroutines.CoroutinesExtensionsKt",
-        oldMethodName = "await",
-        newMethodName = "execute"
-      ),
-      RemoveMethodImport(
-        containingDeclarationName = "$apollo2.coroutines.CoroutinesExtensionsKt",
-        methodName = "await",
-      ),
+      UpdateClassName("$apollo2.api.ApolloQueryCall", "$apollo3.api.ApolloCall"),
+      UpdateMethodName("$apollo2.ApolloClient", "mutate", "mutation"),
+      UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
+      UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
+      UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
+
+      RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "await"),
+
+      // Http Cache
+      UpdateMethodName("$apollo2.ApolloQueryCall.Builder", "httpCachePolicy", "httpFetchPolicy"),
+      UpdateClassName("$apollo2.api.cache.http.HttpCachePolicy", "$apollo3.cache.http.HttpFetchPolicy"),
+      UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "CACHE_ONLY", "CacheOnly"),
+      UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "NETWORK_ONLY", "NetworkOnly"),
+      UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "CACHE_FIRST", "CacheFirst"),
+      UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "NETWORK_FIRST", "NetworkFirst"),
+      RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
