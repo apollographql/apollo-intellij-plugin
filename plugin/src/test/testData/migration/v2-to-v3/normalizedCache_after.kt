@@ -9,6 +9,5 @@ suspend fun main() {
   val myQuery: Query<*, *, *>? = null
     apolloClient!!
       .query(myQuery!!)
-      .toBuilder()
       .fetchPolicy(com.apollographql.apollo3.cache.normalized.FetchPolicy.NetworkOnly)
 }

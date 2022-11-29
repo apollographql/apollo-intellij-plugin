@@ -36,13 +36,11 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     private val migrationItems = arrayOf(
       UpdatePackageName(apollo2, apollo3),
       UpdateClassName("$apollo2.api.Response", "$apollo3.api.ApolloResponse"),
-      UpdateClassName("$apollo2.api.ApolloQueryCall", "$apollo3.api.ApolloCall"),
+      UpdateClassName("$apollo2.ApolloQueryCall", "$apollo3.ApolloCall"),
       UpdateMethodName("$apollo2.ApolloClient", "mutate", "mutation"),
       UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
       UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
-
-      RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "await"),
 
       // Http cache
       UpdateMethodName("$apollo2.ApolloQueryCall.Builder", "httpCachePolicy", "httpFetchPolicy"),
@@ -60,9 +58,9 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "CACHE_FIRST", "CacheFirst"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "NETWORK_FIRST", "NetworkFirst"),
 
+      RemoveMethodCall("$apollo2.ApolloQueryCall", "toBuilder"),
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
-
-      )
+    )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
   }
