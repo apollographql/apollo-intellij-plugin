@@ -53,6 +53,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testHttpCache() = runMigration()
 
+  @Test
+  fun testNormalizedCache() = runMigration()
+
 
   private fun runMigration() {
     myFixture.configureByFile(getTestName(false) + "_before.kt")
