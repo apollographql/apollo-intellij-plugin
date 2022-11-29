@@ -1,4 +1,8 @@
 .gradle
-.idea
 .qodana
 build
+
+.idea/*
+!.idea/codeStyles/
+
+.DS_Store
