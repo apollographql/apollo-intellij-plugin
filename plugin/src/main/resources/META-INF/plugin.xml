@@ -2,7 +2,9 @@
 <idea-plugin>
     <id>com.apollographql.ijplugin</id>
     <name>Apollo GraphQL</name>
-    <vendor url="https://apollographql.com">Apollo GraphQL</vendor>
+    <!-- Use the id that is defined for the Organization in the Marketplace -->
+    <!-- See https://plugins.jetbrains.com/docs/marketplace/organizations.html#4b3f843d -->
+    <vendor url="https://apollographql.com" email="jetbrains-marketplace@apollographql.com">apollographql</vendor>
 
     <!-- In most cases, this should be the same list as what is listed under gradle.properties/platformPlugins -->
     <!-- See https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html#declaring-plugin-dependencies -->
