@@ -1,6 +1,12 @@
 package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.refactoring.migration.item.MigrationItem
+import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.util.logd
 import com.intellij.history.LocalHistory
 import com.intellij.openapi.application.ApplicationManager
@@ -147,9 +153,9 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     val action = LocalHistory.getInstance().startAction(commandName)
     try {
       for (usage in usages) {
-        val element = (usage as MigrationItemUsageInfo).migrationItem.performRefactoring(myProject, migration!!, usage)
-        if (element != null) {
-          refsToShorten += smartPointerManager.createSmartPsiElementPointer(element)
+        val elementToShorten = (usage as MigrationItemUsageInfo).migrationItem.performRefactoring(myProject, migration!!, usage)
+        if (elementToShorten != null) {
+          refsToShorten += smartPointerManager.createSmartPsiElementPointer(elementToShorten)
         }
       }
     } finally {
