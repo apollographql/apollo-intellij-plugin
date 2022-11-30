@@ -56,6 +56,13 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testNormalizedCache() = runMigration()
 
+  @Test
+  fun testUpgradeGradlePluginInBuildGradleKts() {
+    myFixture.configureByFile("build.gradle.kts")
+    ApolloV2ToV3MigrationProcessor(project).run()
+    FileDocumentManager.getInstance().saveAllDocuments()
+    myFixture.checkResultByFile("build_after.gradle.kts")
+  }
 
   private fun runMigration() {
     myFixture.configureByFile(getTestName(false) + "_before.kt")

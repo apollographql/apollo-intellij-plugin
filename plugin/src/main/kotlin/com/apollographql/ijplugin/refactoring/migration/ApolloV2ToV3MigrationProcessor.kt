@@ -5,6 +5,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.MigrationItem
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePlugin
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.util.logd
@@ -66,6 +67,9 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
       RemoveMethodCall("$apollo2.ApolloQueryCall", "toBuilder"),
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
+
+      // Gradle
+      UpdateGradlePlugin("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
@@ -100,6 +104,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     migration = startMigration()
     // This will create classes / packages that we're finding references to in case they don't exist.
     // It must be done in doRun() as this is called from the EDT whereas findUsages() is not.
+    // TODO this is slow and freezes the UI -> instead of calling findUsages, it is only necessary to create the classes/packages
     for (migrationItem in migrationItems) {
       migrationItem.findUsages(myProject, migration!!, searchScope)
     }

@@ -22,7 +22,7 @@ class UpdateFieldName(
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
-    val newFieldReference = JavaPsiFacade.getInstance(project).elementFactory.createExpressionFromText(newFieldName, null)
+    val newFieldReference = JavaPsiFacade.getElementFactory(project).createExpressionFromText(newFieldName, null)
     val fieldIdentifier = element.children.firstOrNull { it is PsiIdentifier && it.text == oldFieldName }
     if (fieldIdentifier != null) {
       // Java

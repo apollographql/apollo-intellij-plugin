@@ -22,7 +22,7 @@ class UpdateMethodName(
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
-    val newMethodReference = JavaPsiFacade.getInstance(project).elementFactory.createExpressionFromText(newMethodName, null)
+    val newMethodReference = JavaPsiFacade.getElementFactory(project).createExpressionFromText(newMethodName, null)
     val methodIdentifier = element.children.firstOrNull { it is PsiIdentifier && it.text == oldMethodName }
     if (methodIdentifier != null) {
       // Java
