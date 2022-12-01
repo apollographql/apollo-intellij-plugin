@@ -13,8 +13,8 @@ class UpdatePackageName(
   private val oldName: String,
   private val newName: String,
 ) : MigrationItem {
-  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-    return MigrationUtil.findPackageUsages(project, migration, oldName, searchScope)
+  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
+    return MigrationUtil.findPackageUsages(project, migration, oldName, searchScope).toMigrationItemUsageInfo()
   }
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {

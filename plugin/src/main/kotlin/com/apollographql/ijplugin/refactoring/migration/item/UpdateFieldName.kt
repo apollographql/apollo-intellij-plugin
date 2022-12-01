@@ -14,9 +14,8 @@ class UpdateFieldName(
   private val oldFieldName: String,
   private val newFieldName: String,
 ) : MigrationItem {
-  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-    return findFieldReferences(project = project, className = className, fieldName = oldFieldName).map { UsageInfo(it) }
-      .toTypedArray()
+  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
+    return findFieldReferences(project = project, className = className, fieldName = oldFieldName).toMigrationItemUsageInfo()
   }
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {

@@ -13,6 +13,7 @@
     <depends>org.jetbrains.kotlin</depends>
     <depends>com.intellij.gradle</depends>
     <depends>com.intellij.lang.jsgraphql</depends>
+    <depends>org.toml.lang</depends>
 
     <resource-bundle>messages.ApolloBundle</resource-bundle>
 

@@ -1,11 +1,12 @@
 package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.ApolloBundle
-import com.apollographql.ijplugin.refactoring.migration.item.MigrationItem
+import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
-import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePlugin
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.util.logd
@@ -69,7 +70,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
 
       // Gradle
-      UpdateGradlePlugin("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
+      UpdateGradlePluginInBuildKts("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
+      UpdateGradlePluginInToml("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
@@ -122,12 +124,6 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
             usageInfo.virtualFile?.let {
               GeneratedSourcesFilter.isGeneratedSourceByAnyFilter(it, myProject)
             } == true
-          }
-          .map { usageInfo ->
-            MigrationItemUsageInfo(
-              source = usageInfo,
-              migrationItem = migrationItem
-            )
           }
       }
         .toTypedArray()
@@ -189,13 +185,5 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     refsToShorten.clear()
     finishMigration()
   }
-
-  private class MigrationItemUsageInfo(
-    source: UsageInfo,
-    val migrationItem: MigrationItem,
-  ) : UsageInfo(
-    source.element!!,
-    source.rangeInElement!!.startOffset,
-    source.rangeInElement!!.endOffset
-  )
 }
+

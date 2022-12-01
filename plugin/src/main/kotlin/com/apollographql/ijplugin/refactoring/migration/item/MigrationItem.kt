@@ -7,6 +7,6 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.usageView.UsageInfo
 
 sealed interface MigrationItem {
-  fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo>
+  fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo>
   fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement?
 }

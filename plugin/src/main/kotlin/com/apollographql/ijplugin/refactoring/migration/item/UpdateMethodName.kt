@@ -14,9 +14,8 @@ class UpdateMethodName(
   private val oldMethodName: String,
   private val newMethodName: String,
 ) : MigrationItem {
-  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-    return findMethodReferences(project = project, className = className, methodName = oldMethodName).map { UsageInfo(it) }
-      .toTypedArray()
+  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
+    return findMethodReferences(project = project, className = className, methodName = oldMethodName).toMigrationItemUsageInfo()
   }
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {

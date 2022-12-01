@@ -55,7 +55,10 @@ tasks {
       targetCompatibility = it
     }
     withType<KotlinCompile> {
-      kotlinOptions.jvmTarget = it
+      kotlinOptions {
+        jvmTarget = it
+        freeCompilerArgs = listOf("-Xcontext-receivers")
+      }
     }
   }
 

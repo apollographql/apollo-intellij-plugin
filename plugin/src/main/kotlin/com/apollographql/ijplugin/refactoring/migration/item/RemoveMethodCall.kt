@@ -15,9 +15,12 @@ open class RemoveMethodCall(
   private val methodName: String,
   private val removeImportsOnly: Boolean = false,
 ) : MigrationItem {
-  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): Array<UsageInfo> {
-    return findMethodReferences(project = project, className = containingDeclarationName, methodName = methodName).map { UsageInfo(it) }
-      .toTypedArray()
+  override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
+    return findMethodReferences(
+      project = project,
+      className = containingDeclarationName,
+      methodName = methodName
+    ).toMigrationItemUsageInfo()
   }
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {

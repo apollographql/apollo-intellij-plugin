@@ -64,6 +64,14 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
     myFixture.checkResultByFile("build_after.gradle.kts")
   }
 
+  @Test
+  fun testUpgradeGradlePluginInLibsVersionsToml() {
+    myFixture.configureByFile("libs.versions.toml")
+    ApolloV2ToV3MigrationProcessor(project).run()
+    FileDocumentManager.getInstance().saveAllDocuments()
+    myFixture.checkResultByFile("libs_after.versions.toml")
+  }
+
   private fun runMigration() {
     myFixture.configureByFile(getTestName(false) + "_before.kt")
     ApolloV2ToV3MigrationProcessor(project).run()
