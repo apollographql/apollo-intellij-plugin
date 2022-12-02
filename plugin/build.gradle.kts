@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -118,5 +120,14 @@ tasks {
     // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
     // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
     channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
+  }
+
+  withType<AbstractTestTask> {
+    testLogging {
+      exceptionFormat = TestExceptionFormat.FULL
+      events.add(TestLogEvent.PASSED)
+      events.add(TestLogEvent.FAILED)
+      showStandardStreams = true
+    }
   }
 }
