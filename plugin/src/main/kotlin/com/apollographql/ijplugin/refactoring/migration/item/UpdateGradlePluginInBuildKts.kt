@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
+import com.apollographql.ijplugin.util.quoted
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -11,6 +12,7 @@ import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
@@ -36,7 +38,7 @@ open class UpdateGradlePluginInBuildKts(
             if (dependencyText == oldPluginId) {
               val parent = expression.parent
               if (parent is KtBinaryExpression || parent is KtDotQualifiedExpression) {
-                // id("xxx") version "yyy"  /  id("xxx").version("yyy")
+                // id("xxx") version yyy  /  id("xxx").version(yyy)
                 usages.add(parent.toMigrationItemUsageInfo())
               } else {
                 usages.add(expression.toMigrationItemUsageInfo())
@@ -52,12 +54,48 @@ open class UpdateGradlePluginInBuildKts(
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
-    if (element is KtBinaryExpression || element is KtDotQualifiedExpression) {
-      // id("xxx") version "yyy"  /  id("xxx").version("yyy")
-      element.replace(KtPsiFactory(project).createExpression("""id("$newPluginId").version("$newPluginVersion")"""))
-    } else {
-      // id("xxx")
-      element.replace(KtPsiFactory(project).createExpression("""id("$newPluginId")"""))
+    when (element) {
+      is KtBinaryExpression -> {
+        // id("xxx") version yyy
+        // If yyy is a simple String (a hardcoded version), replace it with the new version, otherwise leave it alone but add a comment
+        val versionStringTemplateEntries = (element.right as? KtStringTemplateExpression)?.entries
+        val versionIsHardcoded = versionStringTemplateEntries?.size == 1 && versionStringTemplateEntries[0] is KtLiteralStringTemplateEntry
+        if (versionIsHardcoded) {
+          element.replace(KtPsiFactory(project).createExpression("""id("$newPluginId") version "$newPluginVersion""""))
+        } else {
+          // Replace id
+          (element.left as? KtCallExpression)?.valueArguments?.firstOrNull()?.replace(
+            KtPsiFactory(project).createExpression(newPluginId.quoted())
+          )
+          // Add comment
+          val comment = KtPsiFactory(project).createComment("// TODO: Update version to $newPluginVersion")
+          element.parent.addBefore(comment, element)
+        }
+      }
+
+      is KtDotQualifiedExpression -> {
+        // id("xxx").version(yyy)
+        // If yyy is a simple String (a hardcoded version), replace it with the new version, otherwise leave it alone but add a comment
+        val versionCallExpression = element.selectorExpression as? KtCallExpression
+        val versionStringTemplateEntries = (versionCallExpression?.valueArgumentList?.arguments?.firstOrNull()
+          ?.children?.firstOrNull() as? KtStringTemplateExpression)?.entries
+        val versionIsHardcoded = versionStringTemplateEntries?.size == 1 && versionStringTemplateEntries[0] is KtLiteralStringTemplateEntry
+        if (versionIsHardcoded) {
+          element.replace(KtPsiFactory(project).createExpression("""id("$newPluginId").version("$newPluginVersion")"""))
+        } else {
+          // Replace id
+          (element.receiverExpression as? KtCallExpression)?.valueArguments?.firstOrNull()
+            ?.replace(KtPsiFactory(project).createExpression(newPluginId.quoted()))
+          // Add comment
+          val comment = KtPsiFactory(project).createComment("// TODO: Update version to $newPluginVersion")
+          element.parent.addBefore(comment, element)
+        }
+      }
+
+      else -> {
+        // id("xxx")
+        element.replace(KtPsiFactory(project).createExpression("""id("$newPluginId")"""))
+      }
     }
     return null
   }
