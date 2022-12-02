@@ -42,7 +42,7 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   }
 
   @Test
-  fun testUpdatePackageName() = runMigration()
+  fun updatePackageName() = runMigration()
 
   @Test
   fun testUpdateMethodName() = runMigration()
@@ -57,25 +57,27 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   fun testNormalizedCache() = runMigration()
 
   @Test
-  fun testUpgradeGradlePluginInBuildGradleKts() {
-    myFixture.configureByFile("build.gradle.kts")
-    ApolloV2ToV3MigrationProcessor(project).run()
-    FileDocumentManager.getInstance().saveAllDocuments()
-    myFixture.checkResultByFile("build_after.gradle.kts")
-  }
+  fun testUpgradeGradlePluginInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
 
   @Test
-  fun testUpgradeGradlePluginInLibsVersionsToml() {
-    myFixture.configureByFile("libs.versions.toml")
-    ApolloV2ToV3MigrationProcessor(project).run()
-    FileDocumentManager.getInstance().saveAllDocuments()
-    myFixture.checkResultByFile("libs_after.versions.toml")
-  }
+  fun testUpgradeGradlePluginInLibsVersionsToml() = runMigration(extension = "versions.toml", fileNameInProject = "libs.versions.toml")
 
-  private fun runMigration() {
-    myFixture.configureByFile(getTestName(false) + "_before.kt")
+  @Test
+  fun testRemoveGradleDependenciesInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
+
+  private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
+    if (fileNameInProject != null) {
+      myFixture.copyFileToProject(getTestName(false) + ".$extension", fileNameInProject)
+    } else {
+      myFixture.configureByFile(getTestName(false) + ".$extension")
+    }
+
     ApolloV2ToV3MigrationProcessor(project).run()
     FileDocumentManager.getInstance().saveAllDocuments()
-    myFixture.checkResultByFile(getTestName(false) + "_after.kt")
+    if (fileNameInProject != null) {
+      myFixture.checkResultByFile(fileNameInProject, getTestName(false) + "_after.$extension", true)
+    } else {
+      myFixture.checkResultByFile(getTestName(false) + "_after.$extension", true)
+    }
   }
 }
