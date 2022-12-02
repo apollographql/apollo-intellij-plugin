@@ -18,7 +18,6 @@ import org.junit.runners.JUnit4
 @RunWith(JUnit4::class)
 class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   private val mavenLibraries = listOf(
-    "com.apollographql.apollo:apollo-api-jvm:2.5.14",
     "com.apollographql.apollo:apollo-runtime:2.5.14",
     "com.apollographql.apollo:apollo-coroutines-support:2.5.14",
   )
@@ -29,7 +28,6 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
     override fun configureModule(module: Module, model: ModifiableRootModel, contentEntry: ContentEntry) {
       for (library in mavenLibraries) {
         addFromMaven(model, library, true, DependencyScope.COMPILE)
-//        MavenDependencyUtil.addFromMaven(model, library, true, DependencyScope.COMPILE)
       }
     }
   }

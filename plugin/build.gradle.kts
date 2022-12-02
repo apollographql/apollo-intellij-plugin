@@ -1,3 +1,4 @@
+import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.changelog.markdownToHTML
@@ -14,6 +15,8 @@ plugins {
   id("org.jetbrains.changelog") version "1.3.1"
   // Gradle Qodana Plugin
   id("org.jetbrains.qodana") version "0.1.13"
+  // Download a file
+  id("de.undercouch.download") version "5.3.0"
 }
 
 group = properties("pluginGroup")
@@ -130,4 +133,22 @@ tasks {
       showStandardStreams = true
     }
   }
+
+  test {
+    // Setup fake JDK for maven dependencies to work
+    // See https://jetbrains-platform.slack.com/archives/CPL5291JP/p1664105522154139 and https://youtrack.jetbrains.com/issue/IJSDK-321
+    systemProperty("idea.home.path", file("mockJDK").absolutePath)
+  }
+}
+
+// Setup fake JDK for maven dependencies to work
+// See https://jetbrains-platform.slack.com/archives/CPL5291JP/p1664105522154139 and https://youtrack.jetbrains.com/issue/IJSDK-321
+tasks.register<Download>("downloadMockJdk") {
+  src("https://github.com/JetBrains/intellij-community/raw/master/java/mockJDK-1.7/jre/lib/rt.jar")
+  dest(file("mockJDK/java/mockJDK-1.7/jre/lib/rt.jar"))
+  overwrite(false)
+}
+
+tasks.named("test").configure {
+  dependsOn("downloadMockJdk")
 }

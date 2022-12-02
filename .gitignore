@@ -6,3 +6,5 @@ build
 !.idea/codeStyles/
 
 .DS_Store
+
+MockJDK
