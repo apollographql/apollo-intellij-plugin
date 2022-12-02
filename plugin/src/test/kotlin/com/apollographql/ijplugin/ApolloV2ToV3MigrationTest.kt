@@ -6,7 +6,6 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.roots.ModifiableRootModel
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor
@@ -14,7 +13,6 @@ import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.io.File
 
 @TestDataPath("\$CONTENT_ROOT/testData/migration/v2-to-v3")
 @RunWith(JUnit4::class)
@@ -71,18 +69,15 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
     if (fileNameInProject != null) {
       myFixture.copyFileToProject(getTestName(false) + ".$extension", fileNameInProject)
     } else {
-      val testDataPath = myFixture.testDataPath
-      val sourceFile = File(testDataPath, FileUtil.toSystemDependentName(getTestName(false) + ".$extension"))
-      println("Absolute path: ${sourceFile.absolutePath} exists: ${sourceFile.exists()}")
-      myFixture.configureByFile(getTestName(false) + ".$extension")
+      myFixture.configureByFile(getTestName(true) + ".$extension")
     }
 
     ApolloV2ToV3MigrationProcessor(project).run()
     FileDocumentManager.getInstance().saveAllDocuments()
     if (fileNameInProject != null) {
-      myFixture.checkResultByFile(fileNameInProject, getTestName(false) + "_after.$extension", true)
+      myFixture.checkResultByFile(fileNameInProject, getTestName(true) + "_after.$extension", true)
     } else {
-      myFixture.checkResultByFile(getTestName(false) + "_after.$extension", true)
+      myFixture.checkResultByFile(getTestName(true) + "_after.$extension", true)
     }
   }
 }
