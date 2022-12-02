@@ -65,6 +65,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testRemoveGradleDependenciesInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
 
+  @Test
+  fun testRemoveGradleDependenciesInLibsVersionsToml() = runMigration(extension = "versions.toml", fileNameInProject = "libs.versions.toml")
+
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     if (fileNameInProject != null) {
       myFixture.copyFileToProject(getTestName(false) + ".$extension", fileNameInProject)

@@ -3,6 +3,7 @@ package com.apollographql.ijplugin.refactoring.migration
 import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependencyInBuildKts
+import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependencyInToml
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
@@ -74,6 +75,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateGradlePluginInBuildKts("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
       UpdateGradlePluginInToml("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
       RemoveDependencyInBuildKts("com.apollographql.apollo:apollo-coroutines-support"),
+      RemoveDependencyInToml("com.apollographql.apollo:apollo-coroutines-support"),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
