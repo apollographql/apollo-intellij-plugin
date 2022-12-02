@@ -119,11 +119,4 @@ tasks {
     // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
     channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
   }
-
-  test {
-    // TODO At the moment, a checkout of intellij-community is required for certain tests to work
-    // This of course won't work on the CI, so the tests are marked `@Ignore` for now.
-    // See https://jetbrains-platform.slack.com/archives/CPL5291JP/p1664105522154139 and https://youtrack.jetbrains.com/issue/IJSDK-321
-    systemProperty("idea.home.path", "/Users/bod/gitrepo/intellij-community")
-  }
 }
