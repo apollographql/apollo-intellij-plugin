@@ -6,6 +6,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.roots.ModifiableRootModel
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor
@@ -13,11 +14,13 @@ import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import java.io.File
 
 @TestDataPath("\$CONTENT_ROOT/testData/migration/v2-to-v3")
 @RunWith(JUnit4::class)
 class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   private val mavenLibraries = listOf(
+    "com.apollographql.apollo:apollo-api-jvm:2.5.14",
     "com.apollographql.apollo:apollo-runtime:2.5.14",
     "com.apollographql.apollo:apollo-coroutines-support:2.5.14",
   )
@@ -28,6 +31,7 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
     override fun configureModule(module: Module, model: ModifiableRootModel, contentEntry: ContentEntry) {
       for (library in mavenLibraries) {
         addFromMaven(model, library, true, DependencyScope.COMPILE)
+//        MavenDependencyUtil.addFromMaven(model, library, true, DependencyScope.COMPILE)
       }
     }
   }
@@ -67,6 +71,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
     if (fileNameInProject != null) {
       myFixture.copyFileToProject(getTestName(false) + ".$extension", fileNameInProject)
     } else {
+      val testDataPath = myFixture.testDataPath
+      val sourceFile = File(testDataPath, FileUtil.toSystemDependentName(getTestName(false) + ".$extension"))
+      println("Absolute path: ${sourceFile.absolutePath} exists: ${sourceFile.exists()}")
       myFixture.configureByFile(getTestName(false) + ".$extension")
     }
 
