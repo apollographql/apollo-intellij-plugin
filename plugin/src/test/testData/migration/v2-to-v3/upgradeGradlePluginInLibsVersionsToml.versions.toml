@@ -12,5 +12,6 @@ accompanist-systemUiController = { module = "com.google.accompanist:accompanist-
 
 
 [plugins]
-apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
-apolloAgain = { id = "com.apollographql.apollo", version = "2.5.14" }
+apollo-shortNotation = "com.apollographql.apollo:2.5.14"
+apollo-longNotation = { id = "com.apollographql.apollo", version.ref = "apollo" }
+apollo-referenceNotation = { id = "com.apollographql.apollo", version = "2.5.9" }

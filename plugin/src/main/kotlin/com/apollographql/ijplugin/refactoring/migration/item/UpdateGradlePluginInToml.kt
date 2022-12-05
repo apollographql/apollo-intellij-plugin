@@ -8,7 +8,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.usageView.UsageInfo
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlInlineTable
 import org.toml.lang.psi.TomlLiteral
@@ -32,23 +31,27 @@ open class UpdateGradlePluginInToml(
         override fun visitLiteral(element: TomlLiteral) {
           super.visitLiteral(element)
           if (element.kind is TomlLiteralKind.String) {
-            val dependencyText = element.text
-            if (dependencyText == oldPluginId.quoted()) {
-              usages.add(IdUsageInfo(this@UpdateGradlePluginInToml, element.firstChild))
+            val dependencyText = element.text.unquoted()
+            if (dependencyText == oldPluginId) {
+              usages.add(UsageInfo(this@UpdateGradlePluginInToml, element.firstChild, UsageInfo.Kind.ID))
               // Find the associated version
-              val versionEntry =
-                (element.parent.parent as? TomlInlineTable)?.entries?.first { it.key.text == "version" || it.key.text == "version.ref" }
+              val versionEntry = (element.parent.parent as? TomlInlineTable)?.entries
+                ?.first { it.key.text == "version" || it.key.text == "version.ref" }
               if (versionEntry != null) {
                 if (versionEntry.key.text == "version") {
-                  versionEntry.value?.let { usages.add(VersionUsageInfo(this@UpdateGradlePluginInToml, it.firstChild)) }
+                  versionEntry.value?.let { usages.add(UsageInfo(this@UpdateGradlePluginInToml, it.firstChild, UsageInfo.Kind.VERSION)) }
                 } else {
                   // Resolve the reference
-                  val versionsTable =
-                    element.containingFile.children.filterIsInstance<TomlTable>().firstOrNull { it.header.key?.text == "versions" }
+                  val versionsTable = element.containingFile.children.filterIsInstance<TomlTable>()
+                    .firstOrNull { it.header.key?.text == "versions" }
                   val versionRefKey = versionEntry.value?.text?.unquoted()
                   val refTarget = versionsTable?.entries?.firstOrNull { it.key.text == versionRefKey }
-                  refTarget?.value?.let { usages.add(ReferencedVersionUsageInfo(this@UpdateGradlePluginInToml, it.firstChild)) }
+                  refTarget?.value?.let { usages.add(UsageInfo(this@UpdateGradlePluginInToml, it.firstChild, UsageInfo.Kind.VERSION)) }
                 }
+              }
+            } else if (dependencyText.startsWith("$oldPluginId:")) {
+              if ((((element.parent?.parent) as? TomlTable)?.header)?.key?.text == "plugins") {
+                usages.add(UsageInfo(this@UpdateGradlePluginInToml, element.firstChild, UsageInfo.Kind.SHORT_NOTATION))
               }
             }
           }
@@ -58,20 +61,21 @@ open class UpdateGradlePluginInToml(
     return usages
   }
 
-  private class IdUsageInfo(migrationItem: UpdateGradlePluginInToml, element: PsiElement) : MigrationItemUsageInfo(migrationItem, element)
-  private class VersionUsageInfo(migrationItem: UpdateGradlePluginInToml, element: PsiElement) :
-    MigrationItemUsageInfo(migrationItem, element)
+  private class UsageInfo(migrationItem: UpdateGradlePluginInToml, element: PsiElement, val kind: Kind) :
+    MigrationItemUsageInfo(migrationItem, element) {
+    enum class Kind {
+      SHORT_NOTATION, ID, VERSION
+    }
+  }
 
-  private class ReferencedVersionUsageInfo(migrationItem: UpdateGradlePluginInToml, element: PsiElement) :
-    MigrationItemUsageInfo(migrationItem, element)
-
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: com.intellij.usageView.UsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
-    if (usage is IdUsageInfo) {
-      element.replace(TomlPsiFactory(project).createLiteral(newPluginId.quoted()))
-    } else {
-      element.replace(TomlPsiFactory(project).createLiteral(newPluginVersion.quoted()))
+    val kind = (usage as UsageInfo).kind
+    when (kind) {
+      UsageInfo.Kind.SHORT_NOTATION -> element.replace(TomlPsiFactory(project).createLiteral("$newPluginId:$newPluginVersion".quoted()))
+      UsageInfo.Kind.ID -> element.replace(TomlPsiFactory(project).createLiteral(newPluginId.quoted()))
+      UsageInfo.Kind.VERSION -> element.replace(TomlPsiFactory(project).createLiteral(newPluginVersion.quoted()))
     }
     return null
   }
