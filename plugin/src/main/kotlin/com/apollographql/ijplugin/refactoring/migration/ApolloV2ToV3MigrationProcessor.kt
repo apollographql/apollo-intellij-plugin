@@ -7,6 +7,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependencyInT
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
@@ -42,6 +43,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   private companion object {
     private const val apollo2 = "com.apollographql.apollo"
     private const val apollo3 = "com.apollographql.apollo3"
+    private const val apollo3LatestVersion = "3.7.1"
 
     private val migrationItems = arrayOf(
       UpdatePackageName(apollo2, apollo3),
@@ -72,10 +74,11 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
 
       // Gradle
-      UpdateGradlePluginInBuildKts("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
-      UpdateGradlePluginInToml("com.apollographql.apollo", "com.apollographql.apollo3", "3.7.1"),
-      RemoveDependencyInBuildKts("com.apollographql.apollo:apollo-coroutines-support"),
-      RemoveDependencyInToml("com.apollographql.apollo:apollo-coroutines-support"),
+      UpdateGradlePluginInBuildKts(apollo2, apollo3, apollo3LatestVersion),
+      UpdateGradlePluginInToml(apollo2, apollo3, apollo3LatestVersion),
+      RemoveDependencyInBuildKts("$apollo2:apollo-coroutines-support"),
+      RemoveDependencyInToml("$apollo2:apollo-coroutines-support"),
+      UpdateGradleDependenciesBuildKts(apollo2, apollo3)
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")

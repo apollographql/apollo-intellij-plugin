@@ -1,7 +1,6 @@
 package com.apollographql.ijplugin
 
 import com.apollographql.ijplugin.refactoring.migration.ApolloV2ToV3MigrationProcessor
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.DependencyScope
@@ -37,7 +36,7 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   }
 
   @Test
-  fun updatePackageName() = runMigration()
+  fun testUpdatePackageName() = runMigration()
 
   @Test
   fun testUpdateMethodName() = runMigration()
@@ -62,6 +61,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
 
   @Test
   fun testRemoveGradleDependenciesInLibsVersionsToml() = runMigration(extension = "versions.toml", fileNameInProject = "libs.versions.toml")
+
+  @Test
+  fun testUpdateGradleDependenciesInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
 
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     if (fileNameInProject != null) {
