@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin
 
 import com.apollographql.ijplugin.refactoring.migration.ApolloV2ToV3MigrationProcessor
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.DependencyScope
