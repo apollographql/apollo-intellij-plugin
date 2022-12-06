@@ -7,7 +7,7 @@ import com.apollographql.apollo3.cache.http.HttpFetchPolicy
 suspend fun main() {
   val apolloClient: ApolloClient? = null
   val myQuery: Query<*, *, *>? = null
-    apolloClient!!
-      .query(myQuery!!)
-      .httpFetchPolicy(com.apollographql.apollo3.cache.http.HttpFetchPolicy.NetworkOnly)
+  apolloClient!!
+    .query(myQuery!!)
+    .httpFetchPolicy(com.apollographql.apollo3.cache.http.HttpFetchPolicy.NetworkOnly)
 }

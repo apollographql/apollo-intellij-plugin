@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin
 
 import com.apollographql.ijplugin.refactoring.migration.ApolloV2ToV3MigrationProcessor
+import com.intellij.application.options.CodeStyle
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
@@ -10,9 +11,11 @@ import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
+import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+
 
 @TestDataPath("\$CONTENT_ROOT/testData/migration/v2-to-v3")
 @RunWith(JUnit4::class)
@@ -36,6 +39,14 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
 
   override fun getProjectDescriptor(): LightProjectDescriptor {
     return projectDescriptor
+  }
+
+  override fun setUp() {
+    super.setUp()
+    // Set the indent size to 2 to match the fixtures (default is 4)
+    val codeStyleSettings = CodeStyle.getSettings(project)
+    val kotlinSettings = codeStyleSettings.getCommonSettings(KotlinLanguage.INSTANCE)
+    kotlinSettings.indentOptions!!.INDENT_SIZE = 2
   }
 
   @Test
