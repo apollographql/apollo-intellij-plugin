@@ -5,6 +5,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageI
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
+import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodImport
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
@@ -53,6 +54,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
       UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
+      RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow"),
 
       // Http cache
       UpdateMethodName("$apollo2.ApolloQueryCall.Builder", "httpCachePolicy", "httpFetchPolicy"),

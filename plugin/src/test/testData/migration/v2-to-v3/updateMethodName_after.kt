@@ -2,6 +2,7 @@ package com.example
 
 import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.api.Mutation
+import com.apollographql.apollo3.api.Subscription
 
 suspend fun main() {
   val apolloClient = ApolloClient.Builder()
@@ -10,4 +11,7 @@ suspend fun main() {
 
   val myMutation: Mutation<*, *, *>? = null
   apolloClient.mutation(myMutation!!).execute()
+
+  val mySubscription: Subscription<*, *, *>? = null
+  apolloClient.subscription(mySubscription!!).toFlow()
 }
