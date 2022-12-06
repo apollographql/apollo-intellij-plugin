@@ -55,9 +55,6 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   fun testUpgradeGradlePluginInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
 
   @Test
-  fun testUpgradeGradlePluginInLibsVersionsToml() = runMigration(extension = "versions.toml", fileNameInProject = "libs.versions.toml")
-
-  @Test
   fun testRemoveGradleDependenciesInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
 
   @Test
@@ -65,6 +62,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
 
   @Test
   fun testUpdateGradleDependenciesInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
+
+  @Test
+  fun testUpdateGradleDependenciesInLibsVersionsToml() = runMigration(extension = "versions.toml", fileNameInProject = "libs.versions.toml")
 
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     if (fileNameInProject != null) {

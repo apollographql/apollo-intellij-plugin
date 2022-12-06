@@ -12,8 +12,8 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 
-open class RemoveDependencyInBuildKts(
-  private val groupAndArtifact: String,
+open class RemoveDependenciesInBuildKts(
+  private vararg val groupAndArtifact: String,
 ) : MigrationItem {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     val buildGradleKtsFiles: Array<PsiFile> = FilenameIndex.getFilesByName(project, "build.gradle.kts", searchScope)
@@ -23,7 +23,7 @@ open class RemoveDependencyInBuildKts(
       file.accept(object : KtTreeVisitorVoid() {
         override fun visitLiteralStringTemplateEntry(entry: KtLiteralStringTemplateEntry) {
           super.visitLiteralStringTemplateEntry(entry)
-          if (entry.text.contains(groupAndArtifact)) {
+          if (groupAndArtifact.any { entry.text.contains(it) }) {
             val callExpression = entry.parent.parent.parent.parent as? KtCallExpression
             if (callExpression?.calleeExpression?.text in listOf("implementation", "api", "testImplementation", "testApi")) {
               usages.add(callExpression!!.toMigrationItemUsageInfo())

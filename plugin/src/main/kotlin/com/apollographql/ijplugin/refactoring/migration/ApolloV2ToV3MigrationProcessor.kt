@@ -2,14 +2,14 @@ package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
-import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependencyInBuildKts
-import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependencyInToml
+import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInBuildKts
+import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
-import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.util.logd
@@ -74,10 +74,10 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
 
       // Gradle
+      RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
+      RemoveDependenciesInToml("apollo-coroutines-support", "apollo-android-support"),
       UpdateGradlePluginInBuildKts(apollo2, apollo3, apollo3LatestVersion),
-      UpdateGradlePluginInToml(apollo2, apollo3, apollo3LatestVersion),
-      RemoveDependencyInBuildKts("$apollo2:apollo-coroutines-support"),
-      RemoveDependencyInToml("$apollo2:apollo-coroutines-support"),
+      UpdateGradleDependenciesInToml(apollo2, apollo3, apollo3LatestVersion),
       UpdateGradleDependenciesBuildKts(apollo2, apollo3)
     )
 

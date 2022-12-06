@@ -17,10 +17,10 @@ import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
 
-open class UpdateGradlePluginInToml(
-  private val oldPluginId: String,
-  private val newPluginId: String,
-  private val newPluginVersion: String,
+open class UpdateGradleDependenciesInToml(
+  private val oldGroupId: String,
+  private val newGroupId: String,
+  private val newVersion: String,
 ) : MigrationItem {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     val libsVersionTomlFiles: Array<PsiFile> = FilenameIndex.getFilesByName(project, "libs.versions.toml", searchScope)
@@ -32,26 +32,38 @@ open class UpdateGradlePluginInToml(
           super.visitLiteral(element)
           if (element.kind is TomlLiteralKind.String) {
             val dependencyText = element.text.unquoted()
-            if (dependencyText == oldPluginId) {
-              usages.add(UsageInfo(this@UpdateGradlePluginInToml, element.firstChild, UsageInfo.Kind.ID))
+            if (dependencyText == oldGroupId || dependencyText.startsWith("$oldGroupId:")) {
+              usages.add(UsageInfo(this@UpdateGradleDependenciesInToml, element.firstChild, UsageInfo.Kind.SHORT_MODULE_OR_GROUP))
               // Find the associated version
               val versionEntry = (element.parent.parent as? TomlInlineTable)?.entries
                 ?.first { it.key.text == "version" || it.key.text == "version.ref" }
               if (versionEntry != null) {
                 if (versionEntry.key.text == "version") {
-                  versionEntry.value?.let { usages.add(UsageInfo(this@UpdateGradlePluginInToml, it.firstChild, UsageInfo.Kind.VERSION)) }
+                  versionEntry.value?.let {
+                    usages.add(
+                      UsageInfo(
+                        this@UpdateGradleDependenciesInToml,
+                        it.firstChild,
+                        UsageInfo.Kind.VERSION
+                      )
+                    )
+                  }
                 } else {
                   // Resolve the reference
                   val versionsTable = element.containingFile.children.filterIsInstance<TomlTable>()
                     .firstOrNull { it.header.key?.text == "versions" }
                   val versionRefKey = versionEntry.value?.text?.unquoted()
                   val refTarget = versionsTable?.entries?.firstOrNull { it.key.text == versionRefKey }
-                  refTarget?.value?.let { usages.add(UsageInfo(this@UpdateGradlePluginInToml, it.firstChild, UsageInfo.Kind.VERSION)) }
+                  refTarget?.value?.let {
+                    usages.add(
+                      UsageInfo(
+                        this@UpdateGradleDependenciesInToml,
+                        it.firstChild,
+                        UsageInfo.Kind.VERSION
+                      )
+                    )
+                  }
                 }
-              }
-            } else if (dependencyText.startsWith("$oldPluginId:")) {
-              if ((((element.parent?.parent) as? TomlTable)?.header)?.key?.text == "plugins") {
-                usages.add(UsageInfo(this@UpdateGradlePluginInToml, element.firstChild, UsageInfo.Kind.SHORT_NOTATION))
               }
             }
           }
@@ -61,21 +73,38 @@ open class UpdateGradlePluginInToml(
     return usages
   }
 
-  private class UsageInfo(migrationItem: UpdateGradlePluginInToml, element: PsiElement, val kind: Kind) :
+  private class UsageInfo(migrationItem: UpdateGradleDependenciesInToml, element: PsiElement, val kind: Kind) :
     MigrationItemUsageInfo(migrationItem, element) {
     enum class Kind {
-      SHORT_NOTATION, ID, VERSION
+      SHORT_MODULE_OR_GROUP, VERSION
     }
   }
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: com.intellij.usageView.UsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
-    val kind = (usage as UsageInfo).kind
-    when (kind) {
-      UsageInfo.Kind.SHORT_NOTATION -> element.replace(TomlPsiFactory(project).createLiteral("$newPluginId:$newPluginVersion".quoted()))
-      UsageInfo.Kind.ID -> element.replace(TomlPsiFactory(project).createLiteral(newPluginId.quoted()))
-      UsageInfo.Kind.VERSION -> element.replace(TomlPsiFactory(project).createLiteral(newPluginVersion.quoted()))
+    when ((usage as UsageInfo).kind) {
+      UsageInfo.Kind.SHORT_MODULE_OR_GROUP -> {
+        val notation = element.text.unquoted().split(":")
+        val newNotation = when (notation.size) {
+          1 -> newGroupId
+          2 -> {
+            val part = notation[1]
+            if (part.matches(Regex("\\d+.*"))) {
+              // Part is a version number: plugin short notation case, e.g. "com.apollographql.apollo:2.5.14"
+              "$newGroupId:$newVersion"
+            } else {
+              // Part is an artifact name: library case, e.g. "com.apollographql.apollo:apollo-runtime"
+              "$newGroupId:$part"
+            }
+          }
+
+          else -> "$newGroupId:${notation[1]}:$newVersion"
+        }
+        element.replace(TomlPsiFactory(project).createLiteral(newNotation.quoted()))
+      }
+
+      UsageInfo.Kind.VERSION -> element.replace(TomlPsiFactory(project).createLiteral(newVersion.quoted()))
     }
     return null
   }
