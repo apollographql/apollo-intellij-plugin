@@ -47,9 +47,11 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     private const val apollo3LatestVersion = "3.7.1"
 
     private val migrationItems = arrayOf(
+      // Apollo API / Runtime
       RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow"),
       UpdateClassName("$apollo2.api.Response", "$apollo3.api.ApolloResponse"),
       UpdateClassName("$apollo2.ApolloQueryCall", "$apollo3.ApolloCall"),
+      UpdateClassName("$apollo2.ApolloSubscriptionCall", "$apollo3.ApolloCall"),
       UpdateMethodName("$apollo2.ApolloClient", "mutate", "mutation"),
       UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
@@ -70,6 +72,9 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "NETWORK_ONLY", "NetworkOnly"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "CACHE_FIRST", "CacheFirst"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "NETWORK_FIRST", "NetworkFirst"),
+      UpdateMethodName("$apollo2.cache.normalized.ApolloStore", "read", "readOperation"),
+      UpdateMethodName("$apollo2.cache.normalized.ApolloStore", "writeAndPublish", "writeOperation"),
+      RemoveMethodCall("$apollo2.cache.normalized.ApolloStoreOperation", "execute"),
 
       RemoveMethodCall("$apollo2.ApolloQueryCall", "toBuilder"),
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),

@@ -20,6 +20,8 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   private val mavenLibraries = listOf(
     "com.apollographql.apollo:apollo-runtime:2.5.14",
     "com.apollographql.apollo:apollo-coroutines-support:2.5.14",
+    "com.apollographql.apollo:apollo-normalized-cache-jvm:2.5.14",
+    "com.apollographql.apollo:apollo-http-cache-api:2.5.14",
   )
 
   override fun getTestDataPath() = "src/test/testData/migration/v2-to-v3"
