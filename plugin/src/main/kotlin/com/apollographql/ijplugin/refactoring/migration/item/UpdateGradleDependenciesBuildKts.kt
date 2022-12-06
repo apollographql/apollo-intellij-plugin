@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.psi.KtValueArgument
 open class UpdateGradleDependenciesBuildKts(
   private val oldGroupId: String,
   private val newGroupId: String,
-) : MigrationItem {
+) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     val buildGradleKtsFiles: Array<PsiFile> = FilenameIndex.getFilesByName(project, "build.gradle.kts", searchScope)
     val usages = mutableListOf<MigrationItemUsageInfo>()

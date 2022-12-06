@@ -12,7 +12,11 @@ import com.intellij.usageView.UsageInfo
 class UpdateClassName(
   private val oldName: String,
   private val newName: String,
-) : MigrationItem {
+) : MigrationItem() {
+  override fun prepare(project: Project, migration: PsiMigration) {
+    findOrCreateClass(project, migration, newName)
+  }
+
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     return MigrationUtil.findClassUsages(project, migration, oldName, searchScope).toMigrationItemUsageInfo()
   }

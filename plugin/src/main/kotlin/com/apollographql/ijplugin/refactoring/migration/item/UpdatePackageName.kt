@@ -12,7 +12,11 @@ import com.intellij.usageView.UsageInfo
 class UpdatePackageName(
   private val oldName: String,
   private val newName: String,
-) : MigrationItem {
+) : MigrationItem() {
+  override fun prepare(project: Project, migration: PsiMigration) {
+    findOrCreatePackage(project, migration, newName)
+  }
+
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     return MigrationUtil.findPackageUsages(project, migration, oldName, searchScope).toMigrationItemUsageInfo()
   }

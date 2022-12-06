@@ -13,7 +13,7 @@ class UpdateMethodName(
   private val className: String,
   private val oldMethodName: String,
   private val newMethodName: String,
-) : MigrationItem {
+) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     return findMethodReferences(project = project, className = className, methodName = oldMethodName).toMigrationItemUsageInfo()
   }

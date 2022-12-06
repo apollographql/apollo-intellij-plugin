@@ -21,7 +21,7 @@ open class UpdateGradleDependenciesInToml(
   private val oldGroupId: String,
   private val newGroupId: String,
   private val newVersion: String,
-) : MigrationItem {
+) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     val libsVersionTomlFiles: Array<PsiFile> = FilenameIndex.getFilesByName(project, "libs.versions.toml", searchScope)
     val usages = mutableListOf<MigrationItemUsageInfo>()

@@ -47,14 +47,13 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     private const val apollo3LatestVersion = "3.7.1"
 
     private val migrationItems = arrayOf(
-      UpdatePackageName(apollo2, apollo3),
+      RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow"),
       UpdateClassName("$apollo2.api.Response", "$apollo3.api.ApolloResponse"),
       UpdateClassName("$apollo2.ApolloQueryCall", "$apollo3.ApolloCall"),
       UpdateMethodName("$apollo2.ApolloClient", "mutate", "mutation"),
       UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
       UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
-      RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow"),
 
       // Http cache
       UpdateMethodName("$apollo2.ApolloQueryCall.Builder", "httpCachePolicy", "httpFetchPolicy"),
@@ -74,6 +73,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
       RemoveMethodCall("$apollo2.ApolloQueryCall", "toBuilder"),
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
+
+      UpdatePackageName(apollo2, apollo3),
 
       // Gradle
       RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
@@ -115,9 +116,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     migration = startMigration()
     // This will create classes / packages that we're finding references to in case they don't exist.
     // It must be done in doRun() as this is called from the EDT whereas findUsages() is not.
-    // TODO this is slow and freezes the UI -> instead of calling findUsages, it is only necessary to create the classes/packages
     for (migrationItem in migrationItems) {
-      migrationItem.findUsages(myProject, migration!!, searchScope)
+      migrationItem.prepare(myProject, migration!!)
     }
     super.doRun()
   }

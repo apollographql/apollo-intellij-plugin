@@ -13,7 +13,7 @@ class UpdateFieldName(
   private val className: String,
   private val oldFieldName: String,
   private val newFieldName: String,
-) : MigrationItem {
+) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     return findFieldReferences(project = project, className = className, fieldName = oldFieldName).toMigrationItemUsageInfo()
   }

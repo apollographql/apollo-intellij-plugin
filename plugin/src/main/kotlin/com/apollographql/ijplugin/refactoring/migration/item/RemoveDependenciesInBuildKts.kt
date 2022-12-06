@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 
 open class RemoveDependenciesInBuildKts(
   private vararg val groupAndArtifact: String,
-) : MigrationItem {
+) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     val buildGradleKtsFiles: Array<PsiFile> = FilenameIndex.getFilesByName(project, "build.gradle.kts", searchScope)
     val usages = mutableListOf<MigrationItemUsageInfo>()

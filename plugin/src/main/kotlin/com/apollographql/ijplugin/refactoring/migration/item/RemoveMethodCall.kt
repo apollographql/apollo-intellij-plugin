@@ -14,7 +14,7 @@ open class RemoveMethodCall(
   private val containingDeclarationName: String,
   private val methodName: String,
   private val removeImportsOnly: Boolean = false,
-) : MigrationItem {
+) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     return findMethodReferences(
       project = project,
