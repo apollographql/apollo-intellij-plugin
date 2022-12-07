@@ -82,6 +82,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testWatch() = runMigration()
 
+  @Test
+  fun testAddCustomTypeAdapter() = runMigration()
+
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     if (fileNameInProject != null) {
       myFixture.copyFileToProject(getTestName(true) + ".$extension", fileNameInProject)

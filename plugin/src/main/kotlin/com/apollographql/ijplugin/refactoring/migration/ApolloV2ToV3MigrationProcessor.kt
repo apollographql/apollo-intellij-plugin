@@ -1,11 +1,13 @@
 package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.refactoring.migration.item.DeletesElements
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodImport
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateAddCustomTypeAdapter
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
@@ -51,6 +53,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow"),
       UpdateClassName("$apollo2.api.Response", "$apollo3.api.ApolloResponse"),
       UpdateClassName("$apollo2.ApolloQueryCall", "$apollo3.ApolloCall"),
+      UpdateClassName("$apollo2.ApolloMutationCall", "$apollo3.ApolloCall"),
       UpdateClassName("$apollo2.ApolloSubscriptionCall", "$apollo3.ApolloCall"),
       UpdateMethodName("$apollo2.ApolloClient", "mutate", "mutation"),
       UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
@@ -84,11 +87,14 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdatePackageName(apollo2, apollo3),
 
       // Gradle
-      RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
-      RemoveDependenciesInToml("apollo-coroutines-support", "apollo-android-support"),
       UpdateGradlePluginInBuildKts(apollo2, apollo3, apollo3LatestVersion),
       UpdateGradleDependenciesInToml(apollo2, apollo3, apollo3LatestVersion),
-      UpdateGradleDependenciesBuildKts(apollo2, apollo3)
+      UpdateGradleDependenciesBuildKts(apollo2, apollo3),
+      RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
+      RemoveDependenciesInToml("apollo-coroutines-support", "apollo-android-support"),
+
+      // Custom scalars
+      UpdateAddCustomTypeAdapter,
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
@@ -132,16 +138,22 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   override fun findUsages(): Array<UsageInfo> {
     logd()
     try {
-      return migrationItems.flatMap { migrationItem ->
-        migrationItem.findUsages(myProject, migration!!, searchScope)
-          .filterNot { usageInfo ->
-            // Filter out all generated code usages. We don't want generated code to come up in findUsages.
-            // TODO: how to mark Apollo generated code as generated per this method?
-            usageInfo.virtualFile?.let {
-              GeneratedSourcesFilter.isGeneratedSourceByAnyFilter(it, myProject)
-            } == true
-          }
-      }
+      return migrationItems
+        .flatMap { migrationItem ->
+          migrationItem.findUsages(myProject, migration!!, searchScope)
+            .filterNot { usageInfo ->
+              // Filter out all generated code usages. We don't want generated code to come up in findUsages.
+              // TODO: how to mark Apollo generated code as generated per this method?
+              usageInfo.virtualFile?.let {
+                GeneratedSourcesFilter.isGeneratedSourceByAnyFilter(it, myProject)
+              } == true
+            }
+        }
+        .sortedBy { usageInfo ->
+          // UsageInfos that point to the same element are deduplicated and the first one only is kept, before preprocessUsages is called.
+          // Thus put all deleting first.
+          if (usageInfo.migrationItem is DeletesElements) -1 else 0
+        }
         .toTypedArray()
     } finally {
       ApplicationManager.getApplication().invokeLater({ WriteAction.run<Throwable>(::finishMigration) }, myProject.disposed)
