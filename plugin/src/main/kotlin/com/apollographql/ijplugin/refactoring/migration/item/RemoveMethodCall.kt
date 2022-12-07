@@ -13,13 +13,15 @@ import org.jetbrains.kotlin.psi.KtImportDirective
 open class RemoveMethodCall(
   private val containingDeclarationName: String,
   private val methodName: String,
+  private val extensionTargetClassName: String? = null,
   private val removeImportsOnly: Boolean = false,
 ) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     return findMethodReferences(
       project = project,
       className = containingDeclarationName,
-      methodName = methodName
+      methodName = methodName,
+      extensionTargetClassName = extensionTargetClassName,
     ).toMigrationItemUsageInfo()
   }
 

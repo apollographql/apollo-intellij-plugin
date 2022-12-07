@@ -5,6 +5,7 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.PsiPackage
@@ -37,10 +38,22 @@ fun PsiElement.bindReferencesToElement(element: PsiElement): PsiElement? {
   return null
 }
 
-fun findMethodReferences(project: Project, className: String, methodName: String): Collection<PsiReference> {
+fun findMethodReferences(
+  project: Project,
+  className: String,
+  methodName: String,
+  extensionTargetClassName: String? = null,
+): Collection<PsiReference> {
   val psiLookupClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project)) ?: return emptyList()
   val methods = psiLookupClass.findMethodsByName(methodName, true)
-  if (methods.isEmpty()) return emptyList()
+    .filter { method ->
+      if (extensionTargetClassName == null) return@filter true
+      // In Kotlin extensions, the target is passed to the first parameter
+      if (method.parameterList.parametersCount < 1) return@filter false
+      val firstParameter = method.parameterList.parameters.first()
+      val firstParameterType = (firstParameter.type as? PsiClassType)?.rawType()?.canonicalText
+      firstParameterType == extensionTargetClassName
+    }
   return methods.flatMap { method ->
     val processor = RenamePsiElementProcessor.forElement(method)
     processor.findReferences(methods[0], GlobalSearchScope.projectScope(project), false)

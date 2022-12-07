@@ -79,6 +79,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testUpdateGradleDependenciesInLibsVersionsToml() = runMigration(extension = "versions.toml", fileNameInProject = "libs.versions.toml")
 
+  @Test
+  fun testWatch() = runMigration()
+
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     if (fileNameInProject != null) {
       myFixture.copyFileToProject(getTestName(true) + ".$extension", fileNameInProject)

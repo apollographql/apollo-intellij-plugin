@@ -56,6 +56,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
       UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
+      UpdateMethodName("$apollo2.ApolloQueryCall", "watcher", "watch"),
+      RemoveMethodCall("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow", extensionTargetClassName = "$apollo2.ApolloQueryWatcher"),
 
       // Http cache
       UpdateMethodName("$apollo2.ApolloQueryCall.Builder", "httpCachePolicy", "httpFetchPolicy"),
