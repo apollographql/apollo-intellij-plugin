@@ -22,7 +22,15 @@ open class RemoveMethodCall(
       className = containingDeclarationName,
       methodName = methodName,
       extensionTargetClassName = extensionTargetClassName,
-    ).toMigrationItemUsageInfo()
+    )
+      .filter {
+        if (removeImportsOnly) {
+          it.element.parentOfType<KtImportDirective>() != null
+        } else {
+          true
+        }
+      }
+      .toMigrationItemUsageInfo()
   }
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {

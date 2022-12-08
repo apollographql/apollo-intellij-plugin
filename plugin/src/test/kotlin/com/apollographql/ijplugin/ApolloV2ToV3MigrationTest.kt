@@ -2,7 +2,6 @@ package com.apollographql.ijplugin
 
 import com.apollographql.ijplugin.refactoring.migration.ApolloV2ToV3MigrationProcessor
 import com.intellij.application.options.CodeStyle
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.roots.ContentEntry
 import com.intellij.openapi.roots.DependencyScope
@@ -86,18 +85,19 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   fun testAddCustomTypeAdapter() = runMigration()
 
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
+    val fileBaseName = getTestName(true)
     if (fileNameInProject != null) {
-      myFixture.copyFileToProject(getTestName(true) + ".$extension", fileNameInProject)
+      myFixture.copyFileToProject("$fileBaseName.$extension", fileNameInProject)
     } else {
-      myFixture.configureByFile(getTestName(true) + ".$extension")
+      myFixture.copyFileToProject("$fileBaseName.$extension")
     }
 
     ApolloV2ToV3MigrationProcessor(project).run()
-    FileDocumentManager.getInstance().saveAllDocuments()
+
     if (fileNameInProject != null) {
-      myFixture.checkResultByFile(fileNameInProject, getTestName(true) + "_after.$extension", true)
+      myFixture.checkResultByFile(fileNameInProject, fileBaseName + "_after.$extension", true)
     } else {
-      myFixture.checkResultByFile(getTestName(true) + "_after.$extension", true)
+      myFixture.checkResultByFile("$fileBaseName.$extension", fileBaseName + "_after.$extension", true)
     }
   }
 }

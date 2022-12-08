@@ -45,7 +45,7 @@ fun findMethodReferences(
   extensionTargetClassName: String? = null,
 ): Collection<PsiReference> {
   val psiLookupClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project)) ?: return emptyList()
-  val methods = psiLookupClass.findMethodsByName(methodName, true)
+  val methods = psiLookupClass.findMethodsByName(methodName, false)
     .filter { method ->
       if (extensionTargetClassName == null) return@filter true
       // In Kotlin extensions, the target is passed to the first parameter
@@ -56,7 +56,7 @@ fun findMethodReferences(
     }
   return methods.flatMap { method ->
     val processor = RenamePsiElementProcessor.forElement(method)
-    processor.findReferences(methods[0], GlobalSearchScope.projectScope(project), false)
+    processor.findReferences(method, GlobalSearchScope.projectScope(project), false)
   }
 }
 

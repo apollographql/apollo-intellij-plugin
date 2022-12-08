@@ -17,9 +17,9 @@ import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
 
-open class RemoveDependenciesInToml(
+open class CommentDependenciesInToml(
   private vararg val artifactId: String,
-) : MigrationItem(), DeletesElements {
+) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
     val libsVersionTomlFiles: Array<PsiFile> = FilenameIndex.getFilesByName(project, "libs.versions.toml", searchScope)
     val usages = mutableListOf<MigrationItemUsageInfo>()

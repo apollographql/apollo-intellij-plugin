@@ -1,10 +1,10 @@
 package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.refactoring.migration.item.CommentDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.DeletesElements
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInBuildKts
-import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodImport
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateAddCustomTypeAdapter
@@ -16,6 +16,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginI
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.util.logd
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.history.LocalHistory
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
@@ -24,6 +25,7 @@ import com.intellij.openapi.roots.GeneratedSourcesFilter
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
@@ -59,6 +61,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateMethodName("$apollo2.ApolloClient", "subscribe", "subscription"),
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
       UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
+      RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "await"),
       UpdateMethodName("$apollo2.ApolloQueryCall", "watcher", "watch"),
       RemoveMethodCall("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow", extensionTargetClassName = "$apollo2.ApolloQueryWatcher"),
 
@@ -88,10 +91,10 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
       // Gradle
       UpdateGradlePluginInBuildKts(apollo2, apollo3, apollo3LatestVersion),
+      CommentDependenciesInToml("apollo-coroutines-support", "apollo-android-support"),
       UpdateGradleDependenciesInToml(apollo2, apollo3, apollo3LatestVersion),
       UpdateGradleDependenciesBuildKts(apollo2, apollo3),
       RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
-      RemoveDependenciesInToml("apollo-coroutines-support", "apollo-android-support"),
 
       // Custom scalars
       UpdateAddCustomTypeAdapter,
@@ -138,7 +141,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   override fun findUsages(): Array<UsageInfo> {
     logd()
     try {
-      return migrationItems
+      val usageInfos = migrationItems
         .flatMap { migrationItem ->
           migrationItem.findUsages(myProject, migration!!, searchScope)
             .filterNot { usageInfo ->
@@ -149,12 +152,18 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
               } == true
             }
         }
-        .sortedBy { usageInfo ->
-          // UsageInfos that point to the same element are deduplicated and the first one only is kept, before preprocessUsages is called.
-          // Thus put all deleting first.
-          if (usageInfo.migrationItem is DeletesElements) -1 else 0
+        .toMutableList()
+      // If an element must be deleted, make sure we keep the UsageInfo and remove any other pointing to the same element.
+      val iterator = usageInfos.listIterator()
+      while (iterator.hasNext()) {
+        val usageInfo = iterator.next()
+        if (usageInfo.migrationItem !is DeletesElements) {
+          if (usageInfos.any { it !== usageInfo && it.migrationItem is DeletesElements && it.smartPointer == usageInfo.smartPointer }) {
+            iterator.remove()
+          }
         }
-        .toTypedArray()
+      }
+      return usageInfos.toTypedArray()
     } finally {
       ApplicationManager.getApplication().invokeLater({ WriteAction.run<Throwable>(::finishMigration) }, myProject.disposed)
     }
@@ -212,6 +221,13 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     }
     refsToShorten.clear()
     finishMigration()
+
+    // Not sure if this is actually useful but IJ's editor sometimes has a hard time after the files have been touched
+    PsiManager.getInstance(myProject).apply {
+      dropResolveCaches()
+      dropPsiCaches()
+    }
+    DaemonCodeAnalyzer.getInstance(myProject).restart()
   }
 }
 
