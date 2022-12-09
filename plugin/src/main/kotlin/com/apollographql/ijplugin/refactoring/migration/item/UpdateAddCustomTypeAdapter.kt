@@ -40,9 +40,9 @@ object UpdateAddCustomTypeAdapter : MigrationItem() {
     val bodyExpression = typeNameFunction.bodyExpression as? KtStringTemplateExpression ?: return null
     val typeName = bodyExpression.entries.firstOrNull()?.text ?: return null
 
-    val ktPsiFactory = KtPsiFactory(project)
-    callExpression.calleeExpression?.replace(ktPsiFactory.createExpression("addCustomScalarAdapter"))
-    firstArgument.replace(ktPsiFactory.createExpression("$typeName.type"))
+    val psiFactory = KtPsiFactory(project)
+    callExpression.calleeExpression?.replace(psiFactory.createExpression("addCustomScalarAdapter"))
+    firstArgument.replace(psiFactory.createExpression("$typeName.type"))
 
     return null
   }

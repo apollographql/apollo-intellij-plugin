@@ -4,7 +4,9 @@ import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.api.Operation
 import com.apollographql.apollo3.api.Query
 import com.apollographql.apollo3.api.internal.ResponseFieldMarshaller
+import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
+import java.util.concurrent.TimeUnit
 
 suspend fun main() {
   class MyData : Operation.Data {
@@ -13,7 +15,16 @@ suspend fun main() {
 
   class MyVariables : Operation.Variables()
 
-  val apolloClient: ApolloClient? = null
+  val cacheFactory1 = MemoryCacheFactory(maxSizeBytes = 10 * 1024 * 1024)
+  val cacheFactory2 = MemoryCacheFactory(maxSizeBytes = 10 * 1024 * 1024)
+  val cacheFactory3 = MemoryCacheFactory(maxSizeBytes = 10 * 1024 * 1024, expireAfterMillis = TimeUnit.MILLISECONDS.toMillis(10))
+  val cacheFactory4 = MemoryCacheFactory(maxSizeBytes = 10 * 1024 * 1024, expireAfterMillis = TimeUnit.MILLISECONDS.toMillis(10))
+  val cacheFactory5 = MemoryCacheFactory(expireAfterMillis = TimeUnit.HOURS.toMillis(10))
+
+  val apolloClient = ApolloClient.Builder()
+    .normalizedCache(cacheFactory1)
+    .build()
+
   val myQuery: Query<MyData, Any, MyVariables>? = null
 
   apolloClient!!

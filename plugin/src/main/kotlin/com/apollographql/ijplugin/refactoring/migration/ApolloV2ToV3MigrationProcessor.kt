@@ -13,6 +13,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateLruNormalizedCacheFactory
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.util.logd
@@ -83,6 +84,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateMethodName("$apollo2.cache.normalized.ApolloStore", "read", "readOperation"),
       UpdateMethodName("$apollo2.cache.normalized.ApolloStore", "writeAndPublish", "writeOperation"),
       RemoveMethodCall("$apollo2.cache.normalized.ApolloStoreOperation", "execute"),
+      UpdateLruNormalizedCacheFactory,
 
       RemoveMethodCall("$apollo2.ApolloQueryCall", "toBuilder"),
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
