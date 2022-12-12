@@ -5,6 +5,7 @@ import com.apollographql.apollo3.api.Query
 import com.apollographql.apollo3.cache.http.HttpFetchPolicy
 import com.apollographql.apollo3.cache.http.ApolloHttpCache
 import java.io.File
+import com.apollographql.apollo3.cache.http.httpCache
 
 suspend fun main() {
   val maxSize = 10000L

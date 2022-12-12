@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.usageView.UsageInfo
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
 class UpdateFieldName(
@@ -17,7 +16,7 @@ class UpdateFieldName(
     return findFieldReferences(project = project, className = className, fieldName = oldFieldName).toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
     val newFieldReference = KtPsiFactory(project).createExpression(newFieldName)

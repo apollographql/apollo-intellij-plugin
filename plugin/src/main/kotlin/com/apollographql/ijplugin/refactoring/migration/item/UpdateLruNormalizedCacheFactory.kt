@@ -6,7 +6,6 @@ import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.parentOfType
 import com.intellij.refactoring.migration.MigrationUtil
-import com.intellij.usageView.UsageInfo
 import com.intellij.util.castSafelyTo
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
@@ -26,7 +25,7 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
     ).toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
 

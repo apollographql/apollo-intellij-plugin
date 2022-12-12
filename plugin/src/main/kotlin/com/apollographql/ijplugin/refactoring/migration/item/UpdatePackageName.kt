@@ -7,7 +7,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.migration.MigrationUtil
-import com.intellij.usageView.UsageInfo
 
 class UpdatePackageName(
   private val oldName: String,
@@ -21,7 +20,7 @@ class UpdatePackageName(
     return MigrationUtil.findPackageUsages(project, migration, oldName, searchScope).toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
     val newPackage = findOrCreatePackage(project, migration, newName)

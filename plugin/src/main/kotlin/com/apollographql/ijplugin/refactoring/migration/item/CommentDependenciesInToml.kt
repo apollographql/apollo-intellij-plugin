@@ -8,7 +8,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.usageView.UsageInfo
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlPsiFactory
@@ -44,7 +43,7 @@ open class CommentDependenciesInToml(
     return usages
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
     element.parent.addBefore(

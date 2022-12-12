@@ -7,7 +7,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.migration.MigrationUtil
-import com.intellij.usageView.UsageInfo
 
 class UpdateClassName(
   private val oldName: String,
@@ -21,7 +20,7 @@ class UpdateClassName(
     return MigrationUtil.findClassUsages(project, migration, oldName, searchScope).toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: UsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
     val newClass = findOrCreateClass(project, migration, newName)

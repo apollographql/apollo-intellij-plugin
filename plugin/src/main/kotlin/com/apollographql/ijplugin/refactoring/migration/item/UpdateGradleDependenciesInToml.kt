@@ -80,7 +80,7 @@ open class UpdateGradleDependenciesInToml(
     }
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: com.intellij.usageView.UsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
     when ((usage as UsageInfo).kind) {
