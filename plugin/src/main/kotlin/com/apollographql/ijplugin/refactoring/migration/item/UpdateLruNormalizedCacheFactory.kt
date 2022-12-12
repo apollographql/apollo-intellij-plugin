@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
+import com.apollographql.ijplugin.util.containingKtFileImportList
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
@@ -14,7 +15,6 @@ import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.resolve.ImportPath
 
 object UpdateLruNormalizedCacheFactory : MigrationItem() {
@@ -73,7 +73,7 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
             "MemoryCacheFactory(${arguments.joinToString(", ")})"
           )
 
-          val importUsageInfo = element.containingFile?.getChildOfType<KtImportList>()?.let { importList ->
+          val importUsageInfo = element.containingKtFileImportList()?.let { importList ->
             AddImportUsageInfo(this@UpdateLruNormalizedCacheFactory, importList)
           }
 

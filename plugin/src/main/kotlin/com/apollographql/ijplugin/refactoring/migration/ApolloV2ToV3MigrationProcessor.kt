@@ -68,7 +68,12 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       RemoveMethodCall("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow", extensionTargetClassName = "$apollo2.ApolloQueryWatcher"),
 
       // Http cache
-      UpdateMethodName("$apollo2.ApolloQueryCall.Builder", "httpCachePolicy", "httpFetchPolicy"),
+      UpdateMethodName(
+        "$apollo2.ApolloQueryCall.Builder",
+        "httpCachePolicy",
+        "httpFetchPolicy",
+        importToAdd = "com.apollographql.apollo3.cache.http.httpFetchPolicy"
+      ),
       UpdateClassName("$apollo2.api.cache.http.HttpCachePolicy", "$apollo3.cache.http.HttpFetchPolicy"),
       UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "CACHE_ONLY", "CacheOnly"),
       UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "NETWORK_ONLY", "NetworkOnly"),
@@ -77,7 +82,12 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateHttpCache,
 
       // Normalized cache
-      UpdateMethodName("$apollo2.ApolloQueryCall.Builder", "responseFetcher", "fetchPolicy"),
+      UpdateMethodName(
+        "$apollo2.ApolloQueryCall.Builder",
+        "responseFetcher",
+        "fetchPolicy",
+        importToAdd = "com.apollographql.apollo3.cache.normalized.fetchPolicy"
+      ),
       UpdateClassName("$apollo2.fetcher.ApolloResponseFetchers", "$apollo3.cache.normalized.FetchPolicy"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "CACHE_ONLY", "CacheOnly"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "NETWORK_ONLY", "NetworkOnly"),

@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.refactoring.findMethodReferences
+import com.apollographql.ijplugin.util.containingKtFileImportList
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
@@ -11,7 +12,6 @@ import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPsiFactory
-import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.resolve.ImportPath
 
 object UpdateHttpCache : MigrationItem(), DeletesElements {
@@ -71,7 +71,7 @@ object UpdateHttpCache : MigrationItem(), DeletesElements {
           }
         }
         val importUsageInfos = replaceUsageInfos.mapNotNull { replaceUsageInfo ->
-          replaceUsageInfo.element?.containingFile?.getChildOfType<KtImportList>()?.let { importList ->
+          replaceUsageInfo.element?.containingKtFileImportList()?.let { importList ->
             AddImportUsageInfo(this@UpdateHttpCache, importList)
           }
         }
