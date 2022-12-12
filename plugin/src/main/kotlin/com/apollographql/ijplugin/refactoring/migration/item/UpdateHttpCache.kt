@@ -26,27 +26,29 @@ object UpdateHttpCache : MigrationItem() {
     if (element == null || !element.isValid) return null
     val psiFactory = KtPsiFactory(project)
 
-    // httpCache(...)
+    // `httpCache(...)`
     val httpCacheCallExpression = element.parent as? KtCallExpression ?: return null
     val httpCacheArgumentExpression = httpCacheCallExpression.valueArguments.firstOrNull()?.getArgumentExpression() ?: return null
+    val elementsToDelete = mutableSetOf<PsiElement>()
     when (httpCacheArgumentExpression) {
+      // `httpCache(ApolloHttpCache(...))`
       is KtCallExpression -> {
-        val apolloHttpCacheArguments = extractApolloHttpCacheArguments(httpCacheArgumentExpression)
+        val apolloHttpCacheArguments = extractApolloHttpCacheArguments(httpCacheArgumentExpression, elementsToDelete)
         if (apolloHttpCacheArguments != null) {
           element.parent.replace(psiFactory.createExpression("httpCache(${apolloHttpCacheArguments.joinToString(", ")})"))
         }
       }
 
       is KtNameReferenceExpression -> {
-        // Look for `httpCache(xxx)` where xxx is a val defined as `val xxx = ApolloHttpCache(...)`
+        // `httpCache(xxx)` where xxx is a val defined as `val xxx = ApolloHttpCache(...)`
         val referencedVal = httpCacheArgumentExpression.resolve()
         if (referencedVal is KtProperty) {
           val initializerExpression = referencedVal.initializer
           if (initializerExpression is KtCallExpression) {
-            val apolloHttpCacheArguments = extractApolloHttpCacheArguments(initializerExpression)
+            val apolloHttpCacheArguments = extractApolloHttpCacheArguments(initializerExpression, elementsToDelete)
             if (apolloHttpCacheArguments != null) {
               element.parent.replace(psiFactory.createExpression("httpCache(${apolloHttpCacheArguments.joinToString(", ")})"))
-              referencedVal.delete()
+              elementsToDelete += referencedVal
             }
           }
         }
@@ -57,30 +59,50 @@ object UpdateHttpCache : MigrationItem() {
         element.parent.replace(psiFactory.createExpression("httpCache(/* TODO: This could not be migrated automatically. Please check the migration guide at https://www.apollographql.com/docs/kotlin/migration/3.0/ */)"))
       }
     }
+    elementsToDelete.forEach { it.delete() }
     return null
   }
 
-  private fun extractApolloHttpCacheArguments(callExpression: KtCallExpression): List<String>? {
+  private fun extractApolloHttpCacheArguments(callExpression: KtCallExpression, elementsToDelete: MutableSet<PsiElement>): List<String>? {
     // Look for `ApolloHttpCache(...)`
     if (callExpression.calleeExpression?.text == "ApolloHttpCache") {
-      val apolloHttpCacheCtorArgument = callExpression.valueArguments.firstOrNull()?.getArgumentExpression()
+      val apolloHttpCacheCtorArgument = callExpression.valueArguments.firstOrNull()?.getArgumentExpression() ?: return null
       // Look for `DiskLruHttpCacheStore(...)` call
-      if (apolloHttpCacheCtorArgument is KtCallExpression) {
-        if (apolloHttpCacheCtorArgument.calleeExpression?.text == "DiskLruHttpCacheStore") {
-          // There are 2 variants of `DiskLruHttpCacheStore` constructor: with 3 and 2 arguments
-          val diskLruHttpCacheStore = if (apolloHttpCacheCtorArgument.valueArguments.size == 3) {
-            // Ignore the first argument (FileSystem)
-            apolloHttpCacheCtorArgument.valueArguments.drop(1)
-          } else {
-            apolloHttpCacheCtorArgument.valueArguments
-          }
-          if (diskLruHttpCacheStore.size == 2) {
-            val fileArgumentExpression = diskLruHttpCacheStore[0].getArgumentExpression()?.text
-            val maxSizeArgumentExpression = diskLruHttpCacheStore[1].getArgumentExpression()?.text
-            if (fileArgumentExpression != null && maxSizeArgumentExpression != null) {
-              return listOf(fileArgumentExpression, maxSizeArgumentExpression)
+      when (apolloHttpCacheCtorArgument) {
+        is KtCallExpression -> {
+          return extractDiskLruHttpCacheStoreArguments(apolloHttpCacheCtorArgument)
+        }
+
+        is KtNameReferenceExpression -> {
+          // `ApolloHttpCache(xxx)` where xxx is a val defined as `val xxx = DiskLruHttpCacheStore(...)`
+          val referencedVal = apolloHttpCacheCtorArgument.resolve()
+          if (referencedVal is KtProperty) {
+            val initializerExpression = referencedVal.initializer
+            if (initializerExpression is KtCallExpression) {
+              elementsToDelete += referencedVal
+              return extractDiskLruHttpCacheStoreArguments(initializerExpression)
             }
           }
+        }
+      }
+    }
+    return null
+  }
+
+  private fun extractDiskLruHttpCacheStoreArguments(initializerExpression: KtCallExpression): List<String>? {
+    if (initializerExpression.calleeExpression?.text == "DiskLruHttpCacheStore") {
+      // There are 2 variants of `DiskLruHttpCacheStore` constructor: with 3 and 2 arguments
+      val diskLruHttpCacheStore = if (initializerExpression.valueArguments.size == 3) {
+        // Ignore the first argument (FileSystem)
+        initializerExpression.valueArguments.drop(1)
+      } else {
+        initializerExpression.valueArguments
+      }
+      if (diskLruHttpCacheStore.size == 2) {
+        val fileArgumentExpression = diskLruHttpCacheStore[0].getArgumentExpression()?.text
+        val maxSizeArgumentExpression = diskLruHttpCacheStore[1].getArgumentExpression()?.text
+        if (fileArgumentExpression != null && maxSizeArgumentExpression != null) {
+          return listOf(fileArgumentExpression, maxSizeArgumentExpression)
         }
       }
     }

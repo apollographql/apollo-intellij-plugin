@@ -8,14 +8,17 @@ import java.io.File
 
 suspend fun main() {
   val maxSize = 10000L
+
   val apolloHttpCache3: ApolloHttpCache? = null
 
   val apolloClient = ApolloClient.Builder()
-    .httpCache(File(""), maxSize)
-    .httpCache(File(""), maxSize)
-    .httpCache(File(""), maxSize)
-    .httpCache(File(""), maxSize)
+    .httpCache(File("cacheA"), maxSize)
+    .httpCache(File("cacheB"), maxSize)
+    .httpCache(File("cache1"), maxSize)
+    .httpCache(File("cache2"), maxSize)
     .httpCache(/* TODO: This could not be migrated automatically. Please check the migration guide at https://www.apollographql.com/docs/kotlin/migration/3.0/ */)
+    .httpCache(File("cache4"), maxSize)
+    .httpCache(File("cache5"), maxSize)
     .build()
 
   val myQuery: Query<*, *, *>? = null
