@@ -1,12 +1,15 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
-import com.apollographql.ijplugin.refactoring.bindReferencesToElement
 import com.apollographql.ijplugin.refactoring.findOrCreateClass
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.parentOfType
 import com.intellij.refactoring.migration.MigrationUtil
+import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.resolve.ImportPath
 
 class UpdateClassName(
   private val oldName: String,
@@ -17,13 +20,38 @@ class UpdateClassName(
   }
 
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
-    return MigrationUtil.findClassUsages(project, migration, oldName, searchScope).toMigrationItemUsageInfo()
+    return MigrationUtil.findClassUsages(project, migration, oldName, searchScope)
+      .toMigrationItemUsageInfo()
+      .map {
+        val element = it.element!!
+        val importDirective = element.parentOfType<KtImportDirective>()
+        if (importDirective != null) {
+          // Reference is an import
+          ReplaceImportUsageInfo(this@UpdateClassName, importDirective)
+        } else {
+          it
+        }
+      }
   }
+
+  private class ReplaceImportUsageInfo(migrationItem: MigrationItem, element: KtImportDirective) :
+    MigrationItemUsageInfo(migrationItem, element)
+
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
-    val newClass = findOrCreateClass(project, migration, newName)
-    return element.bindReferencesToElement(newClass)
+
+    val psiFactory = KtPsiFactory(project)
+    when (usage) {
+      is ReplaceImportUsageInfo -> {
+        element.replace(psiFactory.createImportDirective(ImportPath.fromString(newName)))
+      }
+
+      else -> {
+        element.replace(psiFactory.createExpression(newName.split('.').last()))
+      }
+    }
+    return null
   }
 }

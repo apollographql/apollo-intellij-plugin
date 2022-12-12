@@ -8,6 +8,7 @@ import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
 import java.util.concurrent.TimeUnit
 import com.apollographql.apollo3.cache.normalized.fetchPolicy
+import com.apollographql.apollo3.cache.normalized.apolloStore
 import com.apollographql.apollo3.cache.normalized.normalizedCache
 
 suspend fun main() {
@@ -31,7 +32,7 @@ suspend fun main() {
 
   apolloClient!!
     .query(myQuery!!)
-    .fetchPolicy(com.apollographql.apollo3.cache.normalized.FetchPolicy.NetworkOnly)
+    .fetchPolicy(FetchPolicy.NetworkOnly)
 
   val cachedData = apolloClient
     .apolloStore

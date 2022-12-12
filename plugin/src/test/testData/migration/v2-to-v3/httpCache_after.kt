@@ -26,5 +26,5 @@ suspend fun main() {
   val myQuery: Query<*, *, *>? = null
   apolloClient!!
     .query(myQuery!!)
-    .httpFetchPolicy(com.apollographql.apollo3.cache.http.HttpFetchPolicy.NetworkOnly)
+    .httpFetchPolicy(HttpFetchPolicy.NetworkOnly)
 }

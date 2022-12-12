@@ -67,7 +67,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
       UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
       RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "await"),
-      UpdateMethodName("$apollo2.ApolloQueryCall", "watcher", "watch"),
+      UpdateMethodName("$apollo2.ApolloQueryCall", "watcher", "watch", importToAdd = "com.apollographql.apollo3.cache.normalized.watch"),
       RemoveMethodCall("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow", extensionTargetClassName = "$apollo2.ApolloQueryWatcher"),
 
       // Http cache
@@ -96,8 +96,18 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "NETWORK_ONLY", "NetworkOnly"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "CACHE_FIRST", "CacheFirst"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "NETWORK_FIRST", "NetworkFirst"),
-      UpdateMethodName("$apollo2.cache.normalized.ApolloStore", "read", "readOperation"),
-      UpdateMethodName("$apollo2.cache.normalized.ApolloStore", "writeAndPublish", "writeOperation"),
+      UpdateMethodName(
+        "$apollo2.cache.normalized.ApolloStore",
+        "read",
+        "readOperation",
+        importToAdd = "com.apollographql.apollo3.cache.normalized.apolloStore"
+      ),
+      UpdateMethodName(
+        "$apollo2.cache.normalized.ApolloStore",
+        "writeAndPublish",
+        "writeOperation",
+        importToAdd = "com.apollographql.apollo3.cache.normalized.apolloStore"
+      ),
       RemoveMethodCall("$apollo2.cache.normalized.ApolloStoreOperation", "execute"),
       UpdateLruNormalizedCacheFactory,
 
