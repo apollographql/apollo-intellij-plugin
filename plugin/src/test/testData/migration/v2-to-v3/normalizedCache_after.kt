@@ -7,6 +7,7 @@ import com.apollographql.apollo3.api.internal.ResponseFieldMarshaller
 import com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo3.cache.normalized.FetchPolicy
 import java.util.concurrent.TimeUnit
+import com.apollographql.apollo3.cache.normalized.normalizedCache
 
 suspend fun main() {
   class MyData : Operation.Data {

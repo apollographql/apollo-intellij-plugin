@@ -10,9 +10,11 @@ import com.intellij.util.castSafelyTo
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
+import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.resolve.ImportPath
 
 object UpdateLruNormalizedCacheFactory : MigrationItem() {
@@ -22,53 +24,94 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
       migration,
       "com.apollographql.apollo.cache.normalized.lru.LruNormalizedCacheFactory",
       searchScope
-    ).toMigrationItemUsageInfo()
+    )
+      .flatMap {
+        val element = it.element!!
+        val importDirective = element.parentOfType<KtImportDirective>()
+        if (importDirective != null) {
+          // Reference is an import
+          listOf(ReplaceImportUsageInfo(this@UpdateLruNormalizedCacheFactory, importDirective))
+        } else {
+          // Reference is a class reference
+          // Looking for something like:
+          //     EvictionPolicy.builder()
+          //      .maxSizeBytes(10 * 1024 * 1024)
+          //      .expireAfterWrite(10, TimeUnit.MILLISECONDS)
+          //      .build()
+          val callExpression = element.parent as? KtCallExpression ?: return@flatMap emptyList<MigrationItemUsageInfo>()
+          val argumentExpression = callExpression.valueArguments.first().getArgumentExpression() as? KtDotQualifiedExpression
+            ?: return@flatMap emptyList<MigrationItemUsageInfo>()
+
+          var maxSizeBytesValue: String? = null
+          val maxSizeBytesCall =
+            argumentExpression.findDescendantOfType<KtNameReferenceExpression> { it.getReferencedName() == "maxSizeBytes" }
+          if (maxSizeBytesCall != null) {
+            maxSizeBytesValue = maxSizeBytesCall.parent.castSafelyTo<KtCallExpression>()?.valueArguments?.firstOrNull()?.text
+          }
+
+          var expireAfterWriteTimeValue: String? = null
+          var expireAfterWriteUnitValue: String? = null
+          val expireAfterWriteCall =
+            argumentExpression.findDescendantOfType<KtNameReferenceExpression> { it.getReferencedName() == "expireAfterWrite" }
+          if (expireAfterWriteCall != null) {
+            val arguments = expireAfterWriteCall.parent.castSafelyTo<KtCallExpression>()?.valueArguments
+            expireAfterWriteTimeValue = arguments?.firstOrNull()?.text
+            expireAfterWriteUnitValue = arguments?.getOrNull(1)?.text
+          }
+
+          val arguments = mutableListOf<String>()
+          if (maxSizeBytesValue != null) {
+            arguments.add("maxSizeBytes = $maxSizeBytesValue")
+          }
+          if (expireAfterWriteTimeValue != null && expireAfterWriteUnitValue?.startsWith("TimeUnit.") == true) {
+            arguments.add("expireAfterMillis = $expireAfterWriteUnitValue.toMillis($expireAfterWriteTimeValue)")
+          }
+
+          val replaceExpressionUsageInfo = ReplaceExpressionUsageInfo(
+            this@UpdateLruNormalizedCacheFactory,
+            element.parent,
+            "MemoryCacheFactory(${arguments.joinToString(", ")})"
+          )
+
+          val importUsageInfo = element.containingFile?.getChildOfType<KtImportList>()?.let { importList ->
+            AddImportUsageInfo(this@UpdateLruNormalizedCacheFactory, importList)
+          }
+
+          if (importUsageInfo != null) {
+            listOf(replaceExpressionUsageInfo, importUsageInfo)
+          } else {
+            listOf(replaceExpressionUsageInfo)
+          }
+        }
+      }
   }
+
+  private class ReplaceImportUsageInfo(migrationItem: MigrationItem, element: KtImportDirective) :
+    MigrationItemUsageInfo(migrationItem, element)
+
+  private class ReplaceExpressionUsageInfo(migrationItem: MigrationItem, element: PsiElement, val replacementExpression: String) :
+    MigrationItemUsageInfo(migrationItem, element)
+
+  private class AddImportUsageInfo(migrationItem: MigrationItem, element: KtImportList) : MigrationItemUsageInfo(migrationItem, element)
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
-
     val psiFactory = KtPsiFactory(project)
-    val importDirective = element.parentOfType<KtImportDirective>()
-    if (importDirective != null) {
-      // Reference is an import
-      importDirective.replace(psiFactory.createImportDirective(ImportPath.fromString("com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory")))
-    } else {
-      // Reference is a class reference
-      // Looking for something like:
-      //     EvictionPolicy.builder()
-      //      .maxSizeBytes(10 * 1024 * 1024)
-      //      .expireAfterWrite(10, TimeUnit.MILLISECONDS)
-      //      .build()
-      val callExpression = element.parent as? KtCallExpression ?: return null
-      val argumentExpression = callExpression.valueArguments.first().getArgumentExpression() as? KtDotQualifiedExpression ?: return null
-
-      var maxSizeBytesValue: String? = null
-      val maxSizeBytesCall = argumentExpression.findDescendantOfType<KtNameReferenceExpression> { it.getReferencedName() == "maxSizeBytes" }
-      if (maxSizeBytesCall != null) {
-        maxSizeBytesValue = maxSizeBytesCall.parent.castSafelyTo<KtCallExpression>()?.valueArguments?.firstOrNull()?.text
+    when (usage) {
+      is ReplaceImportUsageInfo -> {
+        element.replace(psiFactory.createImportDirective(ImportPath.fromString("com.apollographql.apollo3.cache.normalized.api.MemoryCacheFactory")))
       }
 
-      var expireAfterWriteTimeValue: String? = null
-      var expireAfterWriteUnitValue: String? = null
-      val expireAfterWriteCall =
-        argumentExpression.findDescendantOfType<KtNameReferenceExpression> { it.getReferencedName() == "expireAfterWrite" }
-      if (expireAfterWriteCall != null) {
-        val arguments = expireAfterWriteCall.parent.castSafelyTo<KtCallExpression>()?.valueArguments
-        expireAfterWriteTimeValue = arguments?.firstOrNull()?.text
-        expireAfterWriteUnitValue = arguments?.getOrNull(1)?.text
+      is ReplaceExpressionUsageInfo -> {
+        element.replace(psiFactory.createExpression(usage.replacementExpression))
       }
 
-      val arguments = mutableListOf<String>()
-      if (maxSizeBytesValue != null) {
-        arguments.add("maxSizeBytes = $maxSizeBytesValue")
+      is AddImportUsageInfo -> {
+        val newImport =
+          psiFactory.createImportDirective(ImportPath.fromString("com.apollographql.apollo3.cache.normalized.normalizedCache"))
+        element.add(newImport)
       }
-      if (expireAfterWriteTimeValue != null && expireAfterWriteUnitValue?.startsWith("TimeUnit.") == true) {
-        arguments.add("expireAfterMillis = $expireAfterWriteUnitValue.toMillis($expireAfterWriteTimeValue)")
-      }
-
-      element.parent.replace(psiFactory.createExpression("MemoryCacheFactory(${arguments.joinToString(", ")})"))
     }
     return null
   }
