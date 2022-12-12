@@ -17,6 +17,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateHttpCache
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateLruNormalizedCacheFactory
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
+import com.apollographql.ijplugin.util.containingKtFileImportList
 import com.apollographql.ijplugin.util.logd
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.history.LocalHistory
@@ -39,6 +40,8 @@ import com.intellij.refactoring.ui.UsageViewDescriptorAdapter
 import com.intellij.usageView.UsageInfo
 import org.jetbrains.kotlin.idea.core.ShortenReferences
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.resolve.ImportPath
 
 /**
  * Migrations of Apollo Android v2 to Apollo Kotlin v3.
@@ -205,9 +208,21 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     val action = LocalHistory.getInstance().startAction(commandName)
     try {
       for (usage in usages) {
-        val elementToShorten = (usage as MigrationItemUsageInfo).migrationItem.performRefactoring(myProject, migration!!, usage)
+        val migrationItem = (usage as MigrationItemUsageInfo).migrationItem
+        val elementToShorten = migrationItem.performRefactoring(myProject, migration!!, usage)
         if (elementToShorten != null) {
           refsToShorten += smartPointerManager.createSmartPsiElementPointer(elementToShorten)
+        }
+        val importsToAdd = migrationItem.importsToAdd()
+        if (importsToAdd.isNotEmpty()) {
+          val psiFactory = KtPsiFactory(myProject)
+          usage.element?.containingKtFileImportList()?.let { importList ->
+            importsToAdd.forEach { importToAdd ->
+              if (importList.imports.none { it.importPath?.pathStr == importToAdd }) {
+                importList.add(psiFactory.createImportDirective(ImportPath.fromString(importToAdd)))
+              }
+            }
+          }
         }
       }
     } finally {

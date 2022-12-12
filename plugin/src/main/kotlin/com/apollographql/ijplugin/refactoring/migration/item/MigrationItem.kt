@@ -9,4 +9,5 @@ sealed class MigrationItem {
   open fun prepare(project: Project, migration: PsiMigration) {}
   abstract fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo>
   abstract fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement?
+  open fun importsToAdd(): Set<String> = emptySet()
 }

@@ -1,6 +1,5 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
-import com.apollographql.ijplugin.util.containingKtFileImportList
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
@@ -11,7 +10,6 @@ import com.intellij.util.castSafelyTo
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtImportDirective
-import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
@@ -25,12 +23,12 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
       "com.apollographql.apollo.cache.normalized.lru.LruNormalizedCacheFactory",
       searchScope
     )
-      .flatMap {
+      .mapNotNull {
         val element = it.element!!
         val importDirective = element.parentOfType<KtImportDirective>()
         if (importDirective != null) {
           // Reference is an import
-          listOf(ReplaceImportUsageInfo(this@UpdateLruNormalizedCacheFactory, importDirective))
+          ReplaceImportUsageInfo(this@UpdateLruNormalizedCacheFactory, importDirective)
         } else {
           // Reference is a class reference
           // Looking for something like:
@@ -38,9 +36,9 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
           //      .maxSizeBytes(10 * 1024 * 1024)
           //      .expireAfterWrite(10, TimeUnit.MILLISECONDS)
           //      .build()
-          val callExpression = element.parent as? KtCallExpression ?: return@flatMap emptyList<MigrationItemUsageInfo>()
+          val callExpression = element.parent as? KtCallExpression ?: return@mapNotNull null
           val argumentExpression = callExpression.valueArguments.first().getArgumentExpression() as? KtDotQualifiedExpression
-            ?: return@flatMap emptyList<MigrationItemUsageInfo>()
+            ?: return@mapNotNull null
 
           var maxSizeBytesValue: String? = null
           val maxSizeBytesCall =
@@ -72,16 +70,7 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
             element.parent,
             "MemoryCacheFactory(${arguments.joinToString(", ")})"
           )
-
-          val importUsageInfo = element.containingKtFileImportList()?.let { importList ->
-            AddImportUsageInfo(this@UpdateLruNormalizedCacheFactory, importList)
-          }
-
-          if (importUsageInfo != null) {
-            listOf(replaceExpressionUsageInfo, importUsageInfo)
-          } else {
-            listOf(replaceExpressionUsageInfo)
-          }
+          replaceExpressionUsageInfo
         }
       }
   }
@@ -91,8 +80,6 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
 
   private class ReplaceExpressionUsageInfo(migrationItem: MigrationItem, element: PsiElement, val replacementExpression: String) :
     MigrationItemUsageInfo(migrationItem, element)
-
-  private class AddImportUsageInfo(migrationItem: MigrationItem, element: KtImportList) : MigrationItemUsageInfo(migrationItem, element)
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
@@ -106,13 +93,9 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
       is ReplaceExpressionUsageInfo -> {
         element.replace(psiFactory.createExpression(usage.replacementExpression))
       }
-
-      is AddImportUsageInfo -> {
-        val newImport =
-          psiFactory.createImportDirective(ImportPath.fromString("com.apollographql.apollo3.cache.normalized.normalizedCache"))
-        element.add(newImport)
-      }
     }
     return null
   }
+
+  override fun importsToAdd() = setOf("com.apollographql.apollo3.cache.normalized.normalizedCache")
 }

@@ -1,18 +1,15 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.refactoring.findMethodReferences
-import com.apollographql.ijplugin.util.containingKtFileImportList
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.nj2k.postProcessing.resolve
 import org.jetbrains.kotlin.psi.KtCallExpression
-import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPsiFactory
-import org.jetbrains.kotlin.resolve.ImportPath
 
 object UpdateHttpCache : MigrationItem(), DeletesElements {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
@@ -70,18 +67,13 @@ object UpdateHttpCache : MigrationItem(), DeletesElements {
             )
           }
         }
-        val importUsageInfos = replaceUsageInfos.mapNotNull { replaceUsageInfo ->
-          replaceUsageInfo.element?.containingKtFileImportList()?.let { importList ->
-            AddImportUsageInfo(this@UpdateHttpCache, importList)
-          }
-        }
         val deleteUsageInfos = elementsToDelete.map { elementToDelete ->
           DeleteUsageInfo(
             this@UpdateHttpCache,
             elementToDelete
           )
         }
-        replaceUsageInfos + importUsageInfos + deleteUsageInfos
+        replaceUsageInfos + deleteUsageInfos
       }
   }
 
@@ -136,8 +128,6 @@ object UpdateHttpCache : MigrationItem(), DeletesElements {
 
   private class DeleteUsageInfo(migrationItem: MigrationItem, element: PsiElement) : MigrationItemUsageInfo(migrationItem, element)
 
-  private class AddImportUsageInfo(migrationItem: MigrationItem, element: KtImportList) : MigrationItemUsageInfo(migrationItem, element)
-
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
     val element = usage.element
     if (element == null || !element.isValid) return null
@@ -148,14 +138,10 @@ object UpdateHttpCache : MigrationItem(), DeletesElements {
         element.replace(newMethodReference)
       }
 
-      is AddImportUsageInfo -> {
-        val psiFactory = KtPsiFactory(project)
-        val newImport = psiFactory.createImportDirective(ImportPath.fromString("com.apollographql.apollo3.cache.http.httpCache"))
-        element.add(newImport)
-      }
-
       is DeleteUsageInfo -> element.delete()
     }
     return null
   }
+
+  override fun importsToAdd() = setOf("com.apollographql.apollo3.cache.http.httpCache")
 }
