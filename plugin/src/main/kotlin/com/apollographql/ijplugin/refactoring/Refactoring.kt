@@ -11,6 +11,7 @@ import com.intellij.psi.PsiMigration
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 
 fun findOrCreatePackage(project: Project, migration: PsiMigration, qName: String): PsiPackage {
@@ -65,4 +66,15 @@ fun findFieldReferences(project: Project, className: String, fieldName: String):
   val field = psiLookupClass.findFieldByName(fieldName, true) ?: return emptyList()
   val processor = RenamePsiElementProcessor.forElement(field)
   return processor.findReferences(field, GlobalSearchScope.projectScope(project), false)
+}
+
+fun findClassUsages(project: Project, className: String): Collection<PsiReference> {
+  val clazz = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project)) ?: return emptyList()
+  val processor = RenamePsiElementProcessor.forElement(clazz)
+  return processor.findReferences(clazz, GlobalSearchScope.projectScope(project), false)
+}
+
+fun findPackageUsages(project: Project, packageName: String): Collection<PsiReference> {
+  val psiPackage = JavaPsiFacade.getInstance(project).findPackage(packageName) ?: return emptyList()
+  return ReferencesSearch.search(psiPackage, GlobalSearchScope.projectScope(project), false).toList()
 }

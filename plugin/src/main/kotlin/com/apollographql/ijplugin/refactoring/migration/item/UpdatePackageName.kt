@@ -2,11 +2,11 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.refactoring.bindReferencesToElement
 import com.apollographql.ijplugin.refactoring.findOrCreatePackage
+import com.apollographql.ijplugin.refactoring.findPackageUsages
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.refactoring.migration.MigrationUtil
 
 class UpdatePackageName(
   private val oldName: String,
@@ -17,7 +17,7 @@ class UpdatePackageName(
   }
 
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
-    return MigrationUtil.findPackageUsages(project, migration, oldName, searchScope).toMigrationItemUsageInfo()
+    return findPackageUsages(project, oldName).toMigrationItemUsageInfo()
   }
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {

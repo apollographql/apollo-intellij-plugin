@@ -1,11 +1,11 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
+import com.apollographql.ijplugin.refactoring.findClassUsages
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.parentOfType
-import com.intellij.refactoring.migration.MigrationUtil
 import com.intellij.util.castSafelyTo
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
@@ -16,15 +16,12 @@ import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
 import org.jetbrains.kotlin.resolve.ImportPath
 
 object UpdateLruNormalizedCacheFactory : MigrationItem() {
+  private const val CACHE_FACTORY_FQN = "com.apollographql.apollo.cache.normalized.lru.LruNormalizedCacheFactory"
+
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
-    return MigrationUtil.findClassUsages(
-      project,
-      migration,
-      "com.apollographql.apollo.cache.normalized.lru.LruNormalizedCacheFactory",
-      searchScope
-    )
+    return findClassUsages(project, CACHE_FACTORY_FQN)
       .mapNotNull {
-        val element = it.element!!
+        val element = it.element
         val importDirective = element.parentOfType<KtImportDirective>()
         if (importDirective != null) {
           // Reference is an import

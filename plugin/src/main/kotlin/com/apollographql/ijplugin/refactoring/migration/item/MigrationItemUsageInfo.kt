@@ -40,6 +40,5 @@ fun Collection<PsiReference>.toMigrationItemUsageInfo(): List<MigrationItemUsage
   return map { it.toMigrationItemUsageInfo() }
 }
 
-
 context(MigrationItem)
 fun PsiElement.toMigrationItemUsageInfo() = MigrationItemUsageInfo(migrationItem = this@MigrationItem, element = this)

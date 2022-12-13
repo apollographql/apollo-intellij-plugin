@@ -23,6 +23,7 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
     "com.apollographql.apollo:apollo-runtime:2.5.14",
     "com.apollographql.apollo:apollo-coroutines-support:2.5.14",
     "com.apollographql.apollo:apollo-normalized-cache-jvm:2.5.14",
+    "com.apollographql.apollo:apollo-normalized-cache-sqlite-jvm:2.5.14",
     "com.apollographql.apollo:apollo-http-cache-api:2.5.14",
   )
 
@@ -61,7 +62,10 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   fun testHttpCache() = runMigration()
 
   @Test
-  fun testNormalizedCache() = runMigration()
+  fun testInMemoryNormalizedCache() = runMigration()
+
+  @Test
+  fun testSqlNormalizedCache() = runMigration()
 
   @Test
   fun testUpgradeGradlePluginInBuildGradleKts() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")

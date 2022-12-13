@@ -17,6 +17,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateHttpCache
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateLruNormalizedCacheFactory
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateSqlNormalizedCacheFactory
 import com.apollographql.ijplugin.util.containingKtFileImportList
 import com.apollographql.ijplugin.util.logd
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
@@ -110,6 +111,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       ),
       RemoveMethodCall("$apollo2.cache.normalized.ApolloStoreOperation", "execute"),
       UpdateLruNormalizedCacheFactory,
+      UpdateSqlNormalizedCacheFactory,
 
       RemoveMethodCall("$apollo2.ApolloQueryCall", "toBuilder"),
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
