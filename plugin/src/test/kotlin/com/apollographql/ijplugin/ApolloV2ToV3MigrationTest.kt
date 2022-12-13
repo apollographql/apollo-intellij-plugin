@@ -88,6 +88,10 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testAddCustomTypeAdapter() = runMigration()
 
+  @Test
+  fun testUpdateCustomTypeMapping() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
+
+
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     val fileBaseName = getTestName(true)
     if (fileNameInProject != null) {

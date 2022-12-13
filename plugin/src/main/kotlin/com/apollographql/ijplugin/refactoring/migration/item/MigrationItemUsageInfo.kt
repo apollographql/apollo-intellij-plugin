@@ -6,21 +6,30 @@ import com.intellij.usageView.UsageInfo
 
 open class MigrationItemUsageInfo : UsageInfo {
   val migrationItem: MigrationItem
+  private val attachedData: Any?
 
-  constructor(migrationItem: MigrationItem, reference: PsiReference) : super(reference) {
+  constructor(migrationItem: MigrationItem, reference: PsiReference, attachedData: Any? = null) : super(reference) {
     this.migrationItem = migrationItem
+    this.attachedData = attachedData
   }
 
-  constructor(migrationItem: MigrationItem, element: PsiElement) : super(element) {
+  constructor(migrationItem: MigrationItem, element: PsiElement, attachedData: Any? = null) : super(element) {
     this.migrationItem = migrationItem
+    this.attachedData = attachedData
   }
 
-  constructor(migrationItem: MigrationItem, source: UsageInfo) : super(
+  constructor(migrationItem: MigrationItem, source: UsageInfo, attachedData: Any? = null) : super(
     source.element!!,
     source.rangeInElement!!.startOffset,
     source.rangeInElement!!.endOffset
   ) {
     this.migrationItem = migrationItem
+    this.attachedData = attachedData
+  }
+
+  fun <T> attachedData(): T? {
+    @Suppress("UNCHECKED_CAST")
+    return attachedData as T?
   }
 }
 
