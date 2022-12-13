@@ -16,7 +16,7 @@ import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
 
-open class CommentDependenciesInToml(
+class CommentDependenciesInToml(
   private vararg val artifactId: String,
 ) : MigrationItem() {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
@@ -43,15 +43,13 @@ open class CommentDependenciesInToml(
     return usages
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    if (element == null || !element.isValid) return null
     element.parent.addBefore(
       createComment(project, " TODO: remove this declaration and its uses in your gradle files", element.language),
       element
     )
     element.parent.addBefore(TomlPsiFactory(project).createWhitespace("\n"), element)
     element.replace(createComment(project, " " + element.text, element.language))
-    return null
   }
 }

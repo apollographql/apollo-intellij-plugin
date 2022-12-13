@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.refactoring.findMethodReferences
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -17,12 +16,9 @@ class UpdateMethodName(
     return findMethodReferences(project = project, className = className, methodName = oldMethodName).toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
-    val element = usage.element
-    if (element == null || !element.isValid) return null
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val newMethodReference = KtPsiFactory(project).createExpression(newMethodName)
-    element.replace(newMethodReference)
-    return null
+    usage.element.replace(newMethodReference)
   }
 
   override fun importsToAdd() = if (importToAdd != null) setOf(importToAdd) else emptySet()

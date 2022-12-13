@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.util.quoted
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.FilenameIndex
@@ -17,7 +16,7 @@ import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 
-open class UpdateGradlePluginInBuildKts(
+class UpdateGradlePluginInBuildKts(
   private val oldPluginId: String,
   private val newPluginId: String,
   private val newPluginVersion: String,
@@ -50,10 +49,8 @@ open class UpdateGradlePluginInBuildKts(
     return usages
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
-    val element = usage.element
-    if (element == null || !element.isValid) return null
-    when (element) {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
+    when (val element = usage.element) {
       is KtBinaryExpression -> {
         // id("xxx") version yyy
         // If yyy is a simple String (a hardcoded version), replace it with the new version, otherwise leave it alone but add a comment
@@ -96,6 +93,5 @@ open class UpdateGradlePluginInBuildKts(
         element.replace(KtPsiFactory(project).createExpression("""id("$newPluginId")"""))
       }
     }
-    return null
   }
 }

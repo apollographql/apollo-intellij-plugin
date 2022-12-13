@@ -4,7 +4,6 @@ import com.apollographql.ijplugin.refactoring.bindReferencesToElement
 import com.apollographql.ijplugin.refactoring.findOrCreatePackage
 import com.apollographql.ijplugin.refactoring.findPackageUsages
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 
@@ -20,11 +19,8 @@ class UpdatePackageName(
     return findPackageUsages(project, oldName).toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
-    val element = usage.element
-    if (element == null || !element.isValid) return null
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val newPackage = findOrCreatePackage(project, migration, newName)
-    element.bindReferencesToElement(newPackage)
-    return null
+    usage.element.bindReferencesToElement(newPackage)
   }
 }

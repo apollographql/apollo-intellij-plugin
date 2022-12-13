@@ -78,9 +78,8 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
   private class ReplaceExpressionUsageInfo(migrationItem: MigrationItem, element: PsiElement, val replacementExpression: String) :
     MigrationItemUsageInfo(migrationItem, element)
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    if (element == null || !element.isValid) return null
     val psiFactory = KtPsiFactory(project)
     when (usage) {
       is ReplaceImportUsageInfo -> {
@@ -91,7 +90,6 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
         element.replace(psiFactory.createExpression(usage.replacementExpression))
       }
     }
-    return null
   }
 
   override fun importsToAdd() = setOf("com.apollographql.apollo3.cache.normalized.normalizedCache")

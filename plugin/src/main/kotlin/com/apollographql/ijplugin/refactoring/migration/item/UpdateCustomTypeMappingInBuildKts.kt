@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.util.unquoted
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.FilenameIndex
@@ -52,9 +51,8 @@ object UpdateCustomTypeMappingInBuildKts : MigrationItem() {
     return usages
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    if (element == null || !element.isValid) return null
     val map: Map<String, String> = usage.attachedData()!!
     val psiFactory = KtPsiFactory(project)
     map.entries.toList().reversed().forEach { (scalar, kotlinType) ->
@@ -80,6 +78,5 @@ object UpdateCustomTypeMappingInBuildKts : MigrationItem() {
       element.addSiblingAfter(psiFactory.createNewLine())
     }
     element.delete()
-    return null
   }
 }

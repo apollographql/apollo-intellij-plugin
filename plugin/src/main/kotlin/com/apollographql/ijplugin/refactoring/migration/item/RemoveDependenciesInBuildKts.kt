@@ -1,7 +1,6 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.FilenameIndex
@@ -11,7 +10,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 
-open class RemoveDependenciesInBuildKts(
+class RemoveDependenciesInBuildKts(
   private vararg val groupAndArtifact: String,
 ) : MigrationItem(), DeletesElements {
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
@@ -34,10 +33,7 @@ open class RemoveDependenciesInBuildKts(
     return usages
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
-    val element = usage.element
-    if (element == null || !element.isValid) return null
-    element.delete()
-    return null
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
+    usage.element.delete()
   }
 }

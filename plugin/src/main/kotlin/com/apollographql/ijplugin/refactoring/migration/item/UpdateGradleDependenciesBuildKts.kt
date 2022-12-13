@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.util.unquoted
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.FilenameIndex
@@ -15,7 +14,7 @@ import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
 import org.jetbrains.kotlin.psi.KtValueArgument
 
-open class UpdateGradleDependenciesBuildKts(
+class UpdateGradleDependenciesBuildKts(
   private val oldGroupId: String,
   private val newGroupId: String,
 ) : MigrationItem() {
@@ -39,16 +38,13 @@ open class UpdateGradleDependenciesBuildKts(
     return usages
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
-    val element = usage.element
-    if (element == null || !element.isValid) return null
-    val argument = (element as KtCallExpression).valueArguments.first()
-    val entries = ((argument as KtValueArgument).getArgumentExpression() as? KtStringTemplateExpression)?.entries ?: return null
-    val firstEntry = entries.firstOrNull() ?: return null
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
+    val argument = (usage.element as KtCallExpression).valueArguments.first()
+    val entries = ((argument as KtValueArgument).getArgumentExpression() as? KtStringTemplateExpression)?.entries ?: return
+    val firstEntry = entries.firstOrNull() ?: return
     val artifactId = firstEntry.text.unquoted().split(":")[1]
     firstEntry.replace(KtPsiFactory(project).createLiteralStringTemplateEntry("$newGroupId:$artifactId"))
     // Remove other entries (with recent versions of the Apollo Gradle plugin, there is no need to specify the version)
     entries.drop(1).forEach { it.delete() }
-    return null
   }
 }

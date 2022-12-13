@@ -5,5 +5,5 @@ fun String.quoted(): String {
 }
 
 fun String.unquoted(): String {
-  return if (this.startsWith('"') && this.endsWith('"')) this.substring(1, this.length - 1) else this
+  return removeSurrounding("\"")
 }

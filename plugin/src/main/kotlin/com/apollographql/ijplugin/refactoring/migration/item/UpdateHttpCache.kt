@@ -128,9 +128,8 @@ object UpdateHttpCache : MigrationItem(), DeletesElements {
 
   private class DeleteUsageInfo(migrationItem: MigrationItem, element: PsiElement) : MigrationItemUsageInfo(migrationItem, element)
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    if (element == null || !element.isValid) return null
     when (usage) {
       is ReplaceUsageInfo -> {
         val psiFactory = KtPsiFactory(project)
@@ -140,7 +139,6 @@ object UpdateHttpCache : MigrationItem(), DeletesElements {
 
       is DeleteUsageInfo -> element.delete()
     }
-    return null
   }
 
   override fun importsToAdd() = setOf("com.apollographql.apollo3.cache.http.httpCache")

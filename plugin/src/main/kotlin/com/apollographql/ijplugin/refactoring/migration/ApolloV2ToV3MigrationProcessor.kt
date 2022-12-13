@@ -21,6 +21,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateSqlNormalizedCacheFactory
 import com.apollographql.ijplugin.util.containingKtFileImportList
 import com.apollographql.ijplugin.util.logd
+import com.apollographql.ijplugin.util.logw
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.history.LocalHistory
 import com.intellij.openapi.application.ApplicationManager
@@ -33,15 +34,11 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.SmartPointerManager
-import com.intellij.psi.SmartPsiElementPointer
-import com.intellij.psi.codeStyle.JavaCodeStyleManager
 import com.intellij.psi.impl.migration.PsiMigrationManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.ui.UsageViewDescriptorAdapter
 import com.intellij.usageView.UsageInfo
-import org.jetbrains.kotlin.idea.core.ShortenReferences
-import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
 
@@ -137,7 +134,6 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   private val migrationManager = PsiMigrationManager.getInstance(myProject)
   private var migration: PsiMigration? = null
   private val searchScope = GlobalSearchScope.projectScope(project)
-  private val refsToShorten = mutableListOf<SmartPsiElementPointer<PsiElement>>()
   private val smartPointerManager = SmartPointerManager.getInstance(myProject)
 
   override fun getCommandName() = getRefactoringName()
@@ -218,25 +214,26 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     logd()
     finishMigration()
     migration = startMigration()
-    refsToShorten.clear()
     val action = LocalHistory.getInstance().startAction(commandName)
     try {
       for (usage in usages) {
         val migrationItem = (usage as MigrationItemUsageInfo).migrationItem
-        val elementToShorten = migrationItem.performRefactoring(myProject, migration!!, usage)
-        if (elementToShorten != null) {
-          refsToShorten += smartPointerManager.createSmartPsiElementPointer(elementToShorten)
-        }
-        val importsToAdd = migrationItem.importsToAdd()
-        if (importsToAdd.isNotEmpty()) {
-          val psiFactory = KtPsiFactory(myProject)
-          usage.element?.containingKtFileImportList()?.let { importList ->
-            importsToAdd.forEach { importToAdd ->
-              if (importList.imports.none { it.importPath?.pathStr == importToAdd }) {
-                importList.add(psiFactory.createImportDirective(ImportPath.fromString(importToAdd)))
+        try {
+          if (!usage.element.isValid) continue
+          migrationItem.performRefactoring(myProject, migration!!, usage)
+          val importsToAdd = migrationItem.importsToAdd()
+          if (importsToAdd.isNotEmpty()) {
+            val psiFactory = KtPsiFactory(myProject)
+            usage.element.containingKtFileImportList()?.let { importList ->
+              importsToAdd.forEach { importToAdd ->
+                if (importList.imports.none { it.importPath?.pathStr == importToAdd }) {
+                  importList.add(psiFactory.createImportDirective(ImportPath.fromString(importToAdd)))
+                }
               }
             }
           }
+        } catch (t: Throwable) {
+          logw(t, "Error while performing refactoring for $migrationItem")
         }
       }
     } finally {
@@ -247,24 +244,6 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
   override fun performPsiSpoilingRefactoring() {
     logd()
-    // TODO: this doesn't seem to work for Kotlin
-    // In more recent versions of the platform, there's a new way to do this.
-    // See https://github.com/JetBrains/intellij-community/blob/7c17222938b93877bf62b7448766c7f821a7180a/java/java-impl-refactorings/src/com/intellij/refactoring/migration/MigrationProcessor.java#L164
-    val styleManager = JavaCodeStyleManager.getInstance(myProject)
-    for (pointer in refsToShorten) {
-      pointer.element?.let {
-        if (it is KtElement) {
-          // Kotlin
-          ShortenReferences.DEFAULT.process(it)
-        } else {
-          // Java
-          styleManager.shortenClassReferences(it)
-        }
-      }
-    }
-    refsToShorten.clear()
-    finishMigration()
-
     // Not sure if this is actually useful but IJ's editor sometimes has a hard time after the files have been touched
     PsiManager.getInstance(myProject).apply {
       dropResolveCaches()

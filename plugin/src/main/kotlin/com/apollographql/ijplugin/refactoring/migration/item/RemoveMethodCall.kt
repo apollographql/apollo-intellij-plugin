@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.refactoring.findMethodReferences
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.parentOfType
@@ -32,15 +31,14 @@ open class RemoveMethodCall(
       .toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    if (element == null || !element.isValid) return null
     val importDirective = element.parentOfType<KtImportDirective>()
     if (importDirective != null) {
       // Reference is an import
       importDirective.delete()
     } else {
-      if (removeImportsOnly) return null
+      if (removeImportsOnly) return
       val dotQualifiedExpression = element.parentOfType<KtDotQualifiedExpression>()
       if (dotQualifiedExpression != null) {
         // Reference is a method call
@@ -48,6 +46,5 @@ open class RemoveMethodCall(
         dotQualifiedExpression.replace(dotQualifiedExpression.receiverExpression)
       }
     }
-    return null
   }
 }

@@ -31,6 +31,10 @@ open class MigrationItemUsageInfo : UsageInfo {
     @Suppress("UNCHECKED_CAST")
     return attachedData as T?
   }
+
+  override fun getElement(): PsiElement {
+    return super.getElement()!!
+  }
 }
 
 context(MigrationItem)

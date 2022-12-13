@@ -3,7 +3,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 import com.apollographql.ijplugin.util.quoted
 import com.apollographql.ijplugin.util.unquoted
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.FilenameIndex
@@ -17,7 +16,7 @@ import org.toml.lang.psi.TomlTable
 import org.toml.lang.psi.ext.TomlLiteralKind
 import org.toml.lang.psi.ext.kind
 
-open class UpdateGradleDependenciesInToml(
+class UpdateGradleDependenciesInToml(
   private val oldGroupId: String,
   private val newGroupId: String,
   private val newVersion: String,
@@ -33,7 +32,7 @@ open class UpdateGradleDependenciesInToml(
           if (element.kind is TomlLiteralKind.String) {
             val dependencyText = element.text.unquoted()
             if (dependencyText == oldGroupId || dependencyText.startsWith("$oldGroupId:")) {
-              usages.add(UsageInfo(this@UpdateGradleDependenciesInToml, element.firstChild, UsageInfo.Kind.SHORT_MODULE_OR_GROUP))
+              usages.add(MigrationItemUsageInfo(this@UpdateGradleDependenciesInToml, element.firstChild, Kind.SHORT_MODULE_OR_GROUP))
               // Find the associated version
               val versionEntry = (element.parent.parent as? TomlInlineTable)?.entries
                 ?.first { it.key.text == "version" || it.key.text == "version.ref" }
@@ -41,10 +40,10 @@ open class UpdateGradleDependenciesInToml(
                 if (versionEntry.key.text == "version") {
                   versionEntry.value?.let {
                     usages.add(
-                      UsageInfo(
+                      MigrationItemUsageInfo(
                         this@UpdateGradleDependenciesInToml,
                         it.firstChild,
-                        UsageInfo.Kind.VERSION
+                        Kind.VERSION
                       )
                     )
                   }
@@ -56,10 +55,10 @@ open class UpdateGradleDependenciesInToml(
                   val refTarget = versionsTable?.entries?.firstOrNull { it.key.text == versionRefKey }
                   refTarget?.value?.let {
                     usages.add(
-                      UsageInfo(
+                      MigrationItemUsageInfo(
                         this@UpdateGradleDependenciesInToml,
                         it.firstChild,
-                        UsageInfo.Kind.VERSION
+                        Kind.VERSION
                       )
                     )
                   }
@@ -73,18 +72,14 @@ open class UpdateGradleDependenciesInToml(
     return usages
   }
 
-  private class UsageInfo(migrationItem: UpdateGradleDependenciesInToml, element: PsiElement, val kind: Kind) :
-    MigrationItemUsageInfo(migrationItem, element) {
-    enum class Kind {
-      SHORT_MODULE_OR_GROUP, VERSION
-    }
+  private enum class Kind {
+    SHORT_MODULE_OR_GROUP, VERSION
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    if (element == null || !element.isValid) return null
-    when ((usage as UsageInfo).kind) {
-      UsageInfo.Kind.SHORT_MODULE_OR_GROUP -> {
+    when (usage.attachedData<Kind>()!!) {
+      Kind.SHORT_MODULE_OR_GROUP -> {
         val notation = element.text.unquoted().split(":")
         val newNotation = when (notation.size) {
           1 -> newGroupId
@@ -104,8 +99,7 @@ open class UpdateGradleDependenciesInToml(
         element.replace(TomlPsiFactory(project).createLiteral(newNotation.quoted()))
       }
 
-      UsageInfo.Kind.VERSION -> element.replace(TomlPsiFactory(project).createLiteral(newVersion.quoted()))
+      Kind.VERSION -> element.replace(TomlPsiFactory(project).createLiteral(newVersion.quoted()))
     }
-    return null
   }
 }

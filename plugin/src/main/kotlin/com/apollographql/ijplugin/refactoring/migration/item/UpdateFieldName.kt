@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.refactoring.findFieldReferences
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -16,11 +15,8 @@ class UpdateFieldName(
     return findFieldReferences(project = project, className = className, fieldName = oldFieldName).toMigrationItemUsageInfo()
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
-    val element = usage.element
-    if (element == null || !element.isValid) return null
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val newFieldReference = KtPsiFactory(project).createExpression(newFieldName)
-    element.replace(newFieldReference)
-    return null
+    usage.element.replace(newFieldReference)
   }
 }

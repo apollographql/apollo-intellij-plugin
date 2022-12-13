@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.refactoring.migration.item
 
 import com.apollographql.ijplugin.refactoring.findClassUsages
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.parentOfType
@@ -41,11 +40,8 @@ object UpdateSqlNormalizedCacheFactory : MigrationItem() {
       .map { it.toMigrationItemUsageInfo() }
   }
 
-  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo): PsiElement? {
-    val element = usage.element
-    if (element == null || !element.isValid) return null
-    (element as KtCallExpression).valueArgumentList?.removeArgument(0)
-    return null
+  override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
+    (usage.element as KtCallExpression).valueArgumentList?.removeArgument(0)
   }
 
   override fun importsToAdd() = setOf("com.apollographql.apollo3.cache.normalized.normalizedCache")
