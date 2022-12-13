@@ -11,6 +11,7 @@ import com.intellij.psi.PsiMigration
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 
@@ -77,4 +78,9 @@ fun findClassUsages(project: Project, className: String): Collection<PsiReferenc
 fun findPackageUsages(project: Project, packageName: String): Collection<PsiReference> {
   val psiPackage = JavaPsiFacade.getInstance(project).findPackage(packageName) ?: return emptyList()
   return ReferencesSearch.search(psiPackage, GlobalSearchScope.projectScope(project), false).toList()
+}
+
+fun findInheritorsOfClass(project: Project, className: String): Collection<PsiClass> {
+  val psiLookupClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.allScope(project)) ?: return emptyList()
+  return ClassInheritorsSearch.search(psiLookupClass, GlobalSearchScope.projectScope(project), true).toList()
 }

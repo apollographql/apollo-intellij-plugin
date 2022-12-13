@@ -78,7 +78,7 @@ class UpdateGradleDependenciesInToml(
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    when (usage.attachedData<Kind>()!!) {
+    when (usage.attachedData<Kind>()) {
       Kind.SHORT_MODULE_OR_GROUP -> {
         val notation = element.text.unquoted().split(":")
         val newNotation = when (notation.size) {

@@ -27,9 +27,9 @@ open class MigrationItemUsageInfo : UsageInfo {
     this.attachedData = attachedData
   }
 
-  fun <T> attachedData(): T? {
+  fun <T> attachedData(): T {
     @Suppress("UNCHECKED_CAST")
-    return attachedData as T?
+    return attachedData as T
   }
 
   override fun getElement(): PsiElement {

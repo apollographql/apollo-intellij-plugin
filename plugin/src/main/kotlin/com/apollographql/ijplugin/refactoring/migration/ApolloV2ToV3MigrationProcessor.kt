@@ -10,6 +10,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodImport
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateAddCustomTypeAdapter
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateCustomTypeMappingInBuildKts
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateEnumValueCase
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesInToml
@@ -122,10 +123,13 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateGradleDependenciesInToml(apollo2, apollo3, apollo3LatestVersion),
       UpdateGradleDependenciesBuildKts(apollo2, apollo3),
       RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
-      UpdateCustomTypeMappingInBuildKts,
 
       // Custom scalars
+      UpdateCustomTypeMappingInBuildKts,
       UpdateAddCustomTypeAdapter,
+
+      // Enums
+      UpdateEnumValueCase,
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")

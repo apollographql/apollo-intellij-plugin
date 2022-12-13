@@ -53,7 +53,7 @@ object UpdateCustomTypeMappingInBuildKts : MigrationItem() {
 
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val element = usage.element
-    val map: Map<String, String> = usage.attachedData()!!
+    val map: Map<String, String> = usage.attachedData()
     val psiFactory = KtPsiFactory(project)
     map.entries.toList().reversed().forEach { (scalar, kotlinType) ->
       val text = when (kotlinType) {
