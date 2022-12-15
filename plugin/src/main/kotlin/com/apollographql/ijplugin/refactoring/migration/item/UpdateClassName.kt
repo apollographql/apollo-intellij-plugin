@@ -1,6 +1,6 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
-import com.apollographql.ijplugin.refactoring.findClassUsages
+import com.apollographql.ijplugin.refactoring.findClassReferences
 import com.apollographql.ijplugin.refactoring.findOrCreateClass
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMigration
@@ -19,7 +19,7 @@ class UpdateClassName(
   }
 
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
-    return findClassUsages(project, oldName)
+    return findClassReferences(project, oldName)
       .toMigrationItemUsageInfo()
       .map {
         val element = it.element!!

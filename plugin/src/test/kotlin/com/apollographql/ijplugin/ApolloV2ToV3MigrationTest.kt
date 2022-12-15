@@ -92,7 +92,7 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   fun testUpdateCustomTypeMapping() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
 
   @Test
-  fun testUpdateEnumValueCase() = runMigration()
+  fun testUpdateEnumValueUpperCase() = runMigration()
 
 
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {

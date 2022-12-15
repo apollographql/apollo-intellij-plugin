@@ -10,7 +10,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodImport
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateAddCustomTypeAdapter
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateCustomTypeMappingInBuildKts
-import com.apollographql.ijplugin.refactoring.migration.item.UpdateEnumValueCase
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateEnumValueUpperCase
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesInToml
@@ -129,7 +129,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateAddCustomTypeAdapter,
 
       // Enums
-      UpdateEnumValueCase,
+      UpdateEnumValueUpperCase,
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")

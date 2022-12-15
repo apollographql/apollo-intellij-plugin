@@ -1,6 +1,6 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
-import com.apollographql.ijplugin.refactoring.findClassUsages
+import com.apollographql.ijplugin.refactoring.findClassReferences
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMigration
@@ -19,7 +19,7 @@ object UpdateLruNormalizedCacheFactory : MigrationItem() {
   private const val CACHE_FACTORY_FQN = "com.apollographql.apollo.cache.normalized.lru.LruNormalizedCacheFactory"
 
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
-    return findClassUsages(project, CACHE_FACTORY_FQN)
+    return findClassReferences(project, CACHE_FACTORY_FQN)
       .mapNotNull {
         val element = it.element
         val importDirective = element.parentOfType<KtImportDirective>()

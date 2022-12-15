@@ -1,6 +1,6 @@
 package com.apollographql.ijplugin.refactoring.migration.item
 
-import com.apollographql.ijplugin.refactoring.findClassUsages
+import com.apollographql.ijplugin.refactoring.findClassReferences
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMigration
 import com.intellij.psi.search.GlobalSearchScope
@@ -14,7 +14,7 @@ object UpdateSqlNormalizedCacheFactory : MigrationItem() {
   private const val CACHE_FACTORY_FQN = "com.apollographql.apollo.cache.normalized.sql.SqlNormalizedCacheFactory"
 
   override fun findUsages(project: Project, migration: PsiMigration, searchScope: GlobalSearchScope): List<MigrationItemUsageInfo> {
-    return findClassUsages(
+    return findClassReferences(
       project,
       CACHE_FACTORY_FQN,
     )
