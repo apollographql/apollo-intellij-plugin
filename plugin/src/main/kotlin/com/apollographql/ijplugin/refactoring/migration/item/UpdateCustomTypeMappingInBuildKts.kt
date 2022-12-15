@@ -30,7 +30,7 @@ object UpdateCustomTypeMappingInBuildKts : MigrationItem() {
             val qualifiedExpression = expression.parent as? KtQualifiedExpression ?: return
             // `set(mapOf(...))`
             val setCallExpression = qualifiedExpression.selectorExpression
-              ?.findDescendantOfType<KtCallExpression> { it.calleeExpression?.text == "set" } as? KtCallExpression ?: return
+              ?.findDescendantOfType<KtCallExpression> { it.calleeExpression?.text == "set" } ?: return
             // `mapOf(...)`
             val mapOfCallExpression = setCallExpression.valueArguments.firstOrNull()
               ?.findDescendantOfType<KtCallExpression> { it.calleeExpression?.text == "mapOf" } ?: return

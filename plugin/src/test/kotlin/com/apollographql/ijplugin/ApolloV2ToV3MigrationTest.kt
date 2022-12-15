@@ -94,6 +94,8 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testUpdateEnumValueUpperCase() = runMigration()
 
+  @Test
+  fun testUpdateInput() = runMigration()
 
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     val fileBaseName = getTestName(true)

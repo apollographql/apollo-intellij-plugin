@@ -16,6 +16,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDepende
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateHttpCache
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateInputAbsent
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateLruNormalizedCacheFactory
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
@@ -69,6 +70,10 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "await"),
       UpdateMethodName("$apollo2.ApolloQueryCall", "watcher", "watch", importToAdd = "com.apollographql.apollo3.cache.normalized.watch"),
       RemoveMethodCall("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow", extensionTargetClassName = "$apollo2.ApolloQueryWatcher"),
+      UpdateClassName("$apollo2.api.Input", "$apollo3.api.Optional"),
+      UpdateMethodName("$apollo2.api.Input.Companion", "fromNullable", "Present"),
+      UpdateMethodName("$apollo2.api.Input.Companion", "optional", "presentIfNotNull"),
+      UpdateInputAbsent,
 
       // Http cache
       UpdateMethodName(

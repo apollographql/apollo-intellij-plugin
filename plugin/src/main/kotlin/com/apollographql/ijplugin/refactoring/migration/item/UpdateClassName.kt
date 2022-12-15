@@ -22,7 +22,7 @@ class UpdateClassName(
     return findClassReferences(project, oldName)
       .toMigrationItemUsageInfo()
       .map {
-        val element = it.element!!
+        val element = it.element
         val importDirective = element.parentOfType<KtImportDirective>()
         if (importDirective != null) {
           // Reference is an import
