@@ -103,6 +103,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testUpdateGraphqlSourceDirectorySet() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
 
+  @Test
+  fun testUpdateOkHttpExecutionContext() = runMigration()
+
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     val fileBaseName = getTestName(true)
     if (fileNameInProject != null) {

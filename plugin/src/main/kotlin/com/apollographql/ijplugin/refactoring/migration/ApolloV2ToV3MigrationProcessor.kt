@@ -21,6 +21,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateHttpCache
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateInputAbsent
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateLruNormalizedCacheFactory
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateOkHttpExecutionContext
 import com.apollographql.ijplugin.refactoring.migration.item.UpdatePackageName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateSqlNormalizedCacheFactory
 import com.apollographql.ijplugin.util.containingKtFileImportList
@@ -75,6 +76,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateClassName("$apollo2.api.Input", "$apollo3.api.Optional"),
       UpdateMethodName("$apollo2.api.Input.Companion", "fromNullable", "Present"),
       UpdateMethodName("$apollo2.api.Input.Companion", "optional", "presentIfNotNull"),
+      UpdateOkHttpExecutionContext,
       UpdateInputAbsent,
 
       // Http cache
