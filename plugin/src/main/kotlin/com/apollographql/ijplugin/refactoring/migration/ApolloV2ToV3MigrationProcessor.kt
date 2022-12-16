@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin.refactoring.migration
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.refactoring.migration.item.AddUseVersion2Compat
 import com.apollographql.ijplugin.refactoring.migration.item.CommentDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.DeletesElements
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
@@ -128,6 +129,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateGradleDependenciesInToml(apollo2, apollo3, apollo3LatestVersion),
       UpdateGradleDependenciesBuildKts(apollo2, apollo3),
       RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
+      AddUseVersion2Compat,
 
       // Custom scalars
       UpdateCustomTypeMappingInBuildKts,

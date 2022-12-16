@@ -97,6 +97,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testUpdateInput() = runMigration()
 
+  @Test
+  fun testAddUseVersion2Compat() = runMigration(extension = "gradle.kts", fileNameInProject = "build.gradle.kts")
+
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     val fileBaseName = getTestName(true)
     if (fileNameInProject != null) {
