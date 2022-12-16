@@ -16,6 +16,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateGraphqlSourceDirectorySet
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateHttpCache
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateInputAbsent
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateLruNormalizedCacheFactory
@@ -130,6 +131,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateGradleDependenciesBuildKts(apollo2, apollo3),
       RemoveDependenciesInBuildKts("$apollo2:apollo-coroutines-support", "$apollo2:apollo-android-support"),
       AddUseVersion2Compat,
+      UpdateGraphqlSourceDirectorySet,
 
       // Custom scalars
       UpdateCustomTypeMappingInBuildKts,

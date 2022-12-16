@@ -54,4 +54,5 @@ fun Collection<PsiReference>.toMigrationItemUsageInfo(): List<MigrationItemUsage
 }
 
 context(MigrationItem)
-fun PsiElement.toMigrationItemUsageInfo() = MigrationItemUsageInfo(migrationItem = this@MigrationItem, element = this)
+fun PsiElement.toMigrationItemUsageInfo(attachedData: Any? = null) =
+  MigrationItemUsageInfo(migrationItem = this@MigrationItem, element = this, attachedData = attachedData)
