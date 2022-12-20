@@ -79,6 +79,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateMethodName("$apollo2.api.Input.Companion", "optional", "presentIfNotNull"),
       UpdateOkHttpExecutionContext,
       UpdateInputAbsent,
+      RemoveMethodCall("$apollo2.api.OperationName", "name"),
 
       // Http cache
       UpdateMethodName(
