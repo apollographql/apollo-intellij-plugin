@@ -64,4 +64,6 @@ suspend fun main() {
     .apolloStore
     .writeAndPublish(myQuery, data!!)
     .execute()
+
+  apolloClient.clearNormalizedCache()
 }

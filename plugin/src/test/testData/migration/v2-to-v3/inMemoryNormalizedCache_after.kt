@@ -42,4 +42,6 @@ suspend fun main() {
   apolloClient
     .apolloStore
     .writeOperation(myQuery, data!!)
+
+  apolloClient.apolloStore.clearAll()
 }

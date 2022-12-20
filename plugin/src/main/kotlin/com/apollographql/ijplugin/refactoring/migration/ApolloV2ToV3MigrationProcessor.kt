@@ -4,6 +4,7 @@ import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.refactoring.migration.item.AddUseVersion2Compat
 import com.apollographql.ijplugin.refactoring.migration.item.CommentDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.DeletesElements
+import com.apollographql.ijplugin.refactoring.migration.item.MigrationItem
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveDependenciesInBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.RemoveMethodCall
@@ -71,7 +72,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateMethodName("$apollo2.ApolloClient", "builder", "Builder"),
       UpdateMethodName("$apollo2.coroutines.CoroutinesExtensionsKt", "await", "execute"),
       RemoveMethodImport("$apollo2.coroutines.CoroutinesExtensionsKt", "await"),
-      UpdateMethodName("$apollo2.ApolloQueryCall", "watcher", "watch", importToAdd = "com.apollographql.apollo3.cache.normalized.watch"),
+      UpdateMethodName("$apollo2.ApolloQueryCall", "watcher", "watch", importToAdd = "$apollo3.cache.normalized.watch"),
       RemoveMethodCall("$apollo2.coroutines.CoroutinesExtensionsKt", "toFlow", extensionTargetClassName = "$apollo2.ApolloQueryWatcher"),
       UpdateClassName("$apollo2.api.Input", "$apollo3.api.Optional"),
       UpdateMethodName("$apollo2.api.Input.Companion", "fromNullable", "Present"),
@@ -84,7 +85,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         "$apollo2.ApolloQueryCall.Builder",
         "httpCachePolicy",
         "httpFetchPolicy",
-        importToAdd = "com.apollographql.apollo3.cache.http.httpFetchPolicy"
+        importToAdd = "$apollo3.cache.http.httpFetchPolicy"
       ),
       UpdateClassName("$apollo2.api.cache.http.HttpCachePolicy", "$apollo3.cache.http.HttpFetchPolicy"),
       UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "CACHE_ONLY", "CacheOnly"),
@@ -92,13 +93,14 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "CACHE_FIRST", "CacheFirst"),
       UpdateFieldName("$apollo2.api.cache.http.HttpCachePolicy", "NETWORK_FIRST", "NetworkFirst"),
       UpdateHttpCache,
+      UpdateMethodName("$apollo2.ApolloClient", "clearHttpCache", "httpCache.clearAll", importToAdd = "$apollo3.cache.http.httpCache"),
 
       // Normalized cache
       UpdateMethodName(
         "$apollo2.ApolloQueryCall.Builder",
         "responseFetcher",
         "fetchPolicy",
-        importToAdd = "com.apollographql.apollo3.cache.normalized.fetchPolicy"
+        importToAdd = "$apollo3.cache.normalized.fetchPolicy"
       ),
       UpdateClassName("$apollo2.fetcher.ApolloResponseFetchers", "$apollo3.cache.normalized.FetchPolicy"),
       UpdateFieldName("$apollo2.fetcher.ApolloResponseFetchers", "CACHE_ONLY", "CacheOnly"),
@@ -109,17 +111,23 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         "$apollo2.cache.normalized.ApolloStore",
         "read",
         "readOperation",
-        importToAdd = "com.apollographql.apollo3.cache.normalized.apolloStore"
+        importToAdd = "$apollo3.cache.normalized.apolloStore"
       ),
       UpdateMethodName(
         "$apollo2.cache.normalized.ApolloStore",
         "writeAndPublish",
         "writeOperation",
-        importToAdd = "com.apollographql.apollo3.cache.normalized.apolloStore"
+        importToAdd = "$apollo3.cache.normalized.apolloStore"
       ),
       RemoveMethodCall("$apollo2.cache.normalized.ApolloStoreOperation", "execute"),
       UpdateLruNormalizedCacheFactory,
       UpdateSqlNormalizedCacheFactory,
+      UpdateMethodName(
+        "$apollo2.ApolloClient",
+        "clearNormalizedCache",
+        "apolloStore.clearAll",
+        importToAdd = "$apollo3.cache.normalized.apolloStore"
+      ),
 
       RemoveMethodCall("$apollo2.ApolloQueryCall", "toBuilder"),
       RemoveMethodCall("$apollo2.ApolloQueryCall.Builder", "build"),
@@ -235,18 +243,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         val migrationItem = (usage as MigrationItemUsageInfo).migrationItem
         try {
           if (!usage.element.isValid) continue
+          maybeAddImports(usage, migrationItem)
           migrationItem.performRefactoring(myProject, migration!!, usage)
-          val importsToAdd = migrationItem.importsToAdd()
-          if (importsToAdd.isNotEmpty()) {
-            val psiFactory = KtPsiFactory(myProject)
-            usage.element.containingKtFileImportList()?.let { importList ->
-              importsToAdd.forEach { importToAdd ->
-                if (importList.imports.none { it.importPath?.pathStr == importToAdd }) {
-                  importList.add(psiFactory.createImportDirective(ImportPath.fromString(importToAdd)))
-                }
-              }
-            }
-          }
         } catch (t: Throwable) {
           logw(t, "Error while performing refactoring for $migrationItem")
         }
@@ -254,6 +252,23 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     } finally {
       action.finish()
       finishMigration()
+    }
+  }
+
+  private fun maybeAddImports(
+    usage: MigrationItemUsageInfo,
+    migrationItem: MigrationItem,
+  ) {
+    val importsToAdd = migrationItem.importsToAdd()
+    if (importsToAdd.isNotEmpty()) {
+      val psiFactory = KtPsiFactory(myProject)
+      usage.element.containingKtFileImportList()?.let { importList ->
+        importsToAdd.forEach { importToAdd ->
+          if (importList.imports.none { it.importPath?.pathStr == importToAdd }) {
+            importList.add(psiFactory.createImportDirective(ImportPath.fromString(importToAdd)))
+          }
+        }
+      }
     }
   }
 

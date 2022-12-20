@@ -38,4 +38,6 @@ suspend fun main() {
     .toBuilder()
     .httpCachePolicy(HttpCachePolicy.NETWORK_ONLY)
     .build()
+
+  apolloClient.clearHttpCache()
 }

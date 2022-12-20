@@ -27,4 +27,6 @@ suspend fun main() {
   apolloClient!!
     .query(myQuery!!)
     .httpFetchPolicy(HttpFetchPolicy.NetworkOnly)
+
+  apolloClient.httpCache.clearAll()
 }
