@@ -34,14 +34,16 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.history.LocalHistory
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.GeneratedSourcesFilter
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Ref
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMigration
-import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.impl.migration.PsiMigrationManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.BaseRefactoringProcessor
@@ -49,6 +51,7 @@ import com.intellij.refactoring.ui.UsageViewDescriptorAdapter
 import com.intellij.usageView.UsageInfo
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
+import org.jetbrains.plugins.gradle.util.GradleConstants
 
 /**
  * Migrations of Apollo Android v2 to Apollo Kotlin v3.
@@ -168,7 +171,6 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
   private val migrationManager = PsiMigrationManager.getInstance(myProject)
   private var migration: PsiMigration? = null
   private val searchScope = GlobalSearchScope.projectScope(project)
-  private val smartPointerManager = SmartPointerManager.getInstance(myProject)
 
   override fun getCommandName() = getRefactoringName()
 
@@ -240,7 +242,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       )
       return false
     }
-    isPreviewUsages = true
+    // Set to true to see the "preview usages" UI prior to refactoring.
+    // isPreviewUsages = true
     return true
   }
 
@@ -259,6 +262,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         } catch (t: Throwable) {
           logw(t, "Error while performing refactoring for $migrationItem")
         }
+        postRefactoring()
       }
     } finally {
       action.finish()
@@ -283,14 +287,25 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
     }
   }
 
-  override fun performPsiSpoilingRefactoring() {
+  private fun postRefactoring() {
     logd()
-    // Not sure if this is actually useful but IJ's editor sometimes has a hard time after the files have been touched
-    PsiManager.getInstance(myProject).apply {
-      dropResolveCaches()
-      dropPsiCaches()
+    PsiDocumentManager.getInstance(myProject).performLaterWhenAllCommitted {
+      // Not sure if this is actually useful but IJ's editor sometimes has a hard time after the files have been touched
+      PsiManager.getInstance(myProject).apply {
+        dropResolveCaches()
+        dropPsiCaches()
+      }
+      DaemonCodeAnalyzer.getInstance(myProject).restart()
+
+      // Sync gradle
+      ExternalSystemUtil.refreshProject(
+        myProject,
+        GradleConstants.SYSTEM_ID,
+        myProject.basePath!!,
+        false,
+        ProgressExecutionMode.IN_BACKGROUND_ASYNC
+      )
     }
-    DaemonCodeAnalyzer.getInstance(myProject).restart()
   }
 }
 
