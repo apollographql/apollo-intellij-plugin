@@ -81,6 +81,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       UpdateOkHttpExecutionContext,
       UpdateInputAbsent,
       RemoveMethodCall("$apollo2.api.OperationName", "name"),
+      UpdateClassName("$apollo2.api.FileUpload", "$apollo3.api.Upload"),
 
       // Http cache
       UpdateMethodName(
@@ -154,7 +155,6 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
       // Upload
       UpdateFileUpload,
-      UpdateClassName("$apollo2.api.FileUpload", "$apollo3.api.Upload"),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
