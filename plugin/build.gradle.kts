@@ -108,6 +108,12 @@ tasks {
   runIde {
     // Enables debug logging for the plugin
     systemProperty("idea.log.debug.categories", "Apollo")
+    // Use a custom IntelliJ installation. Set this property in your local ~/.gradle/gradle.properties file.
+    // (for AS, it should be something like '/Applications/Android Studio.app/Contents')
+    // See https://plugins.jetbrains.com/docs/intellij/android-studio.html#configuring-the-plugin-gradle-build-script
+    if (project.hasProperty("apolloIntellijPlugin.ideDir")) {
+      ideDir.set(file(project.property("apolloIntellijPlugin.ideDir")!!))
+    }
   }
 
   signPlugin {
