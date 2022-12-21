@@ -20,6 +20,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDepende
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGraphqlSourceDirectorySet
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateHttpCache
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateIdlingResource
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateInputAbsent
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateLruNormalizedCacheFactory
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateMethodName
@@ -155,6 +156,10 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
       // Upload
       UpdateFileUpload,
+
+      // Idling resource
+      UpdateClassName("$apollo2.test.espresso.ApolloIdlingResource", "$apollo3.android.ApolloIdlingResource"),
+      UpdateIdlingResource,
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
