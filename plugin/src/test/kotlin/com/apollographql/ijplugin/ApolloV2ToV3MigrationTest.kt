@@ -109,6 +109,9 @@ class ApolloV2ToV3MigrationTest : LightJavaCodeInsightFixtureTestCase() {
   @Test
   fun testUpdateOperationName() = runMigration()
 
+  @Test
+  fun testUpdateFileUpload() = runMigration()
+
   private fun runMigration(extension: String = "kt", fileNameInProject: String? = null) {
     val fileBaseName = getTestName(true)
     if (fileNameInProject != null) {

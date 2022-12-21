@@ -14,6 +14,7 @@ import com.apollographql.ijplugin.refactoring.migration.item.UpdateClassName
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateCustomTypeMappingInBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateEnumValueUpperCase
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateFieldName
+import com.apollographql.ijplugin.refactoring.migration.item.UpdateFileUpload
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesBuildKts
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradleDependenciesInToml
 import com.apollographql.ijplugin.refactoring.migration.item.UpdateGradlePluginInBuildKts
@@ -150,6 +151,10 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
 
       // Enums
       UpdateEnumValueUpperCase,
+
+      // Upload
+      UpdateFileUpload,
+      UpdateClassName("$apollo2.api.FileUpload", "$apollo3.api.Upload"),
     )
 
     private fun getRefactoringName() = ApolloBundle.message("ApolloV2ToV3MigrationProcessor.title")
@@ -243,7 +248,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       for (usage in usages) {
         val migrationItem = (usage as MigrationItemUsageInfo).migrationItem
         try {
-          if (!usage.element.isValid) continue
+          if (!usage.isValid) continue
           maybeAddImports(usage, migrationItem)
           migrationItem.performRefactoring(myProject, migration!!, usage)
         } catch (t: Throwable) {

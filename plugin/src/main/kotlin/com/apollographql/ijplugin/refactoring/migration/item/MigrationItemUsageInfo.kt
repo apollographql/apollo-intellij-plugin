@@ -35,6 +35,10 @@ open class MigrationItemUsageInfo : UsageInfo {
   override fun getElement(): PsiElement {
     return super.getElement()!!
   }
+
+  override fun isValid(): Boolean {
+    return super.getElement() != null && super.isValid()
+  }
 }
 
 context(MigrationItem)

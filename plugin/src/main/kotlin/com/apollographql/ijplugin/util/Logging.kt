@@ -1,12 +1,14 @@
 package com.apollographql.ijplugin.util
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.util.Disposer
+import org.jetbrains.kotlin.utils.PrintingLogger
 
 // To see debug logs, in the embedded IntelliJ app, go to Help / Diagnostic Tools / Debug Log Settings and add "Apollo"
 // or pass -Didea.log.debug.categories=ApolloKotlin to the VM.
 // See https://plugins.jetbrains.com/docs/intellij/ide-infrastructure.html#logging
 // and https://plugins.jetbrains.com/docs/intellij/testing-faq.html#how-to-enable-debugtrace-logging
-private val logger = Logger.getInstance("Apollo")
+private val logger = if (Disposer.isDebugMode()) PrintingLogger(System.err) else Logger.getInstance("Apollo")
 
 fun logd() {
   logger.debug(prefix(null))
