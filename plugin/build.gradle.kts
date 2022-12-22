@@ -1,6 +1,7 @@
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -12,7 +13,7 @@ plugins {
   // Gradle IntelliJ Plugin
   id("org.jetbrains.intellij") version "1.11.0"
   // Gradle Changelog Plugin
-  id("org.jetbrains.changelog") version "1.3.1"
+  id("org.jetbrains.changelog") version "2.0.0"
   // Gradle Qodana Plugin
   id("org.jetbrains.qodana") version "0.1.13"
   // Download a file
@@ -27,7 +28,12 @@ repositories {
   mavenCentral()
 }
 
-// Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
+// Set the JVM language level used to build project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
+kotlin {
+  jvmToolchain(properties("javaVersion").toInt())
+}
+
+// Configure Gradle IntelliJ Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
   pluginName.set(properties("pluginName"))
   version.set(properties("platformVersion"))
@@ -40,30 +46,22 @@ intellij {
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
   path.set(rootProject.file("CHANGELOG.md").canonicalPath)
-  version.set(properties("pluginVersion"))
   groups.set(emptyList())
+  repositoryUrl.set(properties("pluginRepositoryUrl"))
 }
 
 // Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
 qodana {
-  cachePath.set(projectDir.resolve(".qodana").canonicalPath)
-  reportPath.set(projectDir.resolve("build/reports/inspections").canonicalPath)
+  cachePath.set(rootProject.file(".qodana").canonicalPath)
+  reportPath.set(rootProject.file("build/reports/inspections").canonicalPath)
   saveReport.set(true)
   showReport.set(System.getenv("QODANA_SHOW_REPORT")?.toBoolean() ?: false)
 }
 
 tasks {
-  // Set the JVM compatibility versions
-  properties("javaVersion").let {
-    withType<JavaCompile> {
-      sourceCompatibility = it
-      targetCompatibility = it
-    }
-    withType<KotlinCompile> {
-      kotlinOptions {
-        jvmTarget = it
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-      }
+  withType<KotlinCompile> {
+    kotlinOptions {
+      freeCompilerArgs = listOf("-Xcontext-receivers")
     }
   }
 
@@ -82,14 +80,17 @@ tasks {
           throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
         }
         subList(indexOf(start) + 1, indexOf(end))
-      }.joinToString("\n").run { markdownToHTML(this) }
+      }.joinToString("\n").let { markdownToHTML(it) }
     )
 
     // Get the latest available change notes from the changelog file
     changeNotes.set(provider {
-      changelog.run {
-        getOrNull(properties("pluginVersion")) ?: getLatest()
-      }.toHTML()
+      with(changelog) {
+        renderItem(
+          getOrNull(properties("pluginVersion")) ?: getUnreleased(),
+          Changelog.OutputType.HTML,
+        )
+      }
     })
   }
 
@@ -108,6 +109,7 @@ tasks {
   runIde {
     // Enables debug logging for the plugin
     systemProperty("idea.log.debug.categories", "Apollo")
+
     // Use a custom IntelliJ installation. Set this property in your local ~/.gradle/gradle.properties file.
     // (for AS, it should be something like '/Applications/Android Studio.app/Contents')
     // See https://plugins.jetbrains.com/docs/intellij/android-studio.html#configuring-the-plugin-gradle-build-script
@@ -131,6 +133,7 @@ tasks {
     channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
   }
 
+  // Log tests
   withType<AbstractTestTask> {
     testLogging {
       exceptionFormat = TestExceptionFormat.FULL
