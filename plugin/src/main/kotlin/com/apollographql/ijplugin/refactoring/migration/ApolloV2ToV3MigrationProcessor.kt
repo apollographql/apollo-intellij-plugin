@@ -40,7 +40,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.GeneratedSourcesFilter
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Ref
-import com.intellij.openapiext.isUnitTestMode
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
@@ -50,6 +49,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.ui.UsageViewDescriptorAdapter
 import com.intellij.usageView.UsageInfo
+import org.jetbrains.kotlin.idea.util.application.isUnitTestMode
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
 import org.jetbrains.plugins.gradle.util.GradleConstants
@@ -263,8 +263,8 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
         } catch (t: Throwable) {
           logw(t, "Error while performing refactoring for $migrationItem")
         }
-        postRefactoring()
       }
+      postRefactoring()
     } finally {
       action.finish()
       finishMigration()
@@ -299,7 +299,7 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       DaemonCodeAnalyzer.getInstance(myProject).restart()
 
       // Sync gradle
-      if (!isUnitTestMode) {
+      if (!isUnitTestMode()) {
         ExternalSystemUtil.refreshProject(
           myProject,
           GradleConstants.SYSTEM_ID,
