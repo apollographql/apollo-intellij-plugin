@@ -40,6 +40,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.GeneratedSourcesFilter
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Ref
+import com.intellij.openapiext.isUnitTestMode
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
@@ -298,13 +299,15 @@ class ApolloV2ToV3MigrationProcessor(project: Project) : BaseRefactoringProcesso
       DaemonCodeAnalyzer.getInstance(myProject).restart()
 
       // Sync gradle
-      ExternalSystemUtil.refreshProject(
-        myProject,
-        GradleConstants.SYSTEM_ID,
-        myProject.basePath!!,
-        false,
-        ProgressExecutionMode.IN_BACKGROUND_ASYNC
-      )
+      if (!isUnitTestMode) {
+        ExternalSystemUtil.refreshProject(
+          myProject,
+          GradleConstants.SYSTEM_ID,
+          myProject.basePath!!,
+          false,
+          ProgressExecutionMode.IN_BACKGROUND_ASYNC
+        )
+      }
     }
   }
 }
