@@ -10,6 +10,6 @@ repositories {
 }
 
 dependencies {
-  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.22")
+  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.8.0")
   implementation("org.slf4j:slf4j-simple:2.0.6")
 }
