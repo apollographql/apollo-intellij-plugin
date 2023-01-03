@@ -6,6 +6,7 @@ import com.apollographql.ijplugin.util.isApolloAndroid2Project
 import com.apollographql.ijplugin.util.isApolloKotlin3Project
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
+import com.apollographql.ijplugin.util.runWriteActionInEdt
 import com.intellij.lang.jsgraphql.GraphQLFileType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Document
@@ -33,7 +34,6 @@ import com.intellij.psi.PsiDocumentManager
 import org.gradle.tooling.CancellationTokenSource
 import org.gradle.tooling.GradleConnector
 import org.jetbrains.kotlin.idea.framework.GRADLE_SYSTEM_ID
-import org.jetbrains.kotlin.idea.util.application.runWriteActionInEdt
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionHelper
 import org.jetbrains.plugins.gradle.settings.GradleExecutionSettings
 import org.jetbrains.plugins.gradle.util.GradleConstants
