@@ -17,7 +17,6 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotifica
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskType
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.module.Module
@@ -38,9 +37,6 @@ import org.jetbrains.kotlin.idea.util.application.runWriteActionInEdt
 import org.jetbrains.plugins.gradle.service.execution.GradleExecutionHelper
 import org.jetbrains.plugins.gradle.settings.GradleExecutionSettings
 import org.jetbrains.plugins.gradle.util.GradleConstants
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
 
 private const val CODEGEN_GRADLE_TASK_NAME = "generateApolloSources"
 
@@ -53,27 +49,21 @@ class ApolloProjectServiceImpl(
   override val isApolloAndroid2Project by lazy { project.isApolloAndroid2Project }
   override val isApolloKotlin3Project by lazy { project.isApolloKotlin3Project }
 
-  private val triggerCodegenExecutor = Executors.newSingleThreadScheduledExecutor()
-  private var triggerCodegenFuture: ScheduledFuture<*>? = null
+  private var dirtyGqlDocument: Document? = null
 
   private var codegenGradleCancellationTokenSource: CancellationTokenSource? = null
 
   init {
     logd("project=${project.name} isApolloKotlin3Project=$isApolloKotlin3Project")
     if (isApolloKotlin3Project) {
+      // Trigger the codegen whenever a GraphQL file is saved.
       observeVfsChanges()
+
+      // To make this more reactive, any touched GraphQL document will automatically be saved (thus triggering the codegen)
+      // as soon as the current editor is changed.
       observeDocumentChanges()
+      observeFileEditorChanges()
     }
-
-    project.messageBus.connect(this).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
-      override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
-        logd("File Opened: ${file.name}")
-      }
-
-      override fun selectionChanged(event: FileEditorManagerEvent) {
-        logd("Selection Changed: ${event.newFile?.name}")
-      }
-    })
   }
 
   private fun observeDocumentChanges() {
@@ -86,9 +76,25 @@ class ApolloProjectServiceImpl(
           // Not a GraphQL file or not from this project: ignore
           return
         }
-        scheduleSaveDocument(event.document)
+        dirtyGqlDocument = event.document
       }
     }, this)
+  }
+
+  private fun observeFileEditorChanges() {
+    project.messageBus.connect(this).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
+      override fun selectionChanged(event: FileEditorManagerEvent) {
+        logd(event.newFile)
+        dirtyGqlDocument?.let {
+          dirtyGqlDocument = null
+          runWriteActionInEdt {
+            runCatching {
+              FileDocumentManager.getInstance().saveDocument(it)
+            }
+          }
+        }
+      }
+    })
   }
 
   private fun observeVfsChanges() {
@@ -134,17 +140,6 @@ class ApolloProjectServiceImpl(
       return null
     }
     return moduleForFile
-  }
-
-  private fun scheduleSaveDocument(document: Document) {
-    triggerCodegenFuture?.cancel(false)
-    triggerCodegenFuture = triggerCodegenExecutor.schedule({
-      runWriteActionInEdt {
-        runCatching {
-          FileDocumentManager.getInstance().saveDocument(document)
-        }
-      }
-    }, 4, TimeUnit.SECONDS)
   }
 
   private fun triggerCodegen(modules: Set<Module>) {
@@ -198,6 +193,5 @@ class ApolloProjectServiceImpl(
 
   override fun dispose() {
     logd("project=${project.name}")
-    triggerCodegenExecutor.shutdownNow()
   }
 }
