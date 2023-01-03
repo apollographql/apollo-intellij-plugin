@@ -6,28 +6,37 @@ import com.apollographql.ijplugin.util.isApolloAndroid2Project
 import com.apollographql.ijplugin.util.isApolloKotlin3Project
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
-import com.intellij.execution.executors.DefaultRunExecutor
-import com.intellij.execution.impl.ExecutionManagerImpl
 import com.intellij.lang.jsgraphql.GraphQLFileType
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
-import com.intellij.openapi.externalSystem.model.execution.ExternalSystemTaskExecutionSettings
-import com.intellij.openapi.externalSystem.service.execution.ExternalSystemProcessHandler
-import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
-import com.intellij.openapi.externalSystem.task.TaskCallback
-import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListenerAdapter
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskType
+import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.FileEditorManagerEvent
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.psi.PsiDocumentManager
+import org.gradle.tooling.CancellationTokenSource
+import org.gradle.tooling.GradleConnector
+import org.jetbrains.kotlin.idea.framework.GRADLE_SYSTEM_ID
+import org.jetbrains.kotlin.idea.util.application.runWriteActionInEdt
+import org.jetbrains.plugins.gradle.service.execution.GradleExecutionHelper
+import org.jetbrains.plugins.gradle.settings.GradleExecutionSettings
 import org.jetbrains.plugins.gradle.util.GradleConstants
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -47,12 +56,24 @@ class ApolloProjectServiceImpl(
   private val triggerCodegenExecutor = Executors.newSingleThreadScheduledExecutor()
   private var triggerCodegenFuture: ScheduledFuture<*>? = null
 
+  private var codegenGradleCancellationTokenSource: CancellationTokenSource? = null
+
   init {
     logd("project=${project.name} isApolloKotlin3Project=$isApolloKotlin3Project")
     if (isApolloKotlin3Project) {
       observeVfsChanges()
       observeDocumentChanges()
     }
+
+    project.messageBus.connect(this).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
+      override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+        logd("File Opened: ${file.name}")
+      }
+
+      override fun selectionChanged(event: FileEditorManagerEvent) {
+        logd("Selection Changed: ${event.newFile?.name}")
+      }
+    })
   }
 
   private fun observeDocumentChanges() {
@@ -60,12 +81,12 @@ class ApolloProjectServiceImpl(
       override fun documentChanged(event: DocumentEvent) {
         val vFile = PsiDocumentManager.getInstance(project).getPsiFile(event.document)?.virtualFile ?: return
         logd("vFile=${vFile.path}")
-        val gradleModuleName = getGradleModuleNameForFile(vFile)
-        if (gradleModuleName == null) {
-          // Not a GraphQL file or could not get Gradle module name: ignore
+        val module = getModuleForGqlFile(vFile)
+        if (module == null) {
+          // Not a GraphQL file or not from this project: ignore
           return
         }
-        scheduleCodegen(setOf(gradleModuleName))
+        scheduleSaveDocument(event.document)
       }
     }, this)
   }
@@ -83,26 +104,26 @@ class ApolloProjectServiceImpl(
         }
 
         private fun handleEvents(events: List<VFileEvent>) {
-          val gradleModuleNames = mutableSetOf<String>()
+          val modules = mutableSetOf<Module>()
           for (event in events) {
             val vFile = event.file!!
             logd("vFile=${vFile.path}")
-            val gradleModuleName = getGradleModuleNameForFile(vFile)
-            if (gradleModuleName == null) {
-              // Not a GraphQL file or could not get Gradle module name: ignore
+            val module = getModuleForGqlFile(vFile)
+            if (module == null) {
+              // Not a GraphQL file or not from this project: ignore
               continue
             }
-            gradleModuleNames += gradleModuleName
+            modules += module
           }
-          if (gradleModuleNames.isNotEmpty()) {
-            scheduleCodegen(gradleModuleNames)
+          if (modules.isNotEmpty()) {
+            triggerCodegen(modules)
           }
         }
       },
     )
   }
 
-  private fun getGradleModuleNameForFile(vFile: VirtualFile): String? {
+  private fun getModuleForGqlFile(vFile: VirtualFile): Module? {
     if (vFile.fileType !is GraphQLFileType) {
       // Only care for GraphQL files
       return null
@@ -112,66 +133,65 @@ class ApolloProjectServiceImpl(
       // A file from an external project: ignore
       return null
     }
-    return moduleForFile.getGradleName()
+    return moduleForFile
   }
 
-  private fun scheduleCodegen(gradleModuleNames: Set<String>) {
+  private fun scheduleSaveDocument(document: Document) {
     triggerCodegenFuture?.cancel(false)
-    triggerCodegenFuture = triggerCodegenExecutor.schedule({ triggerCodegen(gradleModuleNames) }, 4, TimeUnit.SECONDS)
-  }
-
-  private fun triggerCodegen(gradleModuleNames: Set<String>) {
-    logd("gradleModuleNames=$gradleModuleNames")
-    with(ApplicationManager.getApplication()) {
-      invokeLater {
-        runWriteAction {
-          stopCodegenIfOngoing()
-
-          val taskSettings = ExternalSystemTaskExecutionSettings().apply {
-            externalProjectPath = project.basePath
-            taskNames = gradleModuleNames.map { if (it == "") CODEGEN_GRADLE_TASK_NAME else ":$it:$CODEGEN_GRADLE_TASK_NAME" }
-            externalSystemIdString = GradleConstants.SYSTEM_ID.id
-          }
-          logd("taskNames=${taskSettings.taskNames}")
-          ExternalSystemUtil.runTask(
-            taskSettings,
-            DefaultRunExecutor.EXECUTOR_ID,
-            project,
-            GradleConstants.SYSTEM_ID,
-            object : TaskCallback {
-              override fun onSuccess() {
-                logd()
-                ApplicationManager.getApplication().invokeLater {
-                  ToolWindowManager.getInstance(project).activateEditorComponent()
-                }
-              }
-
-              override fun onFailure() {
-                logw("triggerCodegen onFailure")
-                ApplicationManager.getApplication().invokeLater {
-                  ToolWindowManager.getInstance(project).activateEditorComponent()
-                }
-              }
-            },
-            ProgressExecutionMode.IN_BACKGROUND_ASYNC,
-            false,
-          )
+    triggerCodegenFuture = triggerCodegenExecutor.schedule({
+      runWriteActionInEdt {
+        runCatching {
+          FileDocumentManager.getInstance().saveDocument(document)
         }
       }
-    }
+    }, 4, TimeUnit.SECONDS)
   }
 
-  private fun stopCodegenIfOngoing() {
-    val allDescriptors = ExecutionManagerImpl.getAllDescriptors(project)
-    logd("descriptors=$allDescriptors")
-    for (descriptor in allDescriptors) {
-      val processHandler = descriptor.processHandler
-      if (processHandler is ExternalSystemProcessHandler
-        && processHandler.executionName.contains(CODEGEN_GRADLE_TASK_NAME)
-        && !processHandler.isProcessTerminated && !processHandler.isProcessTerminating
-      ) {
-        logd("Codegen is ongoing: stopping it")
-        ExecutionManagerImpl.stopProcess(descriptor)
+  private fun triggerCodegen(modules: Set<Module>) {
+    logd("modules=$modules")
+
+    // Cancel any already running codegen task
+    codegenGradleCancellationTokenSource?.cancel()
+
+    val rootProjectPath = ExternalSystemApiUtil.getExternalRootProjectPath(modules.first())
+    if (rootProjectPath == null) {
+      logw("Could not get root project path for module ${modules.first().name}")
+      return
+    }
+    val taskNames = modules.map {
+      val gradleModuleName = it.getGradleName()
+      if (gradleModuleName == "") CODEGEN_GRADLE_TASK_NAME else ":$gradleModuleName:$CODEGEN_GRADLE_TASK_NAME"
+    }
+    logd("taskNames=$taskNames")
+    val executionSettings = ExternalSystemApiUtil.getExecutionSettings<GradleExecutionSettings>(
+      project,
+      rootProjectPath,
+      GradleConstants.SYSTEM_ID
+    )
+
+    val gradleExecutionHelper = GradleExecutionHelper()
+    gradleExecutionHelper.execute(rootProjectPath, executionSettings) { connection ->
+      codegenGradleCancellationTokenSource = GradleConnector.newCancellationTokenSource()
+
+      try {
+        val id = ExternalSystemTaskId.create(GRADLE_SYSTEM_ID, ExternalSystemTaskType.REFRESH_TASKS_LIST, project)
+        gradleExecutionHelper.getBuildLauncher(
+          id,
+          connection,
+          executionSettings,
+          ExternalSystemTaskNotificationListenerAdapter.NULL_OBJECT
+        )
+          .forTasks(*taskNames.toTypedArray())
+          .withCancellationToken(codegenGradleCancellationTokenSource!!.token())
+          .run()
+        logd("Codegen task finished successfully")
+
+        // Sync impacted modules so the generated files are visible to the IDE
+        for (module in modules) {
+          VfsUtil.markDirtyAndRefresh(true, true, true, module.guessModuleDir())
+        }
+      } catch (t: Throwable) {
+        logd(t, "Failed to run codegen")
       }
     }
   }
