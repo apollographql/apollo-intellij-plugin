@@ -1,0 +1,17 @@
+query animals {
+  animals {
+    id
+    name
+    ... on Cat {
+      meowVolume
+      fieldOnDogAndCat
+    }
+    ... on dog {
+      id
+      # noinspection ApolloUnusedField
+      barkVolume
+      fieldOnDogAndCat
+      name
+    }
+  }
+}

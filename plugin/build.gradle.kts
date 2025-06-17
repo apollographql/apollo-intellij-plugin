@@ -1,0 +1,248 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INTERNAL_API_USAGES
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INVALID_PLUGIN
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.PLUGIN_STRUCTURE_WARNINGS
+import java.net.URI
+import java.text.SimpleDateFormat
+import java.util.Date
+
+fun properties(key: String) = project.findProperty(key).toString()
+
+fun isSnapshotBuild() = System.getenv("IJ_PLUGIN_SNAPSHOT").toBoolean()
+
+plugins {
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.intellij.platform)
+  alias(libs.plugins.changelog)
+  alias(libs.plugins.apollo)
+  alias(libs.plugins.grammarkit)
+}
+
+repositories {
+//    mavenLocal()
+//    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+//    maven("https://storage.googleapis.com/apollo-previews/m2/")
+  mavenCentral()
+
+  intellijPlatform {
+    defaultRepositories()
+  }
+}
+
+group = properties("pluginGroup")
+
+// Use the global version defined in the root project + dedicated suffix if building a snapshot from the CI
+version = properties("VERSION_NAME") + getSnapshotVersionSuffix()
+
+fun getSnapshotVersionSuffix(): String {
+  if (!isSnapshotBuild()) return ""
+  return ".${SimpleDateFormat("YYYY-MM-dd").format(Date())}." + System.getenv("GITHUB_SHA").take(7)
+}
+
+kotlin {
+  jvmToolchain(21)
+}
+
+// Copy specific dependencies to a directory visible to the unit tests.
+// See ApolloTestCase.kt.
+configurations {
+  create("apolloDependencies")
+}
+dependencies {
+  listOf(
+      libs.apollo.annotations,
+      libs.apollo.api,
+      libs.apollo.runtime,
+  ).forEach {
+    add("apolloDependencies", it)
+  }
+}
+tasks.register<Copy>("copyApolloDependencies") {
+  from(configurations.getByName("apolloDependencies"))
+  into(layout.buildDirectory.asFile.get().resolve("apolloDependencies"))
+}
+
+tasks {
+  val runLocalIde by intellijPlatformTesting.runIde.registering {
+    // Use a custom IJ/AS installation. Set this property in your local ~/.gradle/gradle.properties file.
+    // (for AS, it should be something like '/Applications/Android Studio.app/Contents')
+    // See https://plugins.jetbrains.com/docs/intellij/android-studio.html#configuring-the-plugin-gradle-build-script
+    providers.gradleProperty("apolloIntellijPlugin.ideDir").orNull?.let {
+      localPath.set(file(it))
+    }
+
+    task {
+      // Enables debug logging for the plugin
+      systemProperty("idea.log.debug.categories", "Apollo")
+
+      // Disable hiding frequent exceptions in logs (annoying for debugging). See com.intellij.idea.IdeaLogger.
+      systemProperty("idea.logger.exception.expiration.minutes", "0")
+
+      // Uncomment to disable internal mode - see https://plugins.jetbrains.com/docs/intellij/enabling-internal.html
+      // systemProperty("idea.is.internal", "false")
+
+      // Enable K2 mode (can't be done in the UI in sandbox mode - see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html)
+      systemProperty("idea.kotlin.plugin.use.k2", "true")
+    }
+  }
+
+  withType<AbstractTestTask> {
+    // Log tests
+    testLogging {
+      exceptionFormat = TestExceptionFormat.FULL
+      events.add(TestLogEvent.PASSED)
+      events.add(TestLogEvent.FAILED)
+      showStandardStreams = true
+    }
+    dependsOn("copyApolloDependencies")
+    dependsOn(":test-project:generateApolloSources")
+  }
+
+  generateLexer {
+    purgeOldFiles.set(true)
+    sourceFile.set(file("src/main/grammars/ApolloGraphQLLexer.flex"))
+    targetOutputDir.set(file("src/main/java/com/apollographql/ijplugin/psi"))
+  }
+}
+
+// Setup fake JDK for maven dependencies to work
+// See https://youtrack.jetbrains.com/issue/IJSDK-321
+val mockJdkRoot = layout.buildDirectory.asFile.get().resolve("mockJDK")
+tasks.register("downloadMockJdk") {
+  val mockJdkRoot = mockJdkRoot
+  doLast {
+    val rtJar = mockJdkRoot.resolve("java/mockJDK-1.7/jre/lib/rt.jar")
+    if (!rtJar.exists()) {
+      rtJar.parentFile.mkdirs()
+      rtJar.writeBytes(
+          URI("https://github.com/JetBrains/intellij-community/raw/master/java/mockJDK-1.7/jre/lib/rt.jar").toURL()
+              .openStream()
+              .readBytes()
+      )
+    }
+  }
+}
+
+tasks.test.configure {
+  // Setup fake JDK for maven dependencies to work
+  // See https://jetbrains-platform.slack.com/archives/CPL5291JP/p1664105522154139 and https://youtrack.jetbrains.com/issue/IJSDK-321
+  // Use a relative path to make build caching work
+  dependsOn("downloadMockJdk")
+  systemProperty("idea.home.path", mockJdkRoot.relativeTo(project.projectDir).path)
+
+  // Enable K2 mode - see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html
+  systemProperty("idea.kotlin.plugin.use.k2", "true")
+}
+
+apollo {
+  service("apolloDebugServer") {
+    packageName.set("com.apollographql.ijplugin.apollodebugserver")
+    introspection {
+      endpointUrl.set("http://localhost:12200/")
+      schemaFile.set(file("src/main/graphql/schema.graphqls"))
+    }
+  }
+}
+
+dependencies {
+  // IntelliJ Platform dependencies must be declared before the intellijPlatform block - see https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1784
+  intellijPlatform {
+    create(type = properties("platformType"), version = properties("platformVersion"))
+    bundledPlugins(properties("platformBundledPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+    plugins(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+    // Use a specific version of the verifier
+    // TODO: remove when https://youtrack.jetbrains.com/issue/MP-7366 is fixed
+    pluginVerifier(version = "1.383")
+    testFramework(TestFrameworkType.Plugin.Java)
+    zipSigner()
+  }
+
+  implementation(libs.apollo.gradle.plugin.external) {
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+  }
+  implementation(libs.apollo.ast)
+  implementation(libs.apollo.tooling) {
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+  }
+  implementation(libs.apollo.normalized.cache.sqlite.classic)
+  implementation(libs.sqlite.jdbc)
+  implementation(libs.apollo.normalized.cache.sqlite.new) {
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+  }
+  implementation(libs.apollo.runtime) {
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+  }
+  runtimeOnly(libs.slf4j.simple)
+  testImplementation(libs.google.testparameterinjector)
+
+  // Temporary workaround for https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1663
+  // Should be fixed in platformVersion 2024.3.x
+  testRuntimeOnly("org.opentest4j:opentest4j:1.3.0")
+}
+
+// IntelliJ Platform Gradle Plugin configuration
+// See https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html#intellijPlatform-pluginConfiguration
+intellijPlatform {
+  pluginConfiguration {
+    id.set(properties("pluginId"))
+    name.set(properties("pluginName"))
+    version.set(project.version.toString())
+    ideaVersion {
+      sinceBuild = properties("pluginSinceBuild")
+      // No untilBuild specified, the plugin wants to be compatible with all future versions
+      untilBuild = provider { null }
+    }
+    // Extract the <!-- Plugin description --> section from README.md and provide it to the plugin's manifest
+    description.set(
+        projectDir.resolve("../README.md").readText().lines().run {
+          val start = "<!-- Plugin description -->"
+          val end = "<!-- Plugin description end -->"
+
+          if (!containsAll(listOf(start, end))) {
+            throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+          }
+          subList(indexOf(start) + 1, indexOf(end))
+        }.joinToString("\n").run { markdownToHTML(this) }
+    )
+    changeNotes.set(
+        if (isSnapshotBuild()) {
+          "Weekly snapshot builds contain the latest changes from the <code>main</code> branch."
+        } else {
+          "See the <a href=\"https://github.com/apollographql/apollo-kotlin/releases/tag/v${project.version}\">release notes</a>."
+        }
+    )
+  }
+
+  signing {
+    certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
+    privateKey.set(System.getenv("PRIVATE_KEY"))
+    password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
+  }
+
+  publishing {
+    token.set(System.getenv("PUBLISH_TOKEN"))
+    if (isSnapshotBuild()) {
+      // Read more: https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html#specifying-a-release-channel
+      channels.set(listOf("snapshots"))
+    }
+  }
+
+  pluginVerification {
+    ides {
+      recommended()
+    }
+    failureLevel.set(
+        setOf(
+            // Temporarily disabled due to https://platform.jetbrains.com/t/plugin-verifier-fails-with-plugin-com-intellij-modules-json-not-declared-as-a-plugin-dependency/580
+            // TODO: Uncomment when https://youtrack.jetbrains.com/issue/MP-7366 is fixed
+            // COMPATIBILITY_PROBLEMS,
+            INTERNAL_API_USAGES,
+            INVALID_PLUGIN,
+            PLUGIN_STRUCTURE_WARNINGS,
+        )
+    )
+  }
+}
