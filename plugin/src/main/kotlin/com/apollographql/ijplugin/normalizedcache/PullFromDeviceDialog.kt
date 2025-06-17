@@ -70,6 +70,7 @@ class PullFromDeviceDialog(
   private fun createTree(): SimpleTree {
     tree = object : SimpleTree() {
       override fun configureUiHelper(helper: TreeUIHelper?) {
+        @Suppress("DEPRECATION")
         TreeSpeedSearch(this).apply {
           setCanExpand(true)
         }
