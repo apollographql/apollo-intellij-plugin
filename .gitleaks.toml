@@ -1,0 +1,8 @@
+
+[[ rules ]]
+    id = "private-key"
+    [ rules.allowlist ]
+        commits = [
+            "5c2331927b604a8cd78b57983ff699f88f8cbda1",
+            
+        ]
