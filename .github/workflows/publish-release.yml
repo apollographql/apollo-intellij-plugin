@@ -1,16 +1,16 @@
-name: Publish snapshot
+name: Publish release
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'
-  workflow_dispatch:
+  push:
+    tags:
+      - '*'
 
 env:
   DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
 jobs:
-  publish-snapshot:
-    name: Publish snapshot
+  publish-intellij-plugin:
+    name: Publish release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
@@ -20,10 +20,9 @@ jobs:
           distribution: temurin
           java-version: 23
 
-      - name: Publish snapshot to JetBrains Marketplace
+      - name: Publish release to JetBrains Marketplace
         run: ./gradlew --no-build-cache :plugin:publishPlugin
         env:
-          IJ_PLUGIN_SNAPSHOT: true
           PUBLISH_TOKEN: ${{ secrets.IJ_PLUGIN_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.IJ_PLUGIN_CERTIFICATE_CHAIN }}
           PRIVATE_KEY: ${{ secrets.IJ_PLUGIN_PRIVATE_KEY }}
