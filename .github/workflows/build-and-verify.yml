@@ -110,6 +110,7 @@ jobs:
     name: Verify plugin
     needs: [ build ]
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
 
       # Free GitHub Actions Environment Disk Space
