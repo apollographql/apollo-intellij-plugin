@@ -24,8 +24,7 @@ public enum class myEnum(
      */
     public fun knownValues(): Array<MyEnum> = arrayOf(
         VALUE_A,
-        VALUE_B
-    )
+        VALUE_B)
   }
 }
 

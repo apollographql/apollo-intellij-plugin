@@ -6,8 +6,8 @@ import com.apollographql.apollo3.api.Subscription
 
 suspend fun main() {
   val apolloClient = ApolloClient.Builder()
-      .serverUrl("http://example.com")
-      .build()
+    .serverUrl("http://example.com")
+    .build()
 
   val myMutation: Mutation<*, *, *>? = null
   val call = apolloClient!!.mutation(myMutation!!)

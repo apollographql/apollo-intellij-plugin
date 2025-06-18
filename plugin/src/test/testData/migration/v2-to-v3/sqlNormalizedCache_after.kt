@@ -13,8 +13,8 @@ suspend fun main() {
   val cacheFactory5 = SqlNormalizedCacheFactory(a, b, c, d)
 
   val apolloClient = ApolloClient.Builder()
-      .normalizedCache(cacheFactory1)
-      .build()
+    .normalizedCache(cacheFactory1)
+    .build()
 }
 
 fun dbName(): String {

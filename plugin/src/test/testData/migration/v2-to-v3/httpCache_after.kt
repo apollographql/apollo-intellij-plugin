@@ -14,19 +14,19 @@ suspend fun main() {
   val apolloHttpCache3: ApolloHttpCache? = null
 
   val apolloClient = ApolloClient.Builder()
-      .httpCache(File("cacheA"), maxSize)
-      .httpCache(File("cacheB"), maxSize)
-      .httpCache(File("cache1"), maxSize)
-      .httpCache(File("cache2"), maxSize)
-      .httpCache(/* TODO: This could not be migrated automatically. Please check the migration guide at https://www.apollographql.com/docs/kotlin/migration/3.0/ */)
-      .httpCache(File("cache4"), maxSize)
-      .httpCache(File("cache5"), maxSize)
-      .build()
+    .httpCache(File("cacheA"), maxSize)
+    .httpCache(File("cacheB"), maxSize)
+    .httpCache(File("cache1"), maxSize)
+    .httpCache(File("cache2"), maxSize)
+    .httpCache(/* TODO: This could not be migrated automatically. Please check the migration guide at https://www.apollographql.com/docs/kotlin/migration/3.0/ */)
+    .httpCache(File("cache4"), maxSize)
+    .httpCache(File("cache5"), maxSize)
+    .build()
 
   val myQuery: Query<*, *, *>? = null
   apolloClient!!
-      .query(myQuery!!)
-      .httpFetchPolicy(HttpFetchPolicy.NetworkOnly)
+    .query(myQuery!!)
+    .httpFetchPolicy(HttpFetchPolicy.NetworkOnly)
 
   apolloClient.httpCache.clearAll()
 }

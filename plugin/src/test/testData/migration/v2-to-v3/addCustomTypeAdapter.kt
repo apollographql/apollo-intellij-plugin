@@ -21,9 +21,9 @@ enum class CustomType : ScalarType {
 
 suspend fun main() {
   val apolloClient = ApolloClient.builder()
-      .addCustomTypeAdapter(CustomType.DATETIME, DateTimeAdapter())
-      .addCustomTypeAdapter(CustomType.URL, UrlAdapter())
-      .build()
+    .addCustomTypeAdapter(CustomType.DATETIME, DateTimeAdapter())
+    .addCustomTypeAdapter(CustomType.URL, UrlAdapter())
+    .build()
 }
 
 class DateTimeAdapter : CustomTypeAdapter<Date> {

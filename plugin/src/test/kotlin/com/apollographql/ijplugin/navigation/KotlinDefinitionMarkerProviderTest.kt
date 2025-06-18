@@ -11,7 +11,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
-
 @RunWith(JUnit4::class)
 class KotlinDefinitionMarkerProviderTest : ApolloTestCase() {
 
@@ -33,7 +32,7 @@ class KotlinDefinitionMarkerProviderTest : ApolloTestCase() {
 
   @Test
   fun fragmentMarker() {
-    val (fragmentSource, fragmentTarget) = infoList[1].sourceAndTarget()
+    val (fragmentSource, fragmentTarget) = infoList[3].sourceAndTarget()
     fragmentSource.assertTypeAndText<PsiElement>("ScreenFields")
     fragmentTarget.assertTypeAndText<GraphQLFragmentDefinition>("fragment ScreenFields")
   }

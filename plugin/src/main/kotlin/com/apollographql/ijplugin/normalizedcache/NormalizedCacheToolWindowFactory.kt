@@ -318,11 +318,12 @@ class NormalizedCacheWindowPanel(
   }
 
   private fun openNormalizedCache(cacheSource: NormalizedCacheSource) {
-    project.telemetryService.logEvent(when (cacheSource) {
-      is ApolloDebugServer -> ApolloIjNormalizedCacheOpenApolloDebugCache()
-      is DeviceFile -> ApolloIjNormalizedCacheOpenDeviceFile()
-      is LocalFile -> ApolloIjNormalizedCacheOpenLocalFile()
-    }
+    project.telemetryService.logEvent(
+        when (cacheSource) {
+          is ApolloDebugServer -> ApolloIjNormalizedCacheOpenApolloDebugCache()
+          is DeviceFile -> ApolloIjNormalizedCacheOpenDeviceFile()
+          is LocalFile -> ApolloIjNormalizedCacheOpenLocalFile()
+        }
     )
     setContent(createLoadingContent())
     object : Task.Backgroundable(
