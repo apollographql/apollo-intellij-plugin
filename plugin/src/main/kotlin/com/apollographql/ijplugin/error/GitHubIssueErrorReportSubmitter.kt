@@ -57,7 +57,7 @@ class GitHubIssueErrorReportSubmitter : ErrorReportSubmitter() {
       |${additionalInfo.orEmpty()}
     """.trimMargin().urlEncoded()
     val gitHubUrl =
-      "https://github.com/apollographql/apollo-kotlin/issues/new?labels=%3Abug%3A+Type%3A+Bug,%3Ajigsaw%3A+IJ%2FAS+plugin&title=${issueTitle}&body=${issueBody}"
+      "https://github.com/apollographql/apollo-intellij-plugin/issues/new?labels=bug&title=${issueTitle}&body=${issueBody}"
     BrowserUtil.browse(gitHubUrl)
     consumer.consume(SubmittedReportInfo(SubmittedReportInfo.SubmissionStatus.NEW_ISSUE))
     return true
