@@ -3,7 +3,7 @@ package com.example
 import com.apollographql.apollo.api.EnumValue
 
 enum class UserInterfaceStyle(
-    override val rawValue: String,
+  override val rawValue: String,
 ) : EnumValue {
   LIGHT("Light"),
 
@@ -24,7 +24,7 @@ enum class UserInterfaceStyle(
 }
 
 sealed class EmbarkExternalRedirectLocation(
-    override val rawValue: String,
+  override val rawValue: String,
 ) : EnumValue {
   object MAILINGLIST : EmbarkExternalRedirectLocation(rawValue = "MailingList")
 
@@ -38,7 +38,7 @@ sealed class EmbarkExternalRedirectLocation(
    * Auto generated constant for unknown enum values
    */
   class UNKNOWN__(
-      rawValue: String,
+    rawValue: String,
   ) : EmbarkExternalRedirectLocation(rawValue = rawValue)
 
   companion object {

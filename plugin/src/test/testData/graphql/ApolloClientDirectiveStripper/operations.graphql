@@ -1,8 +1,8 @@
 query MyQuery {
-<caret>person {
-identity {
-firstName @catch(to: THROW)
-lastName
-}
-}
+  <caret>person {
+    identity {
+      firstName @catch(to: THROW)
+      lastName
+    }
+  }
 }

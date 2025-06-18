@@ -15,7 +15,7 @@ public class FruitListQuery() : Query<FruitListQuery.Data> {
   public override fun name(): String = TODO()
   public override fun serializeVariables(
       writer: JsonWriter,
-      customScalarAdapters: CustomScalarAdapters,
+      customScalarAdapters: CustomScalarAdapters
   ): Unit {
   }
 

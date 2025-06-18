@@ -17,53 +17,53 @@ suspend fun main() {
   class MyVariables : Operation.Variables()
 
   val cacheFactory1 = LruNormalizedCacheFactory(
-      evictionPolicy = EvictionPolicy.builder().maxSizeBytes(10 * 1024 * 1024).build()
+    evictionPolicy = EvictionPolicy.builder().maxSizeBytes(10 * 1024 * 1024).build()
   )
   val cacheFactory2 = LruNormalizedCacheFactory(
-      EvictionPolicy.builder().maxSizeBytes(10 * 1024 * 1024).build()
+    EvictionPolicy.builder().maxSizeBytes(10 * 1024 * 1024).build()
   )
   val cacheFactory3 = LruNormalizedCacheFactory(
-      EvictionPolicy.builder()
-          .maxSizeBytes(10 * 1024 * 1024)
-          .expireAfterWrite(10, TimeUnit.MILLISECONDS)
-          .build()
+    EvictionPolicy.builder()
+      .maxSizeBytes(10 * 1024 * 1024)
+      .expireAfterWrite(10, TimeUnit.MILLISECONDS)
+      .build()
   )
   val cacheFactory4 = LruNormalizedCacheFactory(
-      EvictionPolicy.builder()
-          .maxSizeBytes(10 * 1024 * 1024)
-          .expireAfterWrite(10, TimeUnit.MILLISECONDS)
-          .expireAfterAccess(10, TimeUnit.MILLISECONDS)
-          .maxEntries(42)
-          .build()
+    EvictionPolicy.builder()
+      .maxSizeBytes(10 * 1024 * 1024)
+      .expireAfterWrite(10, TimeUnit.MILLISECONDS)
+      .expireAfterAccess(10, TimeUnit.MILLISECONDS)
+      .maxEntries(42)
+      .build()
   )
   val cacheFactory5 = LruNormalizedCacheFactory(
-      EvictionPolicy.builder()
-          .expireAfterWrite(10, TimeUnit.HOURS)
-          .build()
+    EvictionPolicy.builder()
+      .expireAfterWrite(10, TimeUnit.HOURS)
+      .build()
   )
 
   val apolloClient = ApolloClient.builder()
-      .normalizedCache(cacheFactory1)
-      .build()
+    .normalizedCache(cacheFactory1)
+    .build()
 
   val myQuery: Query<MyData, Any, MyVariables>? = null
 
   apolloClient!!
-      .query(myQuery!!)
-      .toBuilder()
-      .responseFetcher(ApolloResponseFetchers.NETWORK_ONLY)
-      .build()
+    .query(myQuery!!)
+    .toBuilder()
+    .responseFetcher(ApolloResponseFetchers.NETWORK_ONLY)
+    .build()
 
   val cachedData = apolloClient
-      .apolloStore
-      .read(myQuery)
-      .execute()
+    .apolloStore
+    .read(myQuery)
+    .execute()
 
   val data: MyData? = null
   apolloClient
-      .apolloStore
-      .writeAndPublish(myQuery, data!!)
-      .execute()
+    .apolloStore
+    .writeAndPublish(myQuery, data!!)
+    .execute()
 
   apolloClient.clearNormalizedCache()
 }

@@ -23,21 +23,21 @@ suspend fun main() {
   val apolloHttpCache5 = ApolloHttpCache(diskLruHttpCacheStore2)
 
   val apolloClient = ApolloClient.builder()
-      .httpCache(ApolloHttpCache(DiskLruHttpCacheStore(File("cacheA"), maxSize)))
-      .httpCache(ApolloHttpCache(DiskLruHttpCacheStore(FileSystem.SYSTEM, File("cacheB"), maxSize)))
-      .httpCache(apolloHttpCache1)
-      .httpCache(apolloHttpCache2)
-      .httpCache(apolloHttpCache3!!)
-      .httpCache(apolloHttpCache4)
-      .httpCache(apolloHttpCache5)
-      .build()
+    .httpCache(ApolloHttpCache(DiskLruHttpCacheStore(File("cacheA"), maxSize)))
+    .httpCache(ApolloHttpCache(DiskLruHttpCacheStore(FileSystem.SYSTEM, File("cacheB"), maxSize)))
+    .httpCache(apolloHttpCache1)
+    .httpCache(apolloHttpCache2)
+    .httpCache(apolloHttpCache3!!)
+    .httpCache(apolloHttpCache4)
+    .httpCache(apolloHttpCache5)
+    .build()
 
   val myQuery: Query<*, *, *>? = null
   apolloClient!!
-      .query(myQuery!!)
-      .toBuilder()
-      .httpCachePolicy(HttpCachePolicy.NETWORK_ONLY)
-      .build()
+    .query(myQuery!!)
+    .toBuilder()
+    .httpCachePolicy(HttpCachePolicy.NETWORK_ONLY)
+    .build()
 
   apolloClient.clearHttpCache()
 }

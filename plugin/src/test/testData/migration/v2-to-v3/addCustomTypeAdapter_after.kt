@@ -21,11 +21,11 @@ enum class CustomType : ScalarType {
 
 suspend fun main() {
   val apolloClient = ApolloClient.Builder()
-      // TODO: Use addCustomScalarAdapter instead. See https://www.apollographql.com/docs/kotlin/migration/3.0/#custom-scalar-adapters
-      .addCustomTypeAdapter(DateTime.type, DateTimeAdapter())
-      // TODO: Use addCustomScalarAdapter instead. See https://www.apollographql.com/docs/kotlin/migration/3.0/#custom-scalar-adapters
-      .addCustomTypeAdapter(Url.type, UrlAdapter())
-      .build()
+    // TODO: Use addCustomScalarAdapter instead. See https://www.apollographql.com/docs/kotlin/migration/3.0/#custom-scalar-adapters
+    .addCustomTypeAdapter(DateTime.type, DateTimeAdapter())
+    // TODO: Use addCustomScalarAdapter instead. See https://www.apollographql.com/docs/kotlin/migration/3.0/#custom-scalar-adapters
+    .addCustomTypeAdapter(Url.type, UrlAdapter())
+    .build()
 }
 
 class DateTimeAdapter : CustomTypeAdapter<Date> {

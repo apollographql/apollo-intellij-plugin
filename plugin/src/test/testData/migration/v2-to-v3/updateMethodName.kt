@@ -8,8 +8,8 @@ import com.apollographql.apollo.coroutines.toFlow
 
 suspend fun main() {
   val apolloClient = ApolloClient.builder()
-      .serverUrl("http://example.com")
-      .build()
+    .serverUrl("http://example.com")
+    .build()
 
   val myMutation: Mutation<*, *, *>? = null
   val call = apolloClient!!.mutate(myMutation!!)

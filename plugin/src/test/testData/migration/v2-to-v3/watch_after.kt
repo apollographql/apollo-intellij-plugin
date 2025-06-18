@@ -8,5 +8,5 @@ suspend fun main() {
   val apolloClient: ApolloClient? = null
   val myQuery: Query<*, *, *>? = null
   val flow = apolloClient!!.query(myQuery!!)
-      .watch()
+    .watch()
 }

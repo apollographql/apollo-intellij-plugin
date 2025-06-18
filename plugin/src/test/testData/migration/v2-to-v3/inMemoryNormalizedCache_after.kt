@@ -27,23 +27,23 @@ suspend fun main() {
   val cacheFactory5 = MemoryCacheFactory(expireAfterMillis = TimeUnit.HOURS.toMillis(10))
 
   val apolloClient = ApolloClient.Builder()
-      .normalizedCache(cacheFactory1)
-      .build()
+    .normalizedCache(cacheFactory1)
+    .build()
 
   val myQuery: Query<MyData, Any, MyVariables>? = null
 
   apolloClient!!
-      .query(myQuery!!)
-      .fetchPolicy(FetchPolicy.NetworkOnly)
+    .query(myQuery!!)
+    .fetchPolicy(FetchPolicy.NetworkOnly)
 
   val cachedData = apolloClient
-      .apolloStore
-      .readOperation(myQuery)
+    .apolloStore
+    .readOperation(myQuery)
 
   val data: MyData? = null
   apolloClient
-      .apolloStore
-      .writeOperation(myQuery, data!!)
+    .apolloStore
+    .writeOperation(myQuery, data!!)
 
   apolloClient.apolloStore.clearAll()
 }

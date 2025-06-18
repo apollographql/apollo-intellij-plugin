@@ -11,14 +11,54 @@
  */
 package com.apollographql.ijplugin.psi;
 
-import java.util.Stack;
-
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 
+import java.util.Stack;
+
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.AMP;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.AT;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.BANG;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.BRACE_L;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.BRACE_R;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.BRACKET_L;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.BRACKET_R;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.CLOSING_QUOTE;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.CLOSING_TRIPLE_QUOTE;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.COLON;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.DIRECTIVE_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.DOLLAR;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.ENUM_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.EOL_COMMENT;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.EQUALS;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.EXTEND_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.FLOAT;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.FRAGMENT_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.IMPLEMENTS_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.INPUT_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.INTERFACE_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.MUTATION_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.NAME;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.NUMBER;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.ON_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.OPEN_QUOTE;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.OPEN_TRIPLE_QUOTE;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.PAREN_L;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.PAREN_R;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.PIPE;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.QUERY_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.REGULAR_STRING_PART;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.REPEATABLE_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.SCALAR_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.SCHEMA_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.SPREAD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.SUBSCRIPTION_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.TEMPLATE_CHAR;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.TYPE_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.UNION_KEYWORD;
+import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.VARIABLE_NAME;
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
-import static com.apollographql.ijplugin.psi.ApolloGraphQLElementTypes.*;
 
 
 public class ApolloGraphQLLexer implements FlexLexer {
