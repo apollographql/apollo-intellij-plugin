@@ -109,7 +109,8 @@ jobs:
   verify:
     name: Verify plugin
     needs: [ build ]
-    runs-on: ubuntu-latest
+    # Use macOS for Plugin Verifier, due to https://youtrack.jetbrains.com/issue/MP-7480
+    runs-on: macos-latest
     timeout-minutes: 120
     steps:
 
