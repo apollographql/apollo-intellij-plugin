@@ -91,7 +91,7 @@ class ApiKeyDialog(
           }
           .applyToComponent {
             whenTextChanged {
-              graphOsServiceNameTextField.text = it.document.getText(0, it.document.length).extractServiceName()
+              graphOsServiceNameTextField.text = it.extractServiceName()
             }
           }
     }
