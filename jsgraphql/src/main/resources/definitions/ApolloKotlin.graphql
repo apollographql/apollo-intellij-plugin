@@ -1,0 +1,209 @@
+#
+# Apollo Kotlin definitions.
+# Taken from https://specs.apollo.dev/kotlin_labs/v0.2/kotlin_labs-v0.2.graphql.
+#
+
+"""
+Marks a field or variable definition as optional or required
+By default Apollo Kotlin generates all variables of nullable types as optional, in compliance with the GraphQL specification,
+but this can be configured with this directive, because if the variable was added in the first place, it's usually to pass a value
+Since: 3.0.0
+"""
+directive @optional(if: Boolean = true) on FIELD | VARIABLE_DEFINITION
+
+"""
+Marks a field as non-null. The corresponding Kotlin property will be made non-nullable even if the GraphQL type is nullable.
+When used on an object definition in a schema document, `fields` must be non-empty and contain a selection set of fields that should be non-null
+When used on a field from an executable document, `fields` must always be empty
+
+Setting the directive at the schema level is usually easier as there is little reason that a field would be non-null in one place
+and null in the other
+Since: 3.0.0
+"""
+directive @nonnull(fields: String! = "") on OBJECT | FIELD
+
+"""
+Attach extra information to a given type
+Since: 3.0.0
+"""
+directive @typePolicy(
+    """
+    a selection set containing fields used to compute the cache key of an object. Order is important.
+    """
+    keyFields: String! = "",
+    """
+    a selection set containing fields that shouldn't create a new cache Record and should be
+    embedded in their parent instead. Order is unimportant.
+    """
+    embeddedFields: String! = "",
+    """
+    a selection set containing fields that should be treated as Relay Connection fields. Order is unimportant.
+    Since: 3.4.1
+    """
+    connectionFields: String! = ""
+) on OBJECT | INTERFACE | UNION
+
+"""
+Attach extra information to a given field
+Since: 3.3.0
+"""
+directive @fieldPolicy(
+    forField: String!,
+    """
+    a list of arguments used to compute the cache key of the object this field is pointing to.
+    The list is parsed as a selection set: both spaces and comas are valid separators.
+    """
+    keyArgs: String! = "",
+    """
+    (experimental) a list of arguments that vary when requesting different pages.
+    These arguments are omitted when computing the cache key of this field.
+    The list is parsed as a selection set: both spaces and comas are valid separators.
+    Since: 3.4.1
+    """
+    paginationArgs: String! = ""
+) repeatable on OBJECT
+
+"""
+Indicates that the given field, argument, input field or enum value requires
+giving explicit consent before being used.
+Since: 3.3.1
+"""
+directive @requiresOptIn(feature: String!) repeatable
+on FIELD_DEFINITION
+    | ARGUMENT_DEFINITION
+    | INPUT_FIELD_DEFINITION
+    | ENUM_VALUE
+
+"""
+Use the specified name in the generated code instead of the GraphQL name.
+Use this for instance when the name would clash with a reserved keyword or field in the generated code.
+This directive is experimental.
+Since: 3.3.1
+"""
+directive @targetName(name: String!)
+on OBJECT
+    | INTERFACE
+    | ENUM
+    | ENUM_VALUE
+    | UNION
+    | SCALAR
+    | INPUT_OBJECT
+
+
+#
+# Link definitions.
+# Taken from https://specs.apollo.dev/link/v1.0/link-v1.0.graphql.
+#
+
+directive @link(
+    url: String!,
+    as: String,
+    import: [Import],
+    for: Purpose)
+repeatable on SCHEMA
+
+scalar Import
+
+enum Purpose {
+    SECURITY
+    EXECUTION
+}
+
+
+#
+# Nullability definitions.
+# Taken from https://specs.apollo.dev/nullability/v0.1/nullability-v0.1.graphql.
+#
+
+"""
+Indicates that a field is only null if there is a matching error in the `errors` array.
+In all other cases, the field is non-null.
+
+Tools doing code generation may use this information to generate the field as non-null.
+
+This directive can be applied on field definitions:
+
+```graphql
+type User {
+email: String @semanticNonNull
+}
+```
+
+It can also be applied on object type extensions for use in client applications that do
+not own the base schema:
+
+```graphql
+extend type User @semanticNonNull(field: "email")
+```
+
+Control over list items is done using the `level` argument:
+
+```graphql
+type User {
+# friends is nullable but friends[0] is null only on errors
+friends: [User] @semanticNonNull(level: 1)
+}
+```
+
+The `field` argument is the name of the field if `@semanticNonNull` is applied to an object definition.
+If `@semanticNonNull` is applied to a field definition, `field` must be null.
+
+The `level` argument can be used to indicate what level is semantically non null in case of lists.
+`level` starts at 0 if there is no list. If `level` is null, all levels are semantically non null.
+"""
+directive @semanticNonNull(field: String = null, level: Int = null) repeatable on FIELD_DEFINITION | OBJECT
+
+"""
+Indicates how clients should handle errors on a given position.
+
+When used on the schema definition, `@catch` applies to every position that can return an error.
+
+The `level` argument can be used to indicate where to catch in case of lists.
+`level` starts at 0 if there is no list. If `level` is null, all levels catch.
+
+See `CatchTo` for more details.
+"""
+directive @catch(to: CatchTo! = RESULT, level: Int = null) repeatable on FIELD | SCHEMA
+
+enum CatchTo {
+    """
+    Catch the error and map the position to a result type that can contain either
+    a value or an error.
+    """
+    RESULT,
+    """
+    Catch the error and map the position to a nullable type that will be null
+    in the case of error.
+    This does not allow to distinguish between semantic null and error null but
+    can be simpler in some cases.
+    """
+    NULL,
+    """
+    Throw the error.
+    Parent fields can recover using `RESULT` or `NULL`.
+    If no parent field recovers, the parsing stops.
+    """
+    THROW
+}
+
+"""
+Never throw on field errors.
+
+This is used for backward compatibility for clients where this was the default behaviour.
+"""
+directive @ignoreErrors on QUERY | MUTATION | SUBSCRIPTION
+
+
+#
+# Other supported definitions.
+#
+
+#
+# @defer is not ratified yet in the GraphQL spec, but supported as an experimental feature in Apollo Kotlin
+# Taken from https://github.com/apollographql/apollo-kotlin/blob/05f2a3295517fb7a64c2259c38b453a37f3c4d19/libraries/apollo-ast/src/main/resources/builtins.graphqls#L136
+#
+
+directive @defer(
+  label: String
+  if: Boolean! = true
+) on FRAGMENT_SPREAD | INLINE_FRAGMENT

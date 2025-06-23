@@ -1,20 +1,28 @@
 [versions]
 kotlin-plugin = "2.1.21"
-intellij-platform = "2.6.0"
+intellij-platform-plugin = "2.6.0"
 apollo = "4.3.1"
-grammarkit = "2022.3.2.2"
-changelog = "2.2.1"
+grammarkit-plugin = "2022.3.2.2"
+changelog-plugin = "2.2.1"
 sqlite-jdbc = "3.43.2.0"
 apollo-normalizedcache = "1.0.0-alpha.3"
 slf4j = "2.0.13"
 google-testparameterinjector = "1.11"
+cdimascio-dotenv = "6.4.1"
+atlassian-commonmark = "0.17.0"
+
+# Corresponds to AS Meerkat Feature Drop 2024.3.2 Patch 1 -> https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html
+# and https://developer.android.com/studio/archive (more up to date)
+# See also https://plugins.jetbrains.com/docs/intellij/android-studio.html
+intellij-platform-version = "2024.3.5"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-plugin" }
-intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "intellij-platform" }
+intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "intellij-platform-plugin" }
+intellij-platform-module = { id = "org.jetbrains.intellij.platform.module", version.ref = "intellij-platform-plugin" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
-grammarkit = { id = "org.jetbrains.grammarkit", version.ref = "grammarkit" }
-changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
+grammarkit = { id = "org.jetbrains.grammarkit", version.ref = "grammarkit-plugin" }
+changelog = { id = "org.jetbrains.changelog", version.ref = "changelog-plugin" }
 
 [libraries]
 apollo-annotations = { group = "com.apollographql.apollo", name = "apollo-annotations", version.ref = "apollo" }
@@ -28,3 +36,5 @@ apollo-normalized-cache-sqlite-new = { group = "com.apollographql.cache", name =
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite-jdbc" }
 slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 google-testparameterinjector = { group = "com.google.testparameterinjector", name = "test-parameter-injector", version.ref = "google-testparameterinjector" }
+cdimascio-dotenv = { group = "io.github.cdimascio", name = "dotenv-kotlin", version.ref = "cdimascio-dotenv" }
+atlassian-commonmark = { group = "com.atlassian.commonmark", name = "commonmark", version.ref = "atlassian-commonmark" }
