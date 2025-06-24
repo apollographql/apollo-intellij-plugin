@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLInputObjectTypeExtensionDefinitionImpl extends GraphQLTypeExtensionImpl implements GraphQLInputObjectTypeExtensionDefinition {
 
-  public GraphQLInputObjectTypeExtensionDefinitionImpl(@NotNull ASTNode node) {
+  public GraphQLInputObjectTypeExtensionDefinitionImpl(ASTNode node) {
     super(node);
   }
 

@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLStringValueImpl extends GraphQLValueImpl implements GraphQLStringValue {
 
-  public GraphQLStringValueImpl(@NotNull ASTNode node) {
+  public GraphQLStringValueImpl(ASTNode node) {
     super(node);
   }
 

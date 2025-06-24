@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLFragmentSpreadImpl extends GraphQLNamedElementImpl implements GraphQLFragmentSpread {
 
-  public GraphQLFragmentSpreadImpl(@NotNull ASTNode node) {
+  public GraphQLFragmentSpreadImpl(ASTNode node) {
     super(node);
   }
 

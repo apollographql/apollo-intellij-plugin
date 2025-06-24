@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLArrayValueImpl extends GraphQLValueImpl implements GraphQLArrayValue {
 
-  public GraphQLArrayValueImpl(@NotNull ASTNode node) {
+  public GraphQLArrayValueImpl(ASTNode node) {
     super(node);
   }
 

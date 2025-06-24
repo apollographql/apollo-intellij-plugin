@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLImplementsInterfacesImpl extends GraphQLElementImpl implements GraphQLImplementsInterfaces {
 
-  public GraphQLImplementsInterfacesImpl(@NotNull ASTNode node) {
+  public GraphQLImplementsInterfacesImpl(ASTNode node) {
     super(node);
   }
 

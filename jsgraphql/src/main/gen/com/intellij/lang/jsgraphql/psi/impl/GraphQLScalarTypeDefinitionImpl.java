@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLScalarTypeDefinitionImpl extends GraphQLTypeDefinitionImpl implements GraphQLScalarTypeDefinition {
 
-  public GraphQLScalarTypeDefinitionImpl(@NotNull ASTNode node) {
+  public GraphQLScalarTypeDefinitionImpl(ASTNode node) {
     super(node);
   }
 

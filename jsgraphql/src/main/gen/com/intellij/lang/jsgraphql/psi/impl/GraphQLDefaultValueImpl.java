@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLDefaultValueImpl extends GraphQLElementImpl implements GraphQLDefaultValue {
 
-  public GraphQLDefaultValueImpl(@NotNull ASTNode node) {
+  public GraphQLDefaultValueImpl(ASTNode node) {
     super(node);
   }
 

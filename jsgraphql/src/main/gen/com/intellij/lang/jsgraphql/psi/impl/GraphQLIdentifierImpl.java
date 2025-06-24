@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLIdentifierImpl extends GraphQLReferenceMixin implements GraphQLIdentifier {
 
-  public GraphQLIdentifierImpl(@NotNull ASTNode node) {
+  public GraphQLIdentifierImpl(ASTNode node) {
     super(node);
   }
 

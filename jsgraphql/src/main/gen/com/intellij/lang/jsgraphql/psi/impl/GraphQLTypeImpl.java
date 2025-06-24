@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public abstract class GraphQLTypeImpl extends GraphQLElementImpl implements GraphQLType {
 
-  public GraphQLTypeImpl(@NotNull ASTNode node) {
+  public GraphQLTypeImpl(ASTNode node) {
     super(node);
   }
 

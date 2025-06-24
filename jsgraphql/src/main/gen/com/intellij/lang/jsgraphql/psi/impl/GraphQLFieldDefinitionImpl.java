@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLFieldDefinitionImpl extends GraphQLNamedElementImpl implements GraphQLFieldDefinition {
 
-  public GraphQLFieldDefinitionImpl(@NotNull ASTNode node) {
+  public GraphQLFieldDefinitionImpl(ASTNode node) {
     super(node);
   }
 

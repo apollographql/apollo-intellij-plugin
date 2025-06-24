@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLDescriptionImpl extends GraphQLElementImpl implements GraphQLDescription {
 
-  public GraphQLDescriptionImpl(@NotNull ASTNode node) {
+  public GraphQLDescriptionImpl(ASTNode node) {
     super(node);
   }
 

@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLNonNullTypeImpl extends GraphQLTypeImpl implements GraphQLNonNullType {
 
-  public GraphQLNonNullTypeImpl(@NotNull ASTNode node) {
+  public GraphQLNonNullTypeImpl(ASTNode node) {
     super(node);
   }
 

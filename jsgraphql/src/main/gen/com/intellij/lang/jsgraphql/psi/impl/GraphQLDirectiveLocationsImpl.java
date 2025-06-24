@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLDirectiveLocationsImpl extends GraphQLElementImpl implements GraphQLDirectiveLocations {
 
-  public GraphQLDirectiveLocationsImpl(@NotNull ASTNode node) {
+  public GraphQLDirectiveLocationsImpl(ASTNode node) {
     super(node);
   }
 

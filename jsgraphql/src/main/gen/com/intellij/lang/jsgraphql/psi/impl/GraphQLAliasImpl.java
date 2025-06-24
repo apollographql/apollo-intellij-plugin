@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLAliasImpl extends GraphQLElementImpl implements GraphQLAlias {
 
-  public GraphQLAliasImpl(@NotNull ASTNode node) {
+  public GraphQLAliasImpl(ASTNode node) {
     super(node);
   }
 

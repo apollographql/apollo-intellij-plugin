@@ -12,7 +12,7 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLInterfaceTypeDefinitionImpl extends GraphQLTypeDefinitionImpl implements GraphQLInterfaceTypeDefinition {
 
-  public GraphQLInterfaceTypeDefinitionImpl(@NotNull ASTNode node) {
+  public GraphQLInterfaceTypeDefinitionImpl(ASTNode node) {
     super(node);
   }
 

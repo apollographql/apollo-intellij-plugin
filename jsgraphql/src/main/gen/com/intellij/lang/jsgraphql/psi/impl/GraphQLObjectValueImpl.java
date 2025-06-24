@@ -12,11 +12,10 @@ import com.intellij.lang.jsgraphql.psi.*;
 
 public class GraphQLObjectValueImpl extends GraphQLObjectValueMixin implements GraphQLObjectValue {
 
-  public GraphQLObjectValueImpl(@NotNull ASTNode node) {
+  public GraphQLObjectValueImpl(ASTNode node) {
     super(node);
   }
 
-  @Override
   public void accept(@NotNull GraphQLVisitorBase visitor) {
     visitor.visitObjectValue(this);
   }
