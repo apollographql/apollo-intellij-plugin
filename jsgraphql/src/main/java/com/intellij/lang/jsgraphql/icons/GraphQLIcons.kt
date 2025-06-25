@@ -5,46 +5,86 @@
  *  This source code is licensed under the MIT license found in the
  *  LICENSE file in the root directory of this source tree.
  */
-package com.intellij.lang.jsgraphql.icons;
+package com.intellij.lang.jsgraphql.icons
 
-import com.intellij.icons.AllIcons;
-import com.intellij.lang.jsgraphql.GraphqlIcons;
-import com.intellij.ui.LayeredIcon;
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.util.IconLoader
+import com.intellij.ui.LayeredIcon
+import javax.swing.Icon
 
-import javax.swing.*;
+object GraphQLIcons {
+  @JvmField
+  val FILE: Icon = load("/icons/graphql.svg")
 
-public final class GraphQLIcons {
-  public static final Icon FILE = GraphqlIcons.Graphql;
+  object Logos {
+    @JvmField
+    val GraphQL: Icon = FILE
 
-  public static final class Logos {
-    public static final Icon GraphQL = FILE;
-    public static final Icon Relay = GraphqlIcons.Relay;
-    public static final Icon Apollo = GraphqlIcons.Apollo;
+    @JvmField
+    val Relay: Icon = load("/icons/relay.svg")
+
+    @JvmField
+    val Apollo: Icon = load("/icons/apollo.svg")
   }
 
-  public static final class Files {
-    public static final Icon GraphQL = FILE;
-    public static final Icon GraphQLConfig = GraphqlIcons.GraphqlConfig;
-    public static final Icon GraphQLSchema = GraphqlIcons.GraphqlSchema;
-    public static final Icon GraphQLScratch = LayeredIcon.layeredIcon(() -> new Icon[]{GraphQL, AllIcons.Actions.Scratch});
+  object Files {
+    @JvmField
+    val GraphQL: Icon = FILE
+
+    @JvmField
+    val GraphQLConfig: Icon = load("/icons/graphqlConfig.svg")
+
+    @JvmField
+    val GraphQLSchema: Icon = load("/icons/graphqlSchema.svg")
+
+    @JvmField
+    val GraphQLScratch: Icon = LayeredIcon.layeredIcon { arrayOf(GraphQL, AllIcons.Actions.Scratch) }
   }
 
-  public static final class UI {
-    public static final Icon GraphQLToolWindow = GraphqlIcons.GraphqlToolWindow;
-    public static final Icon GraphQLVariables = GraphqlIcons.Variable;
-    public static final Icon GraphQLNode = GraphqlIcons.GraphqlNode;
+  object UI {
+    @JvmField
+    val GraphQLToolWindow: Icon = load("/icons/graphqlToolWindow.svg")
+
+    @JvmField
+    val GraphQLVariables: Icon = load("/icons/variable.svg")
+
+    @JvmField
+    val GraphQLNode: Icon = load("/icons/graphqlNode.svg")
   }
 
-  public static final class Schema {
-    public static final Icon Field = GraphqlIcons.Field;
-    public static final Icon Scalar = GraphqlIcons.Scalar;
-    public static final Icon Enum = GraphqlIcons.Enum;
-    public static final Icon Type = GraphqlIcons.Type;
-    public static final Icon Interface = GraphqlIcons.Interface;
-    public static final Icon Query = GraphqlIcons.Query;
-    public static final Icon Attribute = GraphqlIcons.Attribute;
-    public static final Icon Subscription = GraphqlIcons.Subscription;
-    public static final Icon Mutation = GraphqlIcons.Mutation;
-    public static final Icon Fragment = GraphqlIcons.Fragment;
+  object Schema {
+    @JvmField
+    val Field: Icon = load("/icons/field.svg")
+
+    @JvmField
+    val Scalar: Icon = load("/icons/scalar.svg")
+
+    @JvmField
+    val Enum: Icon = load("/icons/enum.svg")
+
+    @JvmField
+    val Type: Icon = load("/icons/type.svg")
+
+    @JvmField
+    val Interface: Icon = load("/icons/interface.svg")
+
+    @JvmField
+    val Query: Icon = load("/icons/query.svg")
+
+    @JvmField
+    val Attribute: Icon = load("/icons/attribute.svg")
+
+    @JvmField
+    val Subscription: Icon = load("/icons/subscription.svg")
+
+    @JvmField
+    val Mutation: Icon = load("/icons/mutation.svg")
+
+    @JvmField
+    val Fragment: Icon = load("/icons/fragment.svg")
+  }
+
+  private fun load(path: String): Icon {
+    return IconLoader.getIcon(path, GraphQLIcons::class.java)
   }
 }
