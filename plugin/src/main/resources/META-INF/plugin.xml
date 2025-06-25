@@ -183,6 +183,8 @@
     <additionalLibraryRootsProvider implementation="com.intellij.lang.jsgraphql.schema.library.GraphQLLibraryRootsProvider"/>
 
     <!-- Startup -->
+    <postStartupActivity implementation="com.apollographql.ijplugin.project.ApolloProjectActivity"/>
+
     <postStartupActivity implementation="com.intellij.lang.jsgraphql.ide.startup.GraphQLStartupActivity"/>
 
     <!-- Syntax and error highlighting -->
@@ -366,14 +368,6 @@
     <lang.inspectionSuppressor language="GraphQL"
                                implementationClass="com.intellij.lang.jsgraphql.ide.validation.GraphQLInspectionSuppressor"/>
   </extensions>
-
-  <applicationListeners>
-    <!-- Listen to project open/close -->
-    <listener
-        class="com.apollographql.ijplugin.project.ApolloProjectManagerListener"
-        topic="com.intellij.openapi.project.ProjectManagerListener"
-    />
-  </applicationListeners>
 
   <extensions defaultExtensionNs="com.apollographql.ijplugin">
     <!-- Contribute configuration to the GraphQL plugin -->
