@@ -4,12 +4,19 @@ package com.intellij.lang.jsgraphql.schema
 
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.lang.jsgraphql.psi.GraphQLElement
-import com.intellij.lang.jsgraphql.types.language.*
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.lang.jsgraphql.types.language.EnumTypeExtensionDefinition
+import com.intellij.lang.jsgraphql.types.language.InputObjectTypeExtensionDefinition
+import com.intellij.lang.jsgraphql.types.language.InterfaceTypeExtensionDefinition
+import com.intellij.lang.jsgraphql.types.language.Node
+import com.intellij.lang.jsgraphql.types.language.ObjectTypeExtensionDefinition
+import com.intellij.lang.jsgraphql.types.language.SDLDefinition
+import com.intellij.lang.jsgraphql.types.language.ScalarTypeExtensionDefinition
+import com.intellij.lang.jsgraphql.types.language.SchemaExtensionDefinition
+import com.intellij.lang.jsgraphql.types.language.SourceLocation
+import com.intellij.lang.jsgraphql.types.language.UnionTypeExtensionDefinition
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.ex.temp.TempFileSystem
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
@@ -17,12 +24,12 @@ import com.intellij.psi.impl.source.tree.LeafElement
 
 fun isExtensionDefinition(definition: SDLDefinition<*>?): Boolean {
   return definition is SchemaExtensionDefinition ||
-         definition is InputObjectTypeExtensionDefinition ||
-         definition is ObjectTypeExtensionDefinition ||
-         definition is InterfaceTypeExtensionDefinition ||
-         definition is ScalarTypeExtensionDefinition ||
-         definition is UnionTypeExtensionDefinition ||
-         definition is EnumTypeExtensionDefinition
+      definition is InputObjectTypeExtensionDefinition ||
+      definition is ObjectTypeExtensionDefinition ||
+      definition is InterfaceTypeExtensionDefinition ||
+      definition is ScalarTypeExtensionDefinition ||
+      definition is UnionTypeExtensionDefinition ||
+      definition is EnumTypeExtensionDefinition
 }
 
 val GraphQLElement.sourceLocation: SourceLocation
@@ -61,8 +68,8 @@ fun SourceLocation.findElement(project: Project): PsiElement? {
   val document = file.fileDocument
   val offset = document.getLineStartOffset(line) + column
   var element = InjectedLanguageManager.getInstance(project).findInjectedElementAt(file, offset)
-                ?: file.findElementAt(offset)
-                ?: return null
+      ?: file.findElementAt(offset)
+      ?: return null
 
   if (element is PsiWhiteSpace || element is LeafElement) {
     element = element.parent
@@ -72,9 +79,6 @@ fun SourceLocation.findElement(project: Project): PsiElement? {
 }
 
 private fun SourceLocation.findVirtualFile(): VirtualFile? {
-  var file = LocalFileSystem.getInstance().findFileByPath(sourceName)?.takeIf { it.isValid }
-  if (file == null && ApplicationManager.getApplication().isUnitTestMode) {
-    file = TempFileSystem.getInstance().findFileByPath(sourceName)
-  }
+  val file = LocalFileSystem.getInstance().findFileByPath(sourceName)?.takeIf { it.isValid }
   return file
 }

@@ -21,7 +21,11 @@ import com.intellij.lang.jsgraphql.schema.GraphQLSchemaCacheChangeListener
 import com.intellij.lang.jsgraphql.schema.GraphQLSchemaContentChangeListener
 import com.intellij.lang.jsgraphql.schema.GraphQLSchemaContentTracker
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.ProcessCanceledException
@@ -31,8 +35,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
-import com.intellij.openapi.wm.ex.ToolWindowManagerListener.ToolWindowManagerEventType.ActivateToolWindow
-import com.intellij.openapi.wm.ex.ToolWindowManagerListener.ToolWindowManagerEventType.HideToolWindow
 import com.intellij.profile.ProfileChangeAdapter
 import com.intellij.ui.IdeBorderFactory
 import com.intellij.ui.PopupHandler
@@ -131,18 +133,12 @@ class GraphQLSchemasPanel(private val project: Project, private val toolWindowId
 
   private fun subscribeToToolWindowEvents() {
     connection.subscribe(ToolWindowManagerListener.TOPIC, object : ToolWindowManagerListener {
-      override fun stateChanged(toolWindowManager: ToolWindowManager, toolWindow: ToolWindow, changeType: ToolWindowManagerListener.ToolWindowManagerEventType) {
-        if (toolWindow.id != toolWindowId) return
-
-        when (changeType) {
-          ActivateToolWindow -> {
-            scheduleUpdateEvents = true
-          }
-          HideToolWindow -> {
-            scheduleUpdateEvents = false
-            updateAlarm.cancelAllRequests()
-          }
-          else -> {}
+      override fun stateChanged(toolWindowManager: ToolWindowManager, changeType: ToolWindowManagerListener.ToolWindowManagerEventType) {
+        if (toolWindowManager.activeToolWindowId == toolWindowId) {
+          scheduleUpdateEvents = true
+        } else {
+          scheduleUpdateEvents = false
+          updateAlarm.cancelAllRequests()
         }
       }
 
@@ -178,8 +174,8 @@ class GraphQLSchemasPanel(private val project: Project, private val toolWindowId
     tree.addMouseListener(object : PopupHandler() {
       override fun invokePopup(comp: Component?, x: Int, y: Int) {
         tree.getClosestPathForLocation(x, y)
-          ?.let { tree.getNodeFor(it) as? GraphQLSchemaContextMenuNode }
-          ?.handleContextMenu(comp, x, y)
+            ?.let { tree.getNodeFor(it) as? GraphQLSchemaContextMenuNode }
+            ?.handleContextMenu(comp, x, y)
       }
     })
   }
@@ -189,9 +185,9 @@ class GraphQLSchemasPanel(private val project: Project, private val toolWindowId
     val group = DefaultActionGroup()
 
     group.add(object : AnAction(
-      GraphQLBundle.message("graphql.action.add.schema.configuration.text"),
-      GraphQLBundle.message("graphql.action.adds.new.graphql.configuration.file.description"),
-      AllIcons.General.Add
+        GraphQLBundle.message("graphql.action.add.schema.configuration.text"),
+        GraphQLBundle.message("graphql.action.adds.new.graphql.configuration.file.description"),
+        AllIcons.General.Add
     ) {
       override fun actionPerformed(e: AnActionEvent) {
         val dialog = TreeDirectoryChooserDialog(project, GraphQLBundle.message("graphql.dialog.title.select.graphql.schema.base.directory"))
@@ -206,9 +202,9 @@ class GraphQLSchemasPanel(private val project: Project, private val toolWindowId
     })
 
     group.add(object : AnAction(
-      GraphQLBundle.message("graphql.action.edit.selected.schema.configuration.text"),
-      GraphQLBundle.message("graphql.action.opens.graphql.config.file.for.selected.schema.description"),
-      AllIcons.General.Settings
+        GraphQLBundle.message("graphql.action.edit.selected.schema.configuration.text"),
+        GraphQLBundle.message("graphql.action.opens.graphql.config.file.for.selected.schema.description"),
+        AllIcons.General.Settings
     ) {
       override fun actionPerformed(e: AnActionEvent) {
         val selectedSchemaNode = selectedSchemaNode
@@ -246,9 +242,9 @@ class GraphQLSchemasPanel(private val project: Project, private val toolWindowId
     }
 
     group.add(object : AnAction(
-      GraphQLBundle.message("graphql.action.schemas.panel.help.text"),
-      GraphQLBundle.message("graphql.action.schemas.panel.open.documentation.description"),
-      AllIcons.Actions.Help
+        GraphQLBundle.message("graphql.action.schemas.panel.help.text"),
+        GraphQLBundle.message("graphql.action.schemas.panel.open.documentation.description"),
+        AllIcons.Actions.Help
     ) {
       override fun actionPerformed(e: AnActionEvent) {
         BrowserUtil.browse("https://github.com/JetBrains/js-graphql-intellij-plugin")
@@ -276,25 +272,23 @@ class GraphQLSchemasPanel(private val project: Project, private val toolWindowId
 
     updateAlarm.cancelAllRequests()
     updateAlarm.addRequest(
-      {
-        // run the schema discovery on a pooled to prevent blocking of the UI thread by asking the nodes for heir child nodes
-        // the schema caches will be ready when the UI thread then needs to show the tree nodes
-        if (project.isDisposed) {
-          return@addRequest
-        }
-
-        try {
-          val currentVersion = schemaModificationTracker.modificationCount
-          if (isInitialized.compareAndSet(false, true) || startVersion == currentVersion) {
-            model.invalidateAsync()
+        {
+          // run the schema discovery on a pooled to prevent blocking of the UI thread by asking the nodes for heir child nodes
+          // the schema caches will be ready when the UI thread then needs to show the tree nodes
+          if (project.isDisposed) {
+            return@addRequest
           }
-        }
-        catch (_: IndexNotReadyException) {
-          // allowed to happen here -- retry will run later
-        }
-        catch (_: ProcessCanceledException) {
-        }
-      }, 750, ModalityState.stateForComponent(this)
+
+          try {
+            val currentVersion = schemaModificationTracker.modificationCount
+            if (isInitialized.compareAndSet(false, true) || startVersion == currentVersion) {
+              model.invalidateAsync()
+            }
+          } catch (_: IndexNotReadyException) {
+            // allowed to happen here -- retry will run later
+          } catch (_: ProcessCanceledException) {
+          }
+        }, 750, ModalityState.stateForComponent(this)
     )
   }
 }

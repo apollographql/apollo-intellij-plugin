@@ -15,13 +15,13 @@ import com.intellij.lang.jsgraphql.schema.GraphQLSchemaContentTracker
 import com.intellij.lang.jsgraphql.ui.GraphQLUIProjectService
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 
 /**
  * Starts up the UI Service during project startup
  */
-class GraphQLStartupActivity : StartupActivity.Background {
-  override fun runActivity(project: Project) {
+class GraphQLStartupActivity : ProjectActivity {
+  override suspend fun execute(project: Project) {
     // init mandatory services
     GraphQLSchemaContentTracker.getInstance(project)
     GraphQLConfigWatcher.getInstance(project)

@@ -1,11 +1,11 @@
 package com.intellij.lang.jsgraphql.ide.actions
 
+import com.intellij.ide.SaveAndSyncHandler
 import com.intellij.lang.jsgraphql.ide.config.GraphQLConfigFactory
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.LangDataKeys
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.vfs.VirtualFile
 
 class GraphQLCreateConfigFileAction : AnAction() {
@@ -19,7 +19,7 @@ class GraphQLCreateConfigFileAction : AnAction() {
       val virtualFile = getActionDirectory(e)
       if (virtualFile != null) {
         GraphQLConfigFactory.getInstance(project).createAndOpenConfigFile(virtualFile, true)
-        ApplicationManager.getApplication().saveAll()
+        SaveAndSyncHandler.getInstance().scheduleProjectSave(project)
       }
     }
   }

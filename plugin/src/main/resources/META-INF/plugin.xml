@@ -70,6 +70,7 @@
     <!-- Support for the "New UI" -->
     <!-- See https://plugins.jetbrains.com/docs/intellij/icons.html#new-ui-icons -->
     <iconMapper mappingFile="ApolloIconsMapping.json" />
+    <iconMapper mappingFile="GraphQLIconsMapping.json" />
 
     <!-- "@OneOf GraphQL violation" inspection -->
     <!--suppress PluginXmlCapitalization -->

@@ -7,12 +7,12 @@
  */
 package com.intellij.lang.jsgraphql.ide.config
 
+import com.intellij.ide.SaveAndSyncHandler
 import com.intellij.lang.jsgraphql.GraphQLBundle
 import com.intellij.lang.jsgraphql.ide.notifications.GRAPHQL_NOTIFICATION_GROUP_ID
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
@@ -39,50 +39,48 @@ class GraphQLConfigFactory(private val project: Project) {
 
   @JvmOverloads
   fun createAndOpenConfigFile(
-    configBaseDir: VirtualFile,
-    openEditor: Boolean,
-    outputStreamConsumer: Consumer<OutputStream> = Consumer { outputStream: OutputStream ->
-      try {
-        javaClass.classLoader.getResourceAsStream("META-INF/$PREFERRED_CONFIG")?.use { inputStream ->
-          IOUtils.copy(inputStream, outputStream)
+      configBaseDir: VirtualFile,
+      openEditor: Boolean,
+      outputStreamConsumer: Consumer<OutputStream> = Consumer { outputStream: OutputStream ->
+        try {
+          javaClass.classLoader.getResourceAsStream("META-INF/$PREFERRED_CONFIG")?.use { inputStream ->
+            IOUtils.copy(inputStream, outputStream)
+          }
+        } catch (e: IOException) {
+          throw RuntimeException(e)
         }
-      }
-      catch (e: IOException) {
-        throw RuntimeException(e)
-      }
-    },
+      },
   ) {
     invokeLater {
       WriteCommandAction.runWriteCommandAction(
-        project,
-        GraphQLBundle.message("graphql.action.create.config.file.command"),
-        null,
-        {
-          try {
-            val configFile = configBaseDir.createChildData(this, PREFERRED_CONFIG)
-            configFile.getOutputStream(this).use { stream -> outputStreamConsumer.accept(stream) }
-            val psiFile = PsiManager.getInstance(project).findFile(configFile)
-            if (psiFile != null) {
-              CodeStyleManager.getInstance(project).reformat(psiFile)
-            }
-            if (openEditor) {
-              FileEditorManager.getInstance(project).openFile(configFile, true, true)
-            }
-            invokeLater {
-              ApplicationManager.getApplication().saveAll()
-            }
-          }
-          catch (e: IOException) {
-            Notifications.Bus.notify(
-              Notification(
-                GRAPHQL_NOTIFICATION_GROUP_ID,
-                GraphQLBundle.message("graphql.notification.title.unable.to.create", PREFERRED_CONFIG),
-                GraphQLBundle.message("graphql.notification.content.unable.to.create.file.in.directory", PREFERRED_CONFIG, configBaseDir.path, e.message),
-                NotificationType.ERROR
+          project,
+          GraphQLBundle.message("graphql.action.create.config.file.command"),
+          null,
+          {
+            try {
+              val configFile = configBaseDir.createChildData(this, PREFERRED_CONFIG)
+              configFile.getOutputStream(this).use { stream -> outputStreamConsumer.accept(stream) }
+              val psiFile = PsiManager.getInstance(project).findFile(configFile)
+              if (psiFile != null) {
+                CodeStyleManager.getInstance(project).reformat(psiFile)
+              }
+              if (openEditor) {
+                FileEditorManager.getInstance(project).openFile(configFile, true, true)
+              }
+              invokeLater {
+                SaveAndSyncHandler.getInstance().scheduleProjectSave(project)
+              }
+            } catch (e: IOException) {
+              Notifications.Bus.notify(
+                  Notification(
+                      GRAPHQL_NOTIFICATION_GROUP_ID,
+                      GraphQLBundle.message("graphql.notification.title.unable.to.create", PREFERRED_CONFIG),
+                      GraphQLBundle.message("graphql.notification.content.unable.to.create.file.in.directory", PREFERRED_CONFIG, configBaseDir.path, e.message),
+                      NotificationType.ERROR
+                  )
               )
-            )
+            }
           }
-        }
       )
     }
   }

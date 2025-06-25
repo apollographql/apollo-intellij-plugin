@@ -19,7 +19,13 @@ import com.intellij.lang.jsgraphql.ide.resolve.GraphQLScopeDependency
 import com.intellij.lang.jsgraphql.parseOverrideConfigComment
 import com.intellij.lang.jsgraphql.psi.GraphQLFile
 import com.intellij.lang.jsgraphql.psi.getPhysicalVirtualFile
-import com.intellij.openapi.application.*
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.readAction
+import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.smartReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.debug
@@ -36,7 +42,6 @@ import com.intellij.openapi.util.SimpleModificationTracker
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.ex.temp.TempFileSystem
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiFile
@@ -51,12 +56,16 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.CommonProcessors
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread
 import com.intellij.util.concurrency.annotations.RequiresReadLock
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
-import java.util.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -110,9 +119,9 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
 
   private val configFiles: CachedValue<Set<VirtualFile>> = CachedValuesManager.getManager(project).createCachedValue {
     CachedValueProvider.Result.create(
-      queryAllConfigFiles(),
-      VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS,
-      ProjectRootManager.getInstance(project)
+        queryAllConfigFiles(),
+        VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS,
+        ProjectRootManager.getInstance(project)
     )
   }
 
@@ -206,26 +215,21 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
             findConfigFileInDirectory(virtualFile)?.let {
               GraphQLConfigOverride(it, override.project)
             }
-          }
-          else {
+          } else {
             GraphQLConfigOverride(virtualFile, override.project)
           }
         }
       }
 
       return project.guessProjectDir()
-        ?.let { findConfigFileInDirectory(it) }
-        ?.let { GraphQLConfigOverride(it, null) }
+          ?.let { findConfigFileInDirectory(it) }
+          ?.let { GraphQLConfigOverride(it, null) }
     }
 
     return null
   }
 
   private fun findFileByPath(path: String): VirtualFile? {
-    if (ApplicationManager.getApplication().isUnitTestMode) {
-      return TempFileSystem.getInstance().findFileByPath(path)
-    }
-
     return LocalFileSystem.getInstance().findFileByPath(path)
   }
 
@@ -240,8 +244,8 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
         generateSequence(start) { prev ->
           PsiTreeUtil.skipWhitespacesForward(prev)?.takeIf { it is PsiComment }
         }
-          .mapNotNull { parseOverrideConfigComment(it.text) }
-          .firstOrNull()
+            .mapNotNull { parseOverrideConfigComment(it.text) }
+            .firstOrNull()
 
       CachedValueProvider.Result.create(override, file)
     }
@@ -255,8 +259,8 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
         val config = getForConfigFile(overriddenConfig.file)
         if (config != null) {
           return@getCachedValue CachedValueProvider.Result.create(
-            GraphQLConfigSearchResult(config, overriddenConfig.projectName ?: GraphQLConfig.DEFAULT_PROJECT),
-            scopeDependency,
+              GraphQLConfigSearchResult(config, overriddenConfig.projectName ?: GraphQLConfig.DEFAULT_PROJECT),
+              scopeDependency,
           )
         }
       }
@@ -269,8 +273,8 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
       }
 
       CachedValueProvider.Result.create(
-        findConfigInParents(from)?.let { GraphQLConfigSearchResult(it) },
-        scopeDependency,
+          findConfigInParents(from)?.let { GraphQLConfigSearchResult(it) },
+          scopeDependency,
       )
     }
   }
@@ -299,13 +303,11 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
       if (configFile != null) {
         if (shouldSkipConfig(configFile)) {
           true
-        }
-        else {
+        } else {
           config = getForConfigFile(configFile)
           false
         }
-      }
-      else {
+      } else {
         true
       }
     }
@@ -351,8 +353,7 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
 
     if (configFile != null) {
       configData[configFile]?.invalidated?.set(true)
-    }
-    else {
+    } else {
       initialized = false
       configData.clear()
       contributedConfigs.set(emptyMap())
@@ -367,15 +368,14 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
 
     if (ApplicationManager.getApplication().isUnitTestMode) {
       DumbService.getInstance(project).smartInvokeLater(
-        {
-          runWithModalProgressBlocking(project, "") {
-            reload()
-          }
-        },
-        ModalityState.nonModal()
+          {
+            runWithModalProgressBlocking(project, "") {
+              reload()
+            }
+          },
+          ModalityState.nonModal()
       )
-    }
-    else {
+    } else {
       check(reloadConfigAlarm.tryEmit(Unit))
     }
   }
@@ -408,16 +408,15 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
 
       val result = loader.load(file)
       val entry = ConfigEntry(
-        GraphQLConfig(project, dir, file, result.data ?: GraphQLRawConfig.EMPTY),
-        timeStamp,
-        result.status,
-        result.error,
+          GraphQLConfig(project, dir, file, result.data ?: GraphQLRawConfig.EMPTY),
+          timeStamp,
+          result.status,
+          result.error,
       )
 
       if (cached == null) {
         configData.putIfAbsent(file, entry)
-      }
-      else {
+      } else {
         configData.replace(file, cached, entry)
       }
 
@@ -448,28 +447,26 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
         LOG.info("contributed configs changed")
         LOG.debug { "contributed configs: new=$updatedContributed, previous=$prevContributed" }
         true
-      }
-      else {
+      } else {
         // concurrent modification, let's try again later
         scheduleConfigurationReload()
         false
       }
-    }
-    else {
+    } else {
       false
     }
   }
 
   override fun onEnvironmentChanged() {
     configData.values
-      .asSequence()
-      .mapNotNull { it.config }
-      .flatMap { it.getProjects().values }
-      .filter { it.environment.variables.isNotEmpty() }
-      .mapTo(mutableSetOf()) { it.file ?: it.dir }
-      .forEach {
-        invalidate(it)
-      }
+        .asSequence()
+        .mapNotNull { it.config }
+        .flatMap { it.getProjects().values }
+        .filter { it.environment.variables.isNotEmpty() }
+        .mapTo(mutableSetOf()) { it.file ?: it.dir }
+        .forEach {
+          invalidate(it)
+        }
   }
 
   private suspend fun notifyConfigurationChanged() {
@@ -512,18 +509,18 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
   private fun queryAllConfigFiles(): Set<VirtualFile> {
     val processor = CommonProcessors.CollectUniquesProcessor<VirtualFile>()
     FilenameIndex.processFilesByNames(
-      CONFIG_NAMES, true, GlobalSearchScope.projectScope(project), null, processor
+        CONFIG_NAMES, true, GlobalSearchScope.projectScope(project), null, processor
     )
     return processor.results
-      .filter { file -> GraphQLConfigSearchCustomizer.EP_NAME.extensionList.none { it.isIgnoredConfig(project, file) } }
-      .toSet()
+        .filter { file -> GraphQLConfigSearchCustomizer.EP_NAME.extensionList.none { it.isIgnoredConfig(project, file) } }
+        .toSet()
   }
 
   private class ConfigEntry(
-    val config: GraphQLConfig? = null,
-    val timeStamp: Long = -1,
-    val status: GraphQLConfigEvaluationStatus,
-    val error: Throwable? = null,
+      val config: GraphQLConfig? = null,
+      val timeStamp: Long = -1,
+      val status: GraphQLConfigEvaluationStatus,
+      val error: Throwable? = null,
   ) {
     val invalidated: AtomicBoolean = AtomicBoolean(false)
   }
