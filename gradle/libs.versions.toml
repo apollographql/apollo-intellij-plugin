@@ -11,10 +11,14 @@ google-testparameterinjector = "1.11"
 cdimascio-dotenv = "6.4.1"
 atlassian-commonmark = "0.17.0"
 
-# Corresponds to AS Meerkat Feature Drop 2024.3.2 Patch 1 -> https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html
+# XXX Do update the supported versions in the README.md, and in docs/source/testing/android-studio-plugin.mdx file when updating these values!
+# See https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for insight into build numbers and IntelliJ Platform versions.
+sinceBuild = "251"
+
+# Corresponds to AS Narwhal 2025.1.1 -> https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html
 # and https://developer.android.com/studio/archive (more up to date)
 # See also https://plugins.jetbrains.com/docs/intellij/android-studio.html
-intellij-platform-version = "2024.3.5"
+intellij-platform-version = "2025.1.1"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-plugin" }

@@ -168,7 +168,7 @@ dependencies {
     // e.g. for the Android plugin: https://plugins.jetbrains.com/plugin/22989-android/versions/stable
     plugins(
         listOf(
-            "org.jetbrains.android:243.26053.27",
+            "org.jetbrains.android:251.25410.131",
         )
     )
 
@@ -215,9 +215,7 @@ intellijPlatform {
     name.set("Apollo GraphQL")
     version.set(project.version.toString())
     ideaVersion {
-      // XXX Do update the supported versions in the README.md, and in docs/source/testing/android-studio-plugin.mdx file when updating these values!
-      // See https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for insight into build numbers and IntelliJ Platform versions.
-      sinceBuild = "243"
+      sinceBuild = libs.versions.sinceBuild.get()
 
       // No untilBuild specified, the plugin wants to be compatible with all future versions
       untilBuild = provider { null }
