@@ -2,7 +2,6 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INTERNAL_API_USAGES
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INVALID_PLUGIN
@@ -10,8 +9,6 @@ import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLeve
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
-
-fun properties(key: String) = project.findProperty(key).toString()
 
 fun isSnapshotBuild() = System.getenv("IJ_PLUGIN_SNAPSHOT").toBoolean()
 
@@ -34,10 +31,10 @@ repositories {
   }
 }
 
-group = properties("pluginGroup")
+group = "com.apollographql"
 
 // Use the global version defined in the root project + dedicated suffix if building a snapshot from the CI
-version = properties("VERSION_NAME") + getSnapshotVersionSuffix()
+version = project.findProperty("VERSION_NAME").toString() + getSnapshotVersionSuffix()
 
 fun getSnapshotVersionSuffix(): String {
   if (!isSnapshotBuild()) return ""
@@ -68,7 +65,7 @@ tasks.register<Copy>("copyApolloDependencies") {
 }
 
 tasks {
-  val runLocalIde by intellijPlatformTesting.runIde.registering {
+  intellijPlatformTesting.runIde.register("runLocalIde") {
     // Use a custom IJ/AS installation. Set this property in your local ~/.gradle/gradle.properties file.
     // (for AS, it should be something like '/Applications/Android Studio.app/Contents')
     // See https://plugins.jetbrains.com/docs/intellij/android-studio.html#configuring-the-plugin-gradle-build-script
@@ -150,14 +147,38 @@ apollo {
 }
 
 dependencies {
-  // IntelliJ Platform dependencies must be declared before the intellijPlatform block - see https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1784
+  // IntelliJ Platform dependencies must be declared before the intellijPlatform block
+  // See https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1784
   intellijPlatform {
-    create(type = properties("platformType"), version = properties("platformVersion"))
-    bundledPlugins(properties("platformBundledPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
-    plugins(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+    intellijIdeaUltimate(libs.versions.intellij.platform.version.get())
+
+    // Plugin dependencies
+    // See https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
+    bundledPlugins(
+        listOf(
+            "com.intellij.java",
+            "org.jetbrains.kotlin",
+            "com.intellij.gradle",
+            "org.toml.lang",
+            "com.intellij.modules.json",
+        )
+    )
+
+    // To find the version of a plugin relative to the platform version, see the plugin's page on the Marketplace,
+    // e.g. for the Android plugin: https://plugins.jetbrains.com/plugin/22989-android/versions/stable
+    plugins(
+        listOf(
+            "org.jetbrains.android:243.26053.27",
+        )
+    )
+
+    pluginModule(implementation(project(":jsgraphql")))
+
     // Uncomment the version if needing a specific one, e.g. if a regression is introduced in the latest version - see https://github.com/JetBrains/intellij-plugin-verifier/releases
     pluginVerifier(/*version = "1.385"*/)
+
     testFramework(TestFrameworkType.Plugin.Java)
+
     zipSigner()
   }
 
@@ -190,11 +211,14 @@ dependencies {
 // See https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html#intellijPlatform-pluginConfiguration
 intellijPlatform {
   pluginConfiguration {
-    id.set(properties("pluginId"))
-    name.set(properties("pluginName"))
+    id.set("com.apollographql.ijplugin")
+    name.set("Apollo GraphQL")
     version.set(project.version.toString())
     ideaVersion {
-      sinceBuild = properties("pluginSinceBuild")
+      // XXX Do update the supported versions in the README.md, and in docs/source/testing/android-studio-plugin.mdx file when updating these values!
+      // See https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for insight into build numbers and IntelliJ Platform versions.
+      sinceBuild = "243"
+
       // No untilBuild specified, the plugin wants to be compatible with all future versions
       untilBuild = provider { null }
     }

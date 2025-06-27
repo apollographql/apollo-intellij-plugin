@@ -19,6 +19,7 @@ plugins {
 apply(from = "gradle/ge.gradle")
 
 include(
+    ":jsgraphql",
     ":plugin",
     ":test-project",
 )
