@@ -30,8 +30,8 @@ This plugin for Android Studio and IntelliJ helps you work with the
 
 The plugin is supported on:
 
-- IntelliJ 2024.3.5 and above
-- Android Studio 2024.3.2 Patch 1 (Meerkat) and above
+- IntelliJ 2025.1.1 and above
+- Android Studio Narwhal 2025.1.1 and above
 
 ## Installation instructions
 
