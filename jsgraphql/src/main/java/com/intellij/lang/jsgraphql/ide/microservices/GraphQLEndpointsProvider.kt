@@ -4,8 +4,18 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.lang.jsgraphql.GraphQLFileType
 import com.intellij.lang.jsgraphql.GraphQLLanguage
 import com.intellij.lang.jsgraphql.icons.GraphQLIcons
-import com.intellij.lang.jsgraphql.psi.*
-import com.intellij.microservices.endpoints.*
+import com.intellij.lang.jsgraphql.psi.GraphQLElement
+import com.intellij.lang.jsgraphql.psi.GraphQLFieldDefinition
+import com.intellij.lang.jsgraphql.psi.GraphQLFile
+import com.intellij.lang.jsgraphql.psi.GraphQLNamedTypeDefinition
+import com.intellij.lang.jsgraphql.psi.GraphQLObjectTypeDefinition
+import com.intellij.lang.jsgraphql.psi.GraphQLTypeNameDefinition
+import com.intellij.microservices.endpoints.EndpointType
+import com.intellij.microservices.endpoints.EndpointsFilter
+import com.intellij.microservices.endpoints.EndpointsProvider
+import com.intellij.microservices.endpoints.FrameworkPresentation
+import com.intellij.microservices.endpoints.GRAPH_QL_TYPE
+import com.intellij.microservices.endpoints.ModuleEndpointsFilter
 import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
@@ -27,21 +37,21 @@ internal class FieldDefinitionEndpoint(val field: GraphQLFieldDefinition) : Grap
   override fun getEndpointPresentation(group: GraphQLFile): ItemPresentation {
     val name = field.name ?: "Unknown"
     val typeName = field.parentOfType<GraphQLNamedTypeDefinition>()?.typeNameDefinition?.name ?: "Unknown"
-    return PresentationData("$typeName.$name", group.name, GraphQLIcons.FILE, null)
+    return PresentationData("$typeName.$name", group.name, GraphQLIcons.Logos.GraphQL, null)
   }
 }
 
 internal class TypeNameDefinitionEndpoint(val type: GraphQLTypeNameDefinition) : GraphQLEndpoint(type) {
   override fun getEndpointPresentation(group: GraphQLFile): ItemPresentation {
     val typeName = type.parentOfType<GraphQLNamedTypeDefinition>()?.typeNameDefinition?.name ?: "Unknown"
-    return PresentationData(typeName, group.name, GraphQLIcons.FILE, null)
+    return PresentationData(typeName, group.name, GraphQLIcons.Logos.GraphQL, null)
   }
 }
 
 internal class GraphQLEndpointsProvider<E : GraphQLElement> : EndpointsProvider<GraphQLFile, GraphQLEndpoint> {
   override val endpointType: EndpointType = GRAPH_QL_TYPE
 
-  override val presentation: FrameworkPresentation = FrameworkPresentation("GraphQL", "GraphQL", GraphQLIcons.FILE)
+  override val presentation: FrameworkPresentation = FrameworkPresentation("GraphQL", "GraphQL", GraphQLIcons.Logos.GraphQL)
 
   override fun getStatus(project: Project): EndpointsProvider.Status =
     if (getGraphQLFiles(project).isNotEmpty()) EndpointsProvider.Status.HAS_ENDPOINTS

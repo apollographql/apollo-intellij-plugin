@@ -82,8 +82,8 @@ public final class GraphQLColorSettingsPage implements ColorSettingsPage {
   }
 
   @Override
-  public @Nullable Icon getIcon() {
-    return GraphQLIcons.FILE;
+  public Icon getIcon() {
+    return GraphQLIcons.Logos.INSTANCE.getGraphQL();
   }
 
   @Override

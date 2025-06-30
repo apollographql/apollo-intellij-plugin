@@ -35,7 +35,7 @@ class GraphQLGeneratedSourcesEditorNotificationProvider : EditorNotificationProv
         else {
           GraphQLBundle.message("graphql.notification.sdl.generation.error.text")
         }
-        icon(GraphQLIcons.FILE)
+        icon(GraphQLIcons.Logos.GraphQL)
         createActionLabel(
           GraphQLBundle.message("graphql.notification.sdl.generation.stack.trace.action"), {
           val stackTrace = ExceptionUtil.getThrowableText(error)

@@ -35,7 +35,7 @@ public class GraphQLLibrary extends SyntheticLibrary implements ItemPresentation
 
   @Override
   public @Nullable Icon getIcon(boolean unused) {
-    return GraphQLIcons.Logos.GraphQL;
+    return GraphQLIcons.Logos.INSTANCE.getGraphQL();
   }
 
   @Override
