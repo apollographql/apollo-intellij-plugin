@@ -51,16 +51,6 @@
         serviceImplementation="com.apollographql.ijplugin.project.ApolloProjectServiceImpl"
     />
 
-    <!-- Note: the value of `parentId` corresponds to the settings `id` of the JS GraphQL plugin -->
-    <!-- See https://github.com/JetBrains/js-graphql-intellij-plugin/blob/396770c293a57f4903acdf427ba5136db6a79d0b/resources/META-INF/plugin.xml#L151 -->
-    <projectConfigurable
-        id="com.apollographql.ijplugin.settings.SettingsConfigurable"
-        parentId="settings.jsgraphql"
-        instance="com.apollographql.ijplugin.settings.SettingsConfigurable"
-        displayName="Apollo Kotlin"
-        nonDefaultProject="true"
-    />
-
     <!-- Icons -->
     <iconProvider implementation="com.apollographql.ijplugin.icons.GraphQLIconProvider" />
 
@@ -131,9 +121,6 @@
         groupKey="advanced.setting.apollo"
         default="false"
     />
-
-
-    <dependencySupport kind="javascript" coordinate="npm:graphql" displayName="GraphQL"/>
 
     <!-- Color scheme -->
     <additionalTextAttributes scheme="Default" file="colorSchemes/GraphQLLanguageDefault.xml"/>
@@ -240,6 +227,14 @@
                          instance="com.intellij.lang.jsgraphql.ui.GraphQLSettingsConfigurable"
                          bundle="messages.GraphQLBundle" key="graphql"/>
 
+    <projectConfigurable
+        id="com.apollographql.ijplugin.settings.SettingsConfigurable"
+        parentId="settings.jsgraphql"
+        instance="com.apollographql.ijplugin.settings.SettingsConfigurable"
+        displayName="Apollo Kotlin"
+        nonDefaultProject="true"
+    />
+
     <!-- Introspection -->
     <codeInsight.lineMarkerProvider
         implementationClass="com.intellij.lang.jsgraphql.ide.introspection.GraphQLIntrospectionJsonToSDLLineMarkerProvider"
@@ -267,9 +262,6 @@
     <!-- Error highlighting and annotations -->
     <daemon.changeLocalityDetector order="first"
                                    implementation="com.intellij.lang.jsgraphql.ide.validation.GraphQLChangeLocalityDetector"/>
-
-    <!-- Query context highlighter -->
-    <!--<highlightVisitor implementation="com.intellij.lang.jsgraphql.ide.highlighting.query.GraphQLQueryContextHighlightVisitor"/>-->
 
     <!-- Schema documentation -->
     <lang.documentationProvider language="GraphQL"
