@@ -147,8 +147,8 @@
     <!-- Project services -->
     <projectService serviceImplementation="com.intellij.lang.jsgraphql.ide.search.GraphQLPsiSearchHelper"/>
     <projectService serviceImplementation="com.intellij.lang.jsgraphql.ide.resolve.GraphQLReferenceService"/>
-    <projectService
-        serviceImplementation="com.intellij.lang.jsgraphql.ui.GraphQLUIProjectService"/>
+    <projectService serviceInterface="com.intellij.lang.jsgraphql.ui.GraphQLUIProjectService"
+                    serviceImplementation="com.apollographql.ijplugin.graphql.GraphQLUIProjectServiceImpl" />
     <projectService serviceImplementation="com.intellij.lang.jsgraphql.schema.library.GraphQLLibraryManager"/>
 
     <!-- Sources -->

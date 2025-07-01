@@ -321,16 +321,6 @@
     >
       <add-to-group group-id="ApolloToolsActionGroup" />
     </action>
-
-
-    <!-- 'Execute' button on a GraphQL file editor's toolbar. -->
-    <!-- Overrides the GraphQL plugin's action so we can strip Apollo client side directives before executing the query. -->
-    <action
-        id="GraphQLExecuteEditor"
-        class="com.apollographql.ijplugin.action.GraphQLExecuteEditorAction"
-        icon="com.intellij.icons.AllIcons.Actions.Execute"
-        overrides="true"
-    />
   </actions>
 
 </idea-plugin>
