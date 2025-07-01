@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin.inspection
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.settings.appSettingsState
 import com.apollographql.ijplugin.telemetry.TelemetryEvent
 import com.apollographql.ijplugin.telemetry.telemetryService
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo
@@ -33,6 +34,9 @@ class ApolloSchemaInGraphqlFileInspection : LocalInspectionTool() {
       }
 
       private fun checkForInvalidFile(o: GraphQLElement) {
+        if (appSettingsState.lspModeEnabled) {
+          return
+        }
         val currentFileName = o.containingFile.name
         if (currentFileName.endsWith(".graphql")) {
           holder.registerProblem(o, ApolloBundle.message("inspection.schemaInGraphqlFile.reportText"), RenameToGraphqlsQuickFix(currentFileName))

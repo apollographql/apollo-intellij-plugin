@@ -199,6 +199,8 @@ dependencies {
   implementation(libs.apollo.runtime) {
     exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
   }
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
   runtimeOnly(libs.slf4j.simple)
   testImplementation(libs.google.testparameterinjector)
 

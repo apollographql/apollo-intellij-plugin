@@ -250,6 +250,12 @@
     <codeInsight.lineMarkerProvider
         implementationClass="com.intellij.lang.jsgraphql.ide.introspection.GraphQLIntrospectionJsonToSDLLineMarkerProvider"
         language="JSON"/>
+
+    <!-- LSP mode connector run marker provider -->
+    <codeInsight.lineMarkerProvider
+            language="GraphQL"
+            implementationClass="com.apollographql.ijplugin.lsp.ConnectorRunLineMarkerProvider"
+    />
     <codeInsight.lineMarkerProvider
         implementationClass="com.intellij.lang.jsgraphql.ide.introspection.editor.json.GraphQLIntrospectionJsonLineMarkerProvider"
         language="JSON"/>
@@ -300,71 +306,71 @@
     <registryKey key="graphql.schema.size.definitions.limit" defaultValue="4000" description="A limit on the total number of type definitions in a GraphQL schema"/>
 
     <!-- Inspections -->
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.unresolved.reference"
-                     enabledByDefault="true"
-                     groupKey="graphql.inspection.group.general" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLUnresolvedReferenceInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.deprecated.symbols"
-                     enabledByDefault="true"
-                     groupKey="graphql.inspection.group.general" groupPathKey="graphql" level="WEAK WARNING"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLDeprecatedSymbolsInspection"
-                     bundle="messages.GraphQLBundle"/>
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.unresolved.reference"-->
+<!--                     enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.general" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLUnresolvedReferenceInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.deprecated.symbols"-->
+<!--                     enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.general" groupPathKey="graphql" level="WEAK WARNING"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLDeprecatedSymbolsInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
 
-    <!-- Schema inspections -->
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.schema.validation" enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLSchemaValidationInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.type.redefinition" enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLTypeRedefinitionInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.unexpected.type" enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLUnexpectedTypeInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.member.redefinition"
-                     enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLMemberRedefinitionInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.illegal.name" enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLIllegalNameInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.empty.type" enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLEmptyTypeInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.duplicate.argument" enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLDuplicateArgumentInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.interface.implementation"
-                     enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLInterfaceImplementationInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.duplicate.directive"
-                     enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLDuplicateDirectiveInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.missing.type" enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLMissingTypeInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.illegal.directive.argument"
-                     enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLIllegalDirectiveArgumentInspection"
-                     bundle="messages.GraphQLBundle"/>
-    <localInspection language="GraphQL" key="graphql.inspection.display.name.invalid.directive.location"
-                     enabledByDefault="true"
-                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"
-                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLInvalidDirectiveLocationInspection"
-                     bundle="messages.GraphQLBundle"/>
+<!--    &lt;!&ndash; Schema inspections &ndash;&gt;-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.schema.validation" enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLSchemaValidationInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.type.redefinition" enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLTypeRedefinitionInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.unexpected.type" enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLUnexpectedTypeInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.member.redefinition"-->
+<!--                     enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLMemberRedefinitionInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.illegal.name" enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLIllegalNameInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.empty.type" enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLEmptyTypeInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.duplicate.argument" enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLDuplicateArgumentInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.interface.implementation"-->
+<!--                     enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLInterfaceImplementationInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.duplicate.directive"-->
+<!--                     enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLDuplicateDirectiveInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.missing.type" enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLMissingTypeInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.illegal.directive.argument"-->
+<!--                     enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLIllegalDirectiveArgumentInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
+<!--    <localInspection language="GraphQL" key="graphql.inspection.display.name.invalid.directive.location"-->
+<!--                     enabledByDefault="true"-->
+<!--                     groupKey="graphql.inspection.group.schema" groupPathKey="graphql" unfair="true" level="ERROR"-->
+<!--                     implementationClass="com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLInvalidDirectiveLocationInspection"-->
+<!--                     bundle="messages.GraphQLBundle"/>-->
 
     <lang.inspectionSuppressor language="GraphQL"
                                implementationClass="com.intellij.lang.jsgraphql.ide.validation.GraphQLInspectionSuppressor"/>

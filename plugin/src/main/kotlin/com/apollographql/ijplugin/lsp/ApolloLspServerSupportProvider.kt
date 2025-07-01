@@ -7,6 +7,7 @@ import com.apollographql.ijplugin.icons.ApolloIcons
 import com.apollographql.ijplugin.rover.RoverHelper
 import com.apollographql.ijplugin.settings.appSettingsState
 import com.apollographql.ijplugin.settings.lsp.LspSettingsConfigurable
+import com.intellij.lang.jsgraphql.GraphQLFileType
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
@@ -35,7 +36,7 @@ internal class ApolloLspServerSupportProvider : LspServerSupportProvider {
 }
 
 private class ApolloLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "Apollo") {
-  override fun isSupportedFile(file: VirtualFile) = file.extension in ApolloGraphQLFileType.SUPPORTED_EXTENSIONS
+  override fun isSupportedFile(file: VirtualFile) = GraphQLFileType.isGraphQLFile(file)
   override fun createCommandLine() = RoverHelper.getLspCommandLine(project)
 
   override fun getLanguageId(file: VirtualFile): String {
