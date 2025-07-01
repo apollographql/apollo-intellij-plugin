@@ -275,6 +275,8 @@ abstract public class AbstractGraphQLUIProjectService implements GraphQLUIProjec
     queryActions.addSeparator();
     queryActions.add(new GraphQLRunIntrospectionQueryAction());
     queryActions.add(new GraphQLOpenIntrospectionSchemaAction());
+    queryActions.addSeparator();
+    queryActions.add(getOpenInSandboxAction());
     final JComponent queryToolbar = createToolbar(queryActions, headerComponent);
 
     // configured endpoints combo box
@@ -407,8 +409,6 @@ abstract public class AbstractGraphQLUIProjectService implements GraphQLUIProjec
       GraphQLNotificationUtil.showGraphQLRequestErrorNotification(myProject, url, e, NotificationType.ERROR, null);
     }
   }
-
-  protected abstract String stripClientDirectives(@NotNull Editor editor, String query);
 
   private void runQuery(@NotNull Editor editor,
       @NotNull VirtualFile virtualFile,

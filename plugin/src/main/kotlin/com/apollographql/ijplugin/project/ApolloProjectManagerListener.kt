@@ -8,7 +8,6 @@ import com.apollographql.ijplugin.lsp.ApolloLspAppService
 import com.apollographql.ijplugin.lsp.ApolloLspProjectService
 import com.apollographql.ijplugin.settings.ProjectSettingsService
 import com.apollographql.ijplugin.studio.fieldinsights.FieldInsightsService
-import com.apollographql.ijplugin.studio.sandbox.SandboxService
 import com.apollographql.ijplugin.telemetry.TelemetryService
 import com.apollographql.ijplugin.util.isGradlePluginPresent
 import com.apollographql.ijplugin.util.isKotlinPluginPresent
@@ -48,7 +47,6 @@ class ApolloProjectActivity : ProjectActivity {
         project.service<GraphQLConfigService>()
         project.service<GradleToolingModelService>()
         project.service<ProjectSettingsService>()
-        project.service<SandboxService>()
         project.service<FieldInsightsService>()
         project.service<TelemetryService>()
       }

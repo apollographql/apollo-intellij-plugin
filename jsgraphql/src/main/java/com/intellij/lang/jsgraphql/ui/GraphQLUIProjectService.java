@@ -2,6 +2,7 @@ package com.intellij.lang.jsgraphql.ui;
 
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLConfigEndpoint;
 import com.intellij.lang.jsgraphql.ide.project.schemastatus.GraphQLEndpointsModel;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
@@ -41,6 +42,10 @@ public interface GraphQLUIProjectService {
   void showQueryResult(@NotNull String jsonResponse);
 
   void projectOpened();
+
+  String stripClientDirectives(@NotNull Editor editor, String query);
+
+  AnAction getOpenInSandboxAction();
 
   static GraphQLUIProjectService getInstance(@NotNull Project project) {
     return project.getService(GraphQLUIProjectService.class);
