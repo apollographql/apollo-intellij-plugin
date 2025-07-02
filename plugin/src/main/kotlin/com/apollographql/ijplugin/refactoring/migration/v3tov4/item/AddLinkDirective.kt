@@ -1,20 +1,22 @@
+@file:OptIn(ApolloExperimental::class)
+
 package com.apollographql.ijplugin.refactoring.migration.v3tov4.item
 
+import com.apollographql.apollo.annotations.ApolloExperimental
+import com.apollographql.apollo.ast.ForeignSchema
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItem
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
-import com.apollographql.ijplugin.util.KOTLIN_LABS_DEFINITIONS
-import com.apollographql.ijplugin.util.KOTLIN_LABS_URL
-import com.apollographql.ijplugin.util.NULLABILITY_DEFINITIONS
-import com.apollographql.ijplugin.util.NULLABILITY_URL
 import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.createLinkDirective
 import com.apollographql.ijplugin.util.createLinkDirectiveSchemaExtension
 import com.apollographql.ijplugin.util.directives
 import com.apollographql.ijplugin.util.findPsiFilesByName
+import com.apollographql.ijplugin.util.foreignSchemas
 import com.apollographql.ijplugin.util.isImported
 import com.apollographql.ijplugin.util.linkDirectives
 import com.apollographql.ijplugin.util.nameForImport
 import com.apollographql.ijplugin.util.unquoted
+import com.apollographql.ijplugin.util.url
 import com.intellij.lang.jsgraphql.psi.GraphQLArrayValue
 import com.intellij.lang.jsgraphql.psi.GraphQLDirective
 import com.intellij.lang.jsgraphql.psi.GraphQLElementFactory
@@ -29,21 +31,20 @@ object AddLinkDirective : MigrationItem() {
     val usages = mutableListOf<MigrationItemUsageInfo>()
     val extraGraphqlsFiles: List<GraphQLFile> = project.findPsiFilesByName("extra.graphqls", searchScope).filterIsInstance<GraphQLFile>()
     for (file in extraGraphqlsFiles) {
-      file.accept(object : GraphQLRecursiveVisitor() {
-        override fun visitDirective(o: GraphQLDirective) {
-          super.visitDirective(o)
-          if (o.name in NULLABILITY_DEFINITIONS.directives().map { it.name }) {
-            if (!o.isImported(NULLABILITY_URL)) {
-              usages.add(o.toMigrationItemUsageInfo(true))
+      file.accept(
+          object : GraphQLRecursiveVisitor() {
+            override fun visitDirective(o: GraphQLDirective) {
+              super.visitDirective(o)
+              for (foreignSchema in foreignSchemas) {
+                if (o.name in foreignSchema.definitions.directives().map { it.name }) {
+                  if (!o.isImported(foreignSchema.url)) {
+                    usages.add(o.toMigrationItemUsageInfo(foreignSchema))
+                  }
+                }
+              }
             }
           }
-          if (o.name in KOTLIN_LABS_DEFINITIONS.directives().map { it.name }) {
-            if (!o.isImported(KOTLIN_LABS_URL)) {
-              usages.add(o.toMigrationItemUsageInfo(false))
-            }
-          }
-        }
-      })
+      )
     }
     return usages
   }
@@ -51,12 +52,11 @@ object AddLinkDirective : MigrationItem() {
   override fun performRefactoring(project: Project, migration: PsiMigration, usage: MigrationItemUsageInfo) {
     val directive = usage.element as GraphQLDirective
     val extraSchemaFile = directive.containingFile as GraphQLFile
-    val definitions = if (usage.attachedData()) NULLABILITY_DEFINITIONS else KOTLIN_LABS_DEFINITIONS
-    val definitionsUrl = if (usage.attachedData()) NULLABILITY_URL else KOTLIN_LABS_URL
-    val linkDirective = extraSchemaFile.linkDirectives(definitionsUrl).firstOrNull()
+    val foreignSchema = usage.attachedData() as ForeignSchema
+    val linkDirective = extraSchemaFile.linkDirectives(foreignSchema.url).firstOrNull()
     if (linkDirective == null) {
       val linkDirectiveSchemaExtension =
-        createLinkDirectiveSchemaExtension(project, setOf(directive.nameForImport), definitions, definitionsUrl)
+        createLinkDirectiveSchemaExtension(project, setOf(directive.nameForImport), foreignSchema.definitions, foreignSchema.url)
       val addedElement = extraSchemaFile.addBefore(linkDirectiveSchemaExtension, extraSchemaFile.firstChild)
       extraSchemaFile.addAfter(GraphQLElementFactory.createWhiteSpace(project, "\n\n"), addedElement)
     } else {
@@ -65,7 +65,7 @@ object AddLinkDirective : MigrationItem() {
             .map { it.text.unquoted() })
         add(directive.nameForImport)
       }
-      linkDirective.replace(createLinkDirective(project, importedNames, definitions, definitionsUrl))
+      linkDirective.replace(createLinkDirective(project, importedNames, foreignSchema.definitions, foreignSchema.url))
     }
   }
 }

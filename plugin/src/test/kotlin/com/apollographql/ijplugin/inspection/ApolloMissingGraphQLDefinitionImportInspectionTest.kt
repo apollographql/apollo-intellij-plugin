@@ -69,14 +69,14 @@ class ApolloMissingGraphQLDefinitionImportInspectionTest : ApolloTestCase() {
     myFixture.configureByFile("missing-targetName.graphql")
 
     var highlightInfos = doHighlighting()
-    assertTrue(highlightInfos.any { it.description == "Usage of implicit directive: targetName" && it.severity == HighlightSeverity.WEAK_WARNING })
+    assertTrue(highlightInfos.any { it.description == "Unresolved directive: targetName" && it.severity == HighlightSeverity.ERROR })
     val quickFixAction = myFixture.findSingleIntention("Import directive 'targetName'")
     assertNotNull(quickFixAction)
 
     // Apply quickfix
     myFixture.launchAction(quickFixAction)
     highlightInfos = doHighlighting()
-    assertTrue(highlightInfos.none { it.description == "Usage of implicit directive: targetName" })
+    assertTrue(highlightInfos.none { it.description == "Unresolved directive: targetName" })
 
     myFixture.openFileInEditor(myFixture.findFileInTempDir("extra.graphqls"))
     myFixture.checkResultByFile("missing-targetName-extra_after.graphqls", true)

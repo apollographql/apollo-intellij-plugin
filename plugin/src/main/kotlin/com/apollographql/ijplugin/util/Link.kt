@@ -1,16 +1,16 @@
-@file:OptIn(ApolloInternal::class)
+@file:OptIn(ApolloInternal::class, ApolloExperimental::class)
 
 package com.apollographql.ijplugin.util
 
+import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
-import com.apollographql.apollo.ast.AUTO_IMPORTED_KOTLIN_LABS_VERSION
+import com.apollographql.apollo.ast.ForeignSchema
 import com.apollographql.apollo.ast.GQLDefinition
 import com.apollographql.apollo.ast.GQLDirectiveDefinition
 import com.apollographql.apollo.ast.GQLNamed
-import com.apollographql.apollo.ast.NULLABILITY_VERSION
-import com.apollographql.apollo.ast.kotlinLabsDefinitions
-import com.apollographql.apollo.ast.nullabilityDefinitions
+import com.apollographql.apollo.ast.builtinForeignSchemas
 import com.apollographql.apollo.ast.rawType
+import com.apollographql.ijplugin.graphql.cacheGQLDefinitions
 import com.intellij.lang.jsgraphql.psi.GraphQLArrayValue
 import com.intellij.lang.jsgraphql.psi.GraphQLDirective
 import com.intellij.lang.jsgraphql.psi.GraphQLElement
@@ -22,19 +22,14 @@ import com.intellij.lang.jsgraphql.psi.GraphQLSchemaExtension
 import com.intellij.lang.jsgraphql.psi.GraphQLStringValue
 import com.intellij.openapi.project.Project
 
-const val NULLABILITY_URL = "https://specs.apollo.dev/nullability/$NULLABILITY_VERSION"
+val foreignSchemas = builtinForeignSchemas().associate { foreignSchema ->
+  foreignSchema.name to builtinForeignSchemas()
+      // Take only the last version
+      .last { it.name == foreignSchema.name }
+}.values +
+    ForeignSchema("cache", "v0.1", cacheGQLDefinitions)
 
-val NULLABILITY_DEFINITIONS: List<GQLDefinition> by lazy {
-  nullabilityDefinitions(NULLABILITY_VERSION)
-}
-
-const val KOTLIN_LABS_URL = "https://specs.apollo.dev/kotlin_labs/$AUTO_IMPORTED_KOTLIN_LABS_VERSION"
-
-val KOTLIN_LABS_DEFINITIONS: List<GQLDefinition> by lazy {
-  kotlinLabsDefinitions(AUTO_IMPORTED_KOTLIN_LABS_VERSION)
-}
-
-const val CATCH = "catch"
+val ForeignSchema.url: String get() = "https://specs.apollo.dev/$name/$version"
 
 fun List<GQLDefinition>.directives(): List<GQLDirectiveDefinition> {
   return filterIsInstance<GQLDirectiveDefinition>()
