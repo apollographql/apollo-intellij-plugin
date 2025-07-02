@@ -6,7 +6,6 @@ import com.apollographql.ijplugin.util.logw
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.generateServiceName
 import com.intellij.ide.passwordSafe.PasswordSafe
-import com.intellij.lang.jsgraphql.GraphQLSettings
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
@@ -53,12 +52,6 @@ class ProjectSettingsService(private val project: Project) : PersistentStateComp
     set(value) {
       _state.automaticCodegenAdditionalGradleJvmArguments = value
       notifySettingsChanged()
-    }
-
-  override var hasEnabledGraphQLPluginApolloKotlinSupport: Boolean
-    get() = _state.hasEnabledGraphQLPluginApolloKotlinSupport
-    set(value) {
-      _state.hasEnabledGraphQLPluginApolloKotlinSupport = value
     }
 
   override var contributeConfigurationToGraphqlPlugin: Boolean
@@ -125,12 +118,6 @@ class ProjectSettingsService(private val project: Project) : PersistentStateComp
   }
 
   override fun initializeComponent() {
-    // Automatically enable the "Frameworks / Apollo Kotlin" support in the GraphQL plugin's settings
-    if (!hasEnabledGraphQLPluginApolloKotlinSupport) {
-      project.service<GraphQLSettings>().isApolloKotlinSupportEnabled = true
-      hasEnabledGraphQLPluginApolloKotlinSupport = true
-    }
-
     if (telemetryInstanceId.isEmpty()) {
       telemetryInstanceId = UUID.randomUUID().toString()
     }
@@ -152,7 +139,6 @@ class ProjectSettingsService(private val project: Project) : PersistentStateComp
 interface ProjectSettingsState {
   var automaticCodegenTriggering: Boolean
   var automaticCodegenAdditionalGradleJvmArguments: String
-  var hasEnabledGraphQLPluginApolloKotlinSupport: Boolean
   var contributeConfigurationToGraphqlPlugin: Boolean
   var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration>
   var telemetryInstanceId: String
@@ -213,7 +199,6 @@ data class ApolloKotlinServiceConfiguration(
 data class ProjectSettingsStateImpl(
     override var automaticCodegenTriggering: Boolean = true,
     override var automaticCodegenAdditionalGradleJvmArguments: String = "-Xms64m -Xmx512m",
-    override var hasEnabledGraphQLPluginApolloKotlinSupport: Boolean = false,
     override var contributeConfigurationToGraphqlPlugin: Boolean = true,
     override var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration> = emptyList(),
     override var telemetryInstanceId: String = "",

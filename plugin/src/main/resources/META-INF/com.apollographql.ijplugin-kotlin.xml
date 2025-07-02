@@ -240,12 +240,6 @@
       <category>Apollo Kotlin</category>
     </intentionAction>
 
-    <!-- Suppression of GraphQLUnresolvedReference for certain known directives -->
-    <lang.inspectionSuppressor
-        language="GraphQL"
-        implementationClass="com.apollographql.ijplugin.inspection.GraphQLUnresolvedReferenceInspectionSuppressor"
-    />
-
     <!-- Normalized cache viewer -->
     <toolWindow
         id="NormalizedCacheViewer"
