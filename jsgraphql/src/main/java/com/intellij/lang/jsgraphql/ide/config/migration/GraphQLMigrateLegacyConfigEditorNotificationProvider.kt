@@ -18,7 +18,7 @@ class GraphQLMigrateLegacyConfigEditorNotificationProvider : EditorNotificationP
 
       EditorNotificationPanel().apply {
         text = GraphQLBundle.message("graphql.notification.migrate.config.text")
-        icon(GraphQLIcons.FILE)
+        icon(GraphQLIcons.Logos.GraphQL)
         createActionLabel(
           GraphQLBundle.message("graphql.notification.migrate.config.action"),
           GraphQLMigrateLegacyConfigAction.ACTION_ID

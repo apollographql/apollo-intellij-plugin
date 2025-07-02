@@ -35,7 +35,7 @@ class GraphQLConfigStatusEditorNotificationProvider : EditorNotificationProvider
       fileEditor.putUserData(RELOAD_TIMESTAMP_KEY, null)
       EditorNotificationPanel(fileEditor, JBUI.CurrentTheme.Notification.Error.BACKGROUND).apply {
         text = GraphQLBundle.message("graphql.config.evaluation.error")
-        icon(GraphQLIcons.FILE)
+        icon(GraphQLIcons.Logos.GraphQL)
         val cause = state.error?.cause
         if (cause != null) {
           createActionLabel(

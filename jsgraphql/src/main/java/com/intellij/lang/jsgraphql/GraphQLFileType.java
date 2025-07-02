@@ -43,7 +43,7 @@ public final class GraphQLFileType extends LanguageFileType {
 
   @Override
   public @NotNull Icon getIcon() {
-    return GraphQLIcons.FILE;
+    return GraphQLIcons.Files.GraphQL;
   }
 
   /**

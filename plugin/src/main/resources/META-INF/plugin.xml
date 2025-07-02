@@ -51,21 +51,8 @@
         serviceImplementation="com.apollographql.ijplugin.project.ApolloProjectServiceImpl"
     />
 
-    <!-- Note: the value of `parentId` corresponds to the settings `id` of the JS GraphQL plugin -->
-    <!-- See https://github.com/JetBrains/js-graphql-intellij-plugin/blob/396770c293a57f4903acdf427ba5136db6a79d0b/resources/META-INF/plugin.xml#L151 -->
-    <projectConfigurable
-        id="com.apollographql.ijplugin.settings.SettingsConfigurable"
-        parentId="settings.jsgraphql"
-        instance="com.apollographql.ijplugin.settings.SettingsConfigurable"
-        displayName="Apollo Kotlin"
-        nonDefaultProject="true"
-    />
-
     <!-- Icons -->
-    <!-- This may be a bit controversial, but we want to override the GraphQL plugin's icons (hence order="first") -->
-    <!-- because when navigating to GraphQL files from Kotlin code, a generic GraphQL logo is nicer than a specific -->
-    <!-- icon per element type -->
-    <iconProvider implementation="com.apollographql.ijplugin.icons.GraphQLIconProvider" order="first" />
+    <iconProvider implementation="com.apollographql.ijplugin.icons.GraphQLIconProvider" />
 
     <!-- Support for the "New UI" -->
     <!-- See https://plugins.jetbrains.com/docs/intellij/icons.html#new-ui-icons -->
@@ -135,9 +122,6 @@
         default="false"
     />
 
-
-    <dependencySupport kind="javascript" coordinate="npm:graphql" displayName="GraphQL"/>
-
     <!-- Color scheme -->
     <additionalTextAttributes scheme="Default" file="colorSchemes/GraphQLLanguageDefault.xml"/>
     <additionalTextAttributes scheme="Darcula" file="colorSchemes/GraphQLLanguageDarcula.xml"/>
@@ -160,14 +144,11 @@
     <!-- File templates -->
     <internalFileTemplate name="GraphQL File"/>
 
-    <!-- Icons -->
-    <iconProvider implementation="com.intellij.lang.jsgraphql.icons.GraphQLIconProvider"/>
-
     <!-- Project services -->
     <projectService serviceImplementation="com.intellij.lang.jsgraphql.ide.search.GraphQLPsiSearchHelper"/>
     <projectService serviceImplementation="com.intellij.lang.jsgraphql.ide.resolve.GraphQLReferenceService"/>
-    <projectService
-        serviceImplementation="com.intellij.lang.jsgraphql.ui.GraphQLUIProjectService"/>
+    <projectService serviceInterface="com.intellij.lang.jsgraphql.ui.GraphQLUIProjectService"
+                    serviceImplementation="com.apollographql.ijplugin.graphql.GraphQLUIProjectServiceImpl" />
     <projectService serviceImplementation="com.intellij.lang.jsgraphql.schema.library.GraphQLLibraryManager"/>
 
     <!-- Sources -->
@@ -246,6 +227,14 @@
                          instance="com.intellij.lang.jsgraphql.ui.GraphQLSettingsConfigurable"
                          bundle="messages.GraphQLBundle" key="graphql"/>
 
+    <projectConfigurable
+        id="com.apollographql.ijplugin.settings.SettingsConfigurable"
+        parentId="settings.jsgraphql"
+        instance="com.apollographql.ijplugin.settings.SettingsConfigurable"
+        displayName="Apollo Kotlin"
+        nonDefaultProject="true"
+    />
+
     <!-- Introspection -->
     <codeInsight.lineMarkerProvider
         implementationClass="com.intellij.lang.jsgraphql.ide.introspection.GraphQLIntrospectionJsonToSDLLineMarkerProvider"
@@ -273,9 +262,6 @@
     <!-- Error highlighting and annotations -->
     <daemon.changeLocalityDetector order="first"
                                    implementation="com.intellij.lang.jsgraphql.ide.validation.GraphQLChangeLocalityDetector"/>
-
-    <!-- Query context highlighter -->
-    <!--<highlightVisitor implementation="com.intellij.lang.jsgraphql.ide.highlighting.query.GraphQLQueryContextHighlightVisitor"/>-->
 
     <!-- Schema documentation -->
     <lang.documentationProvider language="GraphQL"
