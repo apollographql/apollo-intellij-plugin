@@ -10,7 +10,15 @@ package com.intellij.lang.jsgraphql.ide.validation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.jsgraphql.ide.validation.inspections.GraphQLInspection;
-import com.intellij.lang.jsgraphql.psi.*;
+import com.intellij.lang.jsgraphql.psi.GraphQLDirective;
+import com.intellij.lang.jsgraphql.psi.GraphQLFile;
+import com.intellij.lang.jsgraphql.psi.GraphQLInlineFragment;
+import com.intellij.lang.jsgraphql.psi.GraphQLNamedTypeDefinition;
+import com.intellij.lang.jsgraphql.psi.GraphQLNamedTypeExtension;
+import com.intellij.lang.jsgraphql.psi.GraphQLPsiUtil;
+import com.intellij.lang.jsgraphql.psi.GraphQLTypeCondition;
+import com.intellij.lang.jsgraphql.psi.GraphQLTypeName;
+import com.intellij.lang.jsgraphql.psi.GraphQLTypeNameDefinition;
 import com.intellij.lang.jsgraphql.schema.GraphQLSchemaInfo;
 import com.intellij.lang.jsgraphql.schema.GraphQLSchemaProvider;
 import com.intellij.lang.jsgraphql.schema.GraphQLTypeDefinitionUtil;
@@ -49,6 +57,10 @@ public final class GraphQLSchemaAnnotator implements Annotator {
     if (!(psiElement instanceof GraphQLFile file)) return;
 
     final Project project = psiElement.getProject();
+    boolean disableAnnotations = Boolean.TRUE.equals(project.getUserData(DisableGraphQLAnnotations.INSTANCE));
+    if (disableAnnotations) {
+      return;
+    }
 
     if (GraphQLInspection.isEditorInspectionHighlightingDisabled(project, file)) return;
 
