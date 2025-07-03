@@ -12,7 +12,12 @@ import com.intellij.openapi.roots.ex.ProjectRootManagerEx;
 import com.intellij.openapi.util.ClearableLazyValue;
 import com.intellij.openapi.util.EmptyRunnable;
 import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.vfs.*;
+import com.intellij.openapi.vfs.JarFileSystem;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiManager;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.ui.EditorNotifications;
@@ -37,10 +42,10 @@ public final class GraphQLLibraryManager {
     new GraphQLLibrary(new GraphQLLibraryDescriptor("EMPTY"), new LightVirtualFile());
 
   private static final Map<GraphQLLibraryDescriptor, String> ourDefinitionResourcePaths = Map.of(
-    GraphQLLibraryTypes.SPECIFICATION, "Specification.graphql",
-    GraphQLLibraryTypes.RELAY, "Relay.graphql",
-    GraphQLLibraryTypes.FEDERATION, "Federation.graphql",
-    GraphQLLibraryTypes.APOLLO_KOTLIN, "ApolloKotlin.graphql"
+      GraphQLLibraryTypes.SPECIFICATION, "Specification.graphqls",
+      GraphQLLibraryTypes.RELAY, "Relay.graphqls",
+      GraphQLLibraryTypes.FEDERATION, "Federation.graphqls",
+      GraphQLLibraryTypes.APOLLO_KOTLIN, "ApolloKotlin.graphqls"
   );
 
   private final Project myProject;

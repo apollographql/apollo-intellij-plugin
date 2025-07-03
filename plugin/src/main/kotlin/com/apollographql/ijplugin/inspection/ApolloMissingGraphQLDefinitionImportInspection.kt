@@ -1,5 +1,9 @@
+@file:OptIn(ApolloExperimental::class)
+
 package com.apollographql.ijplugin.inspection
 
+import com.apollographql.apollo.annotations.ApolloExperimental
+import com.apollographql.apollo.ast.ForeignSchema
 import com.apollographql.apollo.ast.GQLDefinition
 import com.apollographql.apollo.ast.GQLDirectiveDefinition
 import com.apollographql.apollo.ast.GQLEnumTypeDefinition
@@ -12,19 +16,17 @@ import com.apollographql.ijplugin.gradle.gradleToolingModelService
 import com.apollographql.ijplugin.project.apolloProjectService
 import com.apollographql.ijplugin.telemetry.TelemetryEvent
 import com.apollographql.ijplugin.telemetry.telemetryService
-import com.apollographql.ijplugin.util.KOTLIN_LABS_DEFINITIONS
-import com.apollographql.ijplugin.util.KOTLIN_LABS_URL
-import com.apollographql.ijplugin.util.NULLABILITY_DEFINITIONS
-import com.apollographql.ijplugin.util.NULLABILITY_URL
 import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.createLinkDirective
 import com.apollographql.ijplugin.util.createLinkDirectiveSchemaExtension
 import com.apollographql.ijplugin.util.directives
+import com.apollographql.ijplugin.util.foreignSchemas
 import com.apollographql.ijplugin.util.isImported
 import com.apollographql.ijplugin.util.linkDirectives
 import com.apollographql.ijplugin.util.nameForImport
 import com.apollographql.ijplugin.util.schemaFiles
 import com.apollographql.ijplugin.util.unquoted
+import com.apollographql.ijplugin.util.url
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo
 import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils
 import com.intellij.codeInspection.LocalInspectionTool
@@ -47,8 +49,9 @@ class ApolloMissingGraphQLDefinitionImportInspection : LocalInspectionTool() {
       override fun visitDirective(o: GraphQLDirective) {
         super.visitDirective(o)
         if (!o.project.apolloProjectService.apolloVersion.isAtLeastV4) return
-        visitDirective(o, holder, NULLABILITY_DEFINITIONS, NULLABILITY_URL, ProblemHighlightType.LIKE_UNKNOWN_SYMBOL)
-        visitDirective(o, holder, KOTLIN_LABS_DEFINITIONS, KOTLIN_LABS_URL, ProblemHighlightType.WEAK_WARNING)
+        for (foreignSchema in foreignSchemas) {
+          visitDirective(o, holder, foreignSchema, ProblemHighlightType.LIKE_UNKNOWN_SYMBOL)
+        }
       }
     }
   }
@@ -56,35 +59,34 @@ class ApolloMissingGraphQLDefinitionImportInspection : LocalInspectionTool() {
   private fun visitDirective(
       directiveElement: GraphQLDirective,
       holder: ProblemsHolder,
-      definitions: List<GQLDefinition>,
-      definitionsUrl: String,
+      foreignSchema: ForeignSchema,
       highlightType: ProblemHighlightType,
   ) {
-    if (directiveElement.name !in definitions.directives().map { it.name }) return
+    if (directiveElement.name !in foreignSchema.definitions.directives().map { it.name }) return
     val message =
       if (highlightType == ProblemHighlightType.WEAK_WARNING) "inspection.missingGraphQLDefinitionImport.reportText.warning" else "inspection.missingGraphQLDefinitionImport.reportText.error"
-    if (!directiveElement.isImported(definitionsUrl)) {
+    if (!directiveElement.isImported(foreignSchema.url)) {
       val typeKind = ApolloBundle.message("inspection.missingGraphQLDefinitionImport.reportText.directive")
       holder.registerProblem(
           directiveElement,
           ApolloBundle.message(message, typeKind, directiveElement.name!!),
           highlightType,
-          ImportDefinitionQuickFix(typeKind = typeKind, elementName = directiveElement.name!!, definitions = definitions, definitionsUrl = definitionsUrl),
+          ImportDefinitionQuickFix(typeKind = typeKind, elementName = directiveElement.name!!, definitions = foreignSchema.definitions, definitionsUrl = foreignSchema.url),
       )
     } else {
-      val directiveDefinition = definitions.directives().firstOrNull { it.name == directiveElement.name } ?: return
-      val knownDefinitionNames = definitions.filterIsInstance<GQLNamed>().map { it.name }
+      val directiveDefinition = foreignSchema.definitions.directives().firstOrNull { it.name == directiveElement.name } ?: return
+      val knownDefinitionNames = foreignSchema.definitions.filterIsInstance<GQLNamed>().map { it.name }
       val arguments = directiveElement.arguments?.argumentList.orEmpty()
       for (argument in arguments) {
         val argumentDefinition = directiveDefinition.arguments.firstOrNull { it.name == argument.name } ?: continue
         val argumentTypeToImport = argumentDefinition.type.rawType().name.takeIf { it in knownDefinitionNames } ?: continue
-        if (!isImported(directiveElement, argumentTypeToImport, definitionsUrl)) {
+        if (!isImported(directiveElement, argumentTypeToImport, foreignSchema.url)) {
           val typeKind = getTypeKind(argumentTypeToImport)
           holder.registerProblem(
               argument,
               ApolloBundle.message(message, typeKind, argumentTypeToImport),
               highlightType,
-              ImportDefinitionQuickFix(typeKind = typeKind, elementName = argumentTypeToImport, definitions = definitions, definitionsUrl = definitionsUrl),
+              ImportDefinitionQuickFix(typeKind = typeKind, elementName = argumentTypeToImport, definitions = foreignSchema.definitions, definitionsUrl = foreignSchema.url),
           )
         }
       }
@@ -93,7 +95,7 @@ class ApolloMissingGraphQLDefinitionImportInspection : LocalInspectionTool() {
 }
 
 private fun getTypeKind(typeName: String): String {
-  val typeDefinition = NULLABILITY_DEFINITIONS.firstOrNull { it is GQLNamed && it.name == typeName } ?: return "unknown"
+  val typeDefinition = foreignSchemas.flatMap { it.definitions }.firstOrNull { it is GQLNamed && it.name == typeName } ?: return "unknown"
   return ApolloBundle.message(
       when (typeDefinition) {
         is GQLDirectiveDefinition -> "inspection.missingGraphQLDefinitionImport.reportText.directive"

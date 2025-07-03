@@ -69,12 +69,6 @@ class GraphQLSettings : PersistentStateComponent<GraphQLSettingsState> {
       state.enableFederationSupport = enableFederationSupport
     }
 
-  var isApolloKotlinSupportEnabled: Boolean
-    get() = state.enableApolloKotlinSupport
-    set(enableApolloKotlinSupport) {
-      state.enableApolloKotlinSupport = enableApolloKotlinSupport
-    }
-
   class GraphQLSettingsState {
     var introspectionQuery = ""
     var enableIntrospectionDefaultValues = true
@@ -82,7 +76,6 @@ class GraphQLSettings : PersistentStateComponent<GraphQLSettingsState> {
     var openEditorWithIntrospectionResult = true
     var enableRelayModernFrameworkSupport = false
     var enableFederationSupport = false
-    var enableApolloKotlinSupport = false
   }
 
   companion object {

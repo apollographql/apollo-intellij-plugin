@@ -223,9 +223,13 @@
     <definitionsSearch implementation="com.intellij.lang.jsgraphql.ide.search.GraphQLDefinitionsSearchExecutor"/>
 
     <!-- Settings -->
-    <projectConfigurable id="settings.jsgraphql" groupId="language"
-                         instance="com.intellij.lang.jsgraphql.ui.GraphQLSettingsConfigurable"
-                         bundle="messages.GraphQLBundle" key="graphql"/>
+    <groupConfigurable
+        id="settings.jsgraphql"
+        parentId="language"
+        bundle="messages.GraphQLBundle"
+        displayNameKey="graphql"
+        descriptionKey="settings.group.description"
+    />
 
     <projectConfigurable
         id="com.apollographql.ijplugin.settings.SettingsConfigurable"
