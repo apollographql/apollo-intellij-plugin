@@ -45,6 +45,7 @@ import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloKotlinModule
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloLanguageVersion
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloLinkSqlite
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloNullableFieldStyle
+import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloOperationManifestFormat
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloServiceCount
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloUseSemanticNaming
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloUsedOptions
@@ -244,7 +245,8 @@ private fun ApolloGradleToolingModel.toTelemetryProperties(): Set<TelemetryPrope
     add(ApolloServiceCount(apolloServiceCount))
 
     apolloServiceTelemetryData.forEach {
-      it.operationManifestFormat?.let { add(ApolloCodegenModels(it)) }
+      it.codegenModels?.let { add(ApolloCodegenModels(it)) }
+      it.operationManifestFormat?.let { add(ApolloOperationManifestFormat(it)) }
       it.warnOnDeprecatedUsages?.let { add(ApolloWarnOnDeprecatedUsages(it)) }
       it.failOnWarnings?.let { add(ApolloFailOnWarnings(it)) }
       it.generateKotlinModels?.let { add(ApolloGenerateKotlinModels(it)) }
