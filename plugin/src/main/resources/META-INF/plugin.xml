@@ -59,6 +59,11 @@
     <iconMapper mappingFile="ApolloIconsMapping.json" />
     <iconMapper mappingFile="GraphQLIconsMapping.json" />
 
+    <!-- GraphQL icon on "graphql" folder -->
+    <fileIconProvider
+        implementationClass="com.apollographql.ijplugin.icons.ApolloFileIconProvider"
+    />
+
     <!-- "@OneOf GraphQL violation" inspection -->
     <!--suppress PluginXmlCapitalization -->
     <localInspection

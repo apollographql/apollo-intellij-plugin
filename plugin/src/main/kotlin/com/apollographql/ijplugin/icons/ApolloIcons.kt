@@ -28,6 +28,7 @@ object ApolloIcons {
 
   object Node {
     val Package by lazy { load("/icons/node-package.svg") }
+    val GraphQL by lazy { load("/icons/node-graphql.svg") }
   }
 
   object StatusBar {
