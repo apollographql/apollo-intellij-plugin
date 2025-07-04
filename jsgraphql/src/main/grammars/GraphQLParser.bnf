@@ -208,8 +208,8 @@ selectionSetOperationDefinition ::= selectionSet {
   mixin="com.intellij.lang.jsgraphql.psi.impl.GraphQLSelectionSetOperationDefinitionMixin"
 }
 
-typedOperationDefinition ::= operationType identifier? variableDefinitions? directives? selectionSet {
-  pin=1
+typedOperationDefinition ::= description? operationType identifier? variableDefinitions? directives? selectionSet {
+  pin=2
   extends=operationDefinition
   methods=[directives="directive" nameIdentifier="identifier"]
   implements="com.intellij.lang.jsgraphql.psi.GraphQLDirectivesAware"
@@ -218,8 +218,8 @@ typedOperationDefinition ::= operationType identifier? variableDefinitions? dire
 
 variableDefinitions ::= '(' variableDefinition+ ')' {pin=1 methods=[variableDefinitions="variableDefinition"]}
 
-variableDefinition ::= variable ':' type defaultValue? directives? {
-  pin=1
+variableDefinition ::= description? variable ':' type defaultValue? directives? {
+  pin=2
   recoverWhile=variableDefinition_recover
   methods=[directives="directive"]
   implements="com.intellij.lang.jsgraphql.psi.GraphQLDirectivesAware"
@@ -266,8 +266,8 @@ inlineFragment ::= typeCondition? directives? selectionSet {
   mixin="com.intellij.lang.jsgraphql.psi.impl.GraphQLInlineFragmentMixin"
 }
 
-fragmentDefinition ::= 'fragment' fragmentName typeCondition directives? selectionSet {
-  pin=1
+fragmentDefinition ::= description? 'fragment' fragmentName typeCondition directives? selectionSet {
+  pin=2
   extends=definition
   implements="com.intellij.lang.jsgraphql.psi.GraphQLDirectivesAware"
   methods=[directives="directive" nameIdentifier="identifier"]

@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface GraphQLFragmentDefinition extends GraphQLDefinition, GraphQLDirectivesAware, GraphQLNamedElement, GraphQLTypeScopeProvider {
 
   @Nullable
+  GraphQLDescription getDescription();
+
+  @Nullable
   GraphQLSelectionSet getSelectionSet();
 
   @Nullable

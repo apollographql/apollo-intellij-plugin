@@ -11,6 +11,9 @@ public interface GraphQLVariableDefinition extends GraphQLDirectivesAware, Graph
   GraphQLDefaultValue getDefaultValue();
 
   @Nullable
+  GraphQLDescription getDescription();
+
+  @Nullable
   GraphQLType getType();
 
   @NotNull
