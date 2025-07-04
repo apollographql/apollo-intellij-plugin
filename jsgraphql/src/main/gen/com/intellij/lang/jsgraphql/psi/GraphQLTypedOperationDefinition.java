@@ -7,6 +7,9 @@ import com.intellij.psi.PsiElement;
 
 public interface GraphQLTypedOperationDefinition extends GraphQLOperationDefinition, GraphQLDirectivesAware, GraphQLTypeScopeProvider {
 
+  @Nullable
+  GraphQLDescription getDescription();
+
   @NotNull
   GraphQLOperationType getOperationType();
 
