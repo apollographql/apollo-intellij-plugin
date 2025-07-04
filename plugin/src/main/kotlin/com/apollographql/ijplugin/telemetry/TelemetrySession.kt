@@ -79,9 +79,18 @@ sealed class TelemetryProperty(
   class AndroidGradlePluginVersion(version: String) : TelemetryProperty("android_agp_version", version)
 
   /**
-   * Value of the Apollo Kotlin option `codegenModels` if set.
+   * Value of the Apollo Kotlin option `operationManifestFormat` if set.
+   *
+   * Note: due to a typo in a previous version of the plugin, this property is tracked as `ak_codegen_models` instead of `ak_operation_manifest_format`.
    */
-  class ApolloCodegenModels(codegenModels: String) : TelemetryProperty("ak_codegen_models", codegenModels)
+  class ApolloOperationManifestFormat(operationManifestFormat: String) : TelemetryProperty("ak_codegen_models", operationManifestFormat)
+
+  /**
+   * Value of the Apollo Kotlin option `codegenModels` if set.
+   *
+   * Note: due to a typo in a previous version of the plugin, this property is tracked as `ak_codegen_models_2` instead of `ak_codegen_models`.
+   */
+  class ApolloCodegenModels(codegenModels: String) : TelemetryProperty("ak_codegen_models_2", codegenModels)
 
   /**
    * Value of the Apollo Kotlin option `warnOnDeprecatedUsages` if set.
