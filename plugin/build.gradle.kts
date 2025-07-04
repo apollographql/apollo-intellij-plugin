@@ -17,7 +17,6 @@ plugins {
   alias(libs.plugins.intellij.platform)
   alias(libs.plugins.changelog)
   alias(libs.plugins.apollo)
-  alias(libs.plugins.grammarkit)
 }
 
 repositories {
@@ -98,12 +97,6 @@ tasks {
     }
     dependsOn("copyApolloDependencies")
     dependsOn(":test-project:generateApolloSources")
-  }
-
-  generateLexer {
-    purgeOldFiles.set(true)
-    sourceFile.set(file("src/main/grammars/ApolloGraphQLLexer.flex"))
-    targetOutputDir.set(file("src/main/java/com/apollographql/ijplugin/psi"))
   }
 }
 

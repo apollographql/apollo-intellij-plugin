@@ -7,10 +7,9 @@ import com.apollographql.ijplugin.settings.ProjectSettingsState
 import com.apollographql.ijplugin.settings.appSettingsState
 import com.apollographql.ijplugin.settings.projectSettingsState
 import com.apollographql.ijplugin.util.logd
+import com.intellij.lang.jsgraphql.ide.validation.DisableGraphQLAnnotations
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -34,9 +33,6 @@ class ApolloLspAppService : Disposable {
         lspModeEnabled = appSettingsState.lspModeEnabled
         logd("lspModeEnabledChanged=$lspModeEnabledChanged")
         if (lspModeEnabledChanged) {
-          runWriteAction {
-            FileTypeManagerEx.getInstanceEx().makeFileTypesChange("Apollo GraphQL file type change", {})
-          }
           restartApolloLsp()
         }
       }
@@ -77,6 +73,13 @@ class ApolloLspProjectService(private val project: Project) : Disposable {
         if (lspPassPathToSuperGraphYamlChanged || lspPathToSuperGraphYamlChanged || lspPassAdditionalArgumentsChanged || lspAdditionalArgumentsChanged) {
           restartApolloLsp()
         }
+      }
+    })
+
+    project.putUserData(DisableGraphQLAnnotations, appSettingsState.lspModeEnabled)
+    application.messageBus.connect(this).subscribe(AppSettingsListener.TOPIC, object : AppSettingsListener {
+      override fun settingsChanged(appSettingsState: AppSettingsState) {
+        project.putUserData(DisableGraphQLAnnotations, appSettingsState.lspModeEnabled)
       }
     })
   }
