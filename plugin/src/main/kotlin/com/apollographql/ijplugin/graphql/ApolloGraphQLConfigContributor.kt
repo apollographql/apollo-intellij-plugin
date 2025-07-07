@@ -30,9 +30,9 @@ class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
             dir = projectDir,
             file = null,
             rawData = GraphQLRawConfig(
-                projects = project.service<GradleToolingModelService>().apolloKotlinServices.map { apolloKotlinService ->
+                projects = project.service<GradleToolingModelService>().apolloKotlinServices.associate { apolloKotlinService ->
                   apolloKotlinService.id.toString() to apolloKotlinService.toGraphQLRawProjectConfig()
-                }.toMap()
+                }
             )
         )
     )
