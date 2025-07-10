@@ -41,13 +41,10 @@ public final class GraphQLLibraryManager {
   private static final Logger LOG = Logger.getInstance(GraphQLLibraryManager.class);
   public static final String DEFINITIONS_RESOURCE_DIR = "definitions";
   private static final GraphQLLibrary EMPTY_LIBRARY =
-      new GraphQLLibrary(new GraphQLLibraryDescriptor("EMPTY"), new LightVirtualFile());
+      new GraphQLLibrary(new GraphQLLibraryDescriptor("EMPTY", "Empty"), new LightVirtualFile());
 
   private static final Map<GraphQLLibraryDescriptor, String> ourDefinitionResourcePaths = Map.ofEntries(
-      entry(GraphQLLibraryTypes.SPECIFICATION, "Specification.graphqls"),
-
-      entry(GraphQLLibraryTypes.RELAY, "Relay.graphqls"),
-      entry(GraphQLLibraryTypes.FEDERATION, "Federation.graphqls"),
+      entry(GraphQLLibraryTypes.SPECIFICATION, "specification.graphqls"),
 
       entry(GraphQLLibraryTypes.LINK_V1_0, "link-v1.0.graphqls"),
 
