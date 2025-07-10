@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public class GraphQLLibraryDescriptor {
 
-  private final String myIdentifier;
+  protected final String myIdentifier;
 
   public GraphQLLibraryDescriptor(@NotNull String identifier) {
     myIdentifier = identifier;

@@ -89,6 +89,20 @@
         editorAttributes="WRONG_REFERENCES_ATTRIBUTES"
     />
 
+    <!-- TODO -->
+    <!--suppress PluginXmlCapitalization -->
+    <localInspection
+        language="GraphQL"
+        implementationClass="com.apollographql.ijplugin.inspection.TestLibInspection"
+        groupPathKey="inspection.group.graphql"
+        groupKey="inspection.group.graphql.apolloKotlin"
+        key="inspection.missingGraphQLDefinitionImport.displayName"
+        enabledByDefault="true"
+        level="ERROR"
+        editorAttributes="WRONG_REFERENCES_ATTRIBUTES"
+    />
+
+
     <!-- "Missing introspection" inspection  -->
     <!--suppress PluginXmlCapitalization -->
     <localInspection

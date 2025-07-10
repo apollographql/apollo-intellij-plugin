@@ -35,17 +35,31 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static java.util.Map.entry;
+
 public final class GraphQLLibraryManager {
   private static final Logger LOG = Logger.getInstance(GraphQLLibraryManager.class);
-  private static final String DEFINITIONS_RESOURCE_DIR = "definitions";
+  public static final String DEFINITIONS_RESOURCE_DIR = "definitions";
   private static final GraphQLLibrary EMPTY_LIBRARY =
-    new GraphQLLibrary(new GraphQLLibraryDescriptor("EMPTY"), new LightVirtualFile());
+      new GraphQLLibrary(new GraphQLLibraryDescriptor("EMPTY"), new LightVirtualFile());
 
-  private static final Map<GraphQLLibraryDescriptor, String> ourDefinitionResourcePaths = Map.of(
-      GraphQLLibraryTypes.SPECIFICATION, "Specification.graphqls",
-      GraphQLLibraryTypes.RELAY, "Relay.graphqls",
-      GraphQLLibraryTypes.FEDERATION, "Federation.graphqls",
-      GraphQLLibraryTypes.APOLLO_KOTLIN, "ApolloKotlin.graphqls"
+  private static final Map<GraphQLLibraryDescriptor, String> ourDefinitionResourcePaths = Map.ofEntries(
+      entry(GraphQLLibraryTypes.SPECIFICATION, "Specification.graphqls"),
+
+      entry(GraphQLLibraryTypes.RELAY, "Relay.graphqls"),
+      entry(GraphQLLibraryTypes.FEDERATION, "Federation.graphqls"),
+
+      entry(GraphQLLibraryTypes.LINK_V1_0, "link-v1.0.graphqls"),
+
+      entry(GraphQLLibraryTypes.KOTLIN_LABS_V0_3, "kotlin_labs-v0.3.graphqls"),
+      entry(GraphQLLibraryTypes.KOTLIN_LABS_V0_4, "kotlin_labs-v0.4.graphqls"),
+      entry(GraphQLLibraryTypes.KOTLIN_LABS_V0_5, "kotlin_labs-v0.5.graphqls"),
+
+      entry(GraphQLLibraryTypes.NULLABILITY_V0_4, "nullability-v0.4.graphqls"),
+
+      entry(GraphQLLibraryTypes.CACHE_V0_1, "cache-v0.1.graphqls"),
+
+      entry(GraphQLLibraryTypes.FAKES_V0_0, "fakes-v0.0.graphqls")
   );
 
   private final Project myProject;
@@ -55,10 +69,10 @@ public final class GraphQLLibraryManager {
   private volatile boolean myLibrariesEnabled = !ApplicationManager.getApplication().isUnitTestMode();
 
   private final ClearableLazyValue<Set<VirtualFile>> myKnownLibraryRoots = ClearableLazyValue.createAtomic(
-    () -> getAllLibraries()
-      .stream()
-      .flatMap(library -> library.getSourceRoots().stream())
-      .collect(Collectors.toSet())
+      () -> getAllLibraries()
+          .stream()
+          .flatMap(library -> library.getSourceRoots().stream())
+          .collect(Collectors.toSet())
   );
 
   public GraphQLLibraryManager(@NotNull Project project) {
@@ -116,11 +130,11 @@ public final class GraphQLLibraryManager {
 
   public @NotNull Collection<SyntheticLibrary> getAllLibraries() {
     return ourDefinitionResourcePaths
-      .keySet().stream()
-      .map(this::getOrCreateLibrary)
-      .filter(Objects::nonNull)
-      .filter(l -> l.getLibraryDescriptor().isEnabled(myProject))
-      .collect(Collectors.toList());
+        .keySet().stream()
+        .map(this::getOrCreateLibrary)
+        .filter(Objects::nonNull)
+        .filter(l -> l.getLibraryDescriptor().isEnabled(myProject))
+        .collect(Collectors.toList());
   }
 
   private @Nullable VirtualFile resolveLibraryRoot(@NotNull GraphQLLibraryDescriptor descriptor) {
@@ -159,8 +173,7 @@ public final class GraphQLLibraryManager {
             DaemonCodeAnalyzer.getInstance(myProject).restart();
             EditorNotifications.getInstance(myProject).updateAllNotifications();
           });
-        }
-        finally {
+        } finally {
           myLibrariesChangeTriggered.set(false);
         }
       }, ModalityState.nonModal());
