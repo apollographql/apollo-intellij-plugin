@@ -4,19 +4,18 @@ package com.apollographql.ijplugin.refactoring.migration.v3tov4.item
 
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.ast.ForeignSchema
+import com.apollographql.ijplugin.graphql.ForeignSchemas
+import com.apollographql.ijplugin.graphql.url
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItem
 import com.apollographql.ijplugin.refactoring.migration.item.MigrationItemUsageInfo
 import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.createLinkDirective
 import com.apollographql.ijplugin.util.createLinkDirectiveSchemaExtension
-import com.apollographql.ijplugin.util.directives
 import com.apollographql.ijplugin.util.findPsiFilesByName
-import com.apollographql.ijplugin.util.foreignSchemas
 import com.apollographql.ijplugin.util.isImported
 import com.apollographql.ijplugin.util.linkDirectives
 import com.apollographql.ijplugin.util.nameForImport
 import com.apollographql.ijplugin.util.unquoted
-import com.apollographql.ijplugin.util.url
 import com.intellij.lang.jsgraphql.psi.GraphQLArrayValue
 import com.intellij.lang.jsgraphql.psi.GraphQLDirective
 import com.intellij.lang.jsgraphql.psi.GraphQLElementFactory
@@ -35,12 +34,9 @@ object AddLinkDirective : MigrationItem() {
           object : GraphQLRecursiveVisitor() {
             override fun visitDirective(o: GraphQLDirective) {
               super.visitDirective(o)
-              for (foreignSchema in foreignSchemas) {
-                if (o.name in foreignSchema.definitions.directives().map { it.name }) {
-                  if (!o.isImported(foreignSchema.url)) {
-                    usages.add(o.toMigrationItemUsageInfo(foreignSchema))
-                  }
-                }
+              val foreignSchema = ForeignSchemas.getForeignSchemaForDirective(o.name!!) ?: return
+              if (!o.isImported()) {
+                usages.add(o.toMigrationItemUsageInfo(foreignSchema))
               }
             }
           }

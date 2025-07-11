@@ -57,25 +57,11 @@ class GraphQLSettings : PersistentStateComponent<GraphQLSettingsState> {
 
   /* Frameworks */
 
-  var isRelaySupportEnabled: Boolean
-    get() = state.enableRelayModernFrameworkSupport
-    set(enableRelayModernFrameworkSupport) {
-      state.enableRelayModernFrameworkSupport = enableRelayModernFrameworkSupport
-    }
-
-  var isFederationSupportEnabled: Boolean
-    get() = state.enableFederationSupport
-    set(enableFederationSupport) {
-      state.enableFederationSupport = enableFederationSupport
-    }
-
   class GraphQLSettingsState {
     var introspectionQuery = ""
     var enableIntrospectionDefaultValues = true
     var enableIntrospectionRepeatableDirectives = false
     var openEditorWithIntrospectionResult = true
-    var enableRelayModernFrameworkSupport = false
-    var enableFederationSupport = false
   }
 
   companion object {
