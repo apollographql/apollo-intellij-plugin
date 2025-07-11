@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.normalizedcache.ui
 
+import com.apollographql.cache.normalized.api.ApolloCacheHeaders
 import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.normalizedcache.NormalizedCache
 import com.intellij.ide.DefaultTreeExpander
@@ -15,49 +16,65 @@ import com.intellij.util.ui.UIUtil
 import java.awt.Color
 import java.awt.Component
 import java.awt.Cursor
+import java.awt.Graphics
 import java.awt.Point
 import java.awt.datatransfer.StringSelection
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.text.SimpleDateFormat
+import java.util.Date
 import javax.swing.JTable
 import javax.swing.SwingUtilities
 import javax.swing.event.PopupMenuEvent
 import javax.swing.event.PopupMenuListener
 import javax.swing.tree.TreePath
 
+private val receivedDateFormat = SimpleDateFormat.getDateTimeInstance()
+
 @Suppress("UnstableApiUsage")
 class FieldTreeTable(selectRecord: (String) -> Unit) : JBTreeTable(FieldTreeTableModel()) {
   val treeExpander: TreeExpander = DefaultTreeExpander { tree }
 
   init {
-    columnProportion = .8F
+    columnProportion = .4F
     setDefaultRenderer(
         NormalizedCache.Field::class.java,
         object : ColoredTableCellRenderer() {
           override fun customizeCellRenderer(table: JTable, value: Any?, selected: Boolean, hasFocus: Boolean, row: Int, column: Int) {
             value as NormalizedCache.Field
-            when (val v = value.value) {
-              is NormalizedCache.FieldValue.StringValue -> append("\"${v.value}\"")
-              is NormalizedCache.FieldValue.NumberValue -> append(v.value)
-              is NormalizedCache.FieldValue.BooleanValue -> append(v.value.toString())
-              is NormalizedCache.FieldValue.ListValue -> append(
-                  when (val size = v.value.size) {
-                    0 -> ApolloBundle.message("normalizedCacheViewer.fields.list.empty")
-                    1 -> ApolloBundle.message("normalizedCacheViewer.fields.list.single")
-                    else -> ApolloBundle.message("normalizedCacheViewer.fields.list.multiple", size)
-                  },
-                  SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES
-              )
+            when (column) {
+              0 -> {
+                when (val v = value.value) {
+                  is NormalizedCache.FieldValue.StringValue -> append("\"${v.value}\"")
+                  is NormalizedCache.FieldValue.NumberValue -> append(v.value)
+                  is NormalizedCache.FieldValue.BooleanValue -> append(v.value.toString())
+                  is NormalizedCache.FieldValue.ListValue -> append(
+                      when (val size = v.value.size) {
+                        0 -> ApolloBundle.message("normalizedCacheViewer.fields.list.empty")
+                        1 -> ApolloBundle.message("normalizedCacheViewer.fields.list.single")
+                        else -> ApolloBundle.message("normalizedCacheViewer.fields.list.multiple", size)
+                      },
+                      SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES
+                  )
 
-              is NormalizedCache.FieldValue.CompositeValue -> append("{...}", SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES)
-              NormalizedCache.FieldValue.Null -> append("null")
-              is NormalizedCache.FieldValue.Reference -> {
-                append("→ ", SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES)
-                append(v.key, SimpleTextAttributes.LINK_PLAIN_ATTRIBUTES)
+                  is NormalizedCache.FieldValue.CompositeValue -> append("{...}", SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES)
+                  NormalizedCache.FieldValue.Null -> append("null")
+                  is NormalizedCache.FieldValue.Reference -> {
+                    append("→ ", SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES)
+                    append(v.key, SimpleTextAttributes.LINK_PLAIN_ATTRIBUTES)
+                  }
+
+                  is NormalizedCache.FieldValue.ErrorValue -> {
+                    append("Error: '${v.message}'", SimpleTextAttributes.ERROR_ATTRIBUTES)
+                  }
+                }
               }
 
-              is NormalizedCache.FieldValue.ErrorValue -> {
-                append("Error: '${v.message}'", SimpleTextAttributes.ERROR_ATTRIBUTES)
+              1 -> {
+                val receivedDate = value.metadata?.get(ApolloCacheHeaders.RECEIVED_DATE) as? Int
+                if (receivedDate != null) {
+                  append(receivedDateFormat.format(Date(receivedDate * 1000L)))
+                }
               }
             }
           }
@@ -95,6 +112,17 @@ class FieldTreeTable(selectRecord: (String) -> Unit) : JBTreeTable(FieldTreeTabl
     table.isStriped = true
 
     installPopupMenu()
+  }
+
+  private var resized = false
+  override fun paint(g: Graphics?) {
+    if (!resized) {
+      val receivedDateColumnWidth = 160
+      table.columnModel.getColumn(0).preferredWidth = table.width - receivedDateColumnWidth
+      table.columnModel.getColumn(1).preferredWidth = receivedDateColumnWidth
+      resized = true
+    }
+    super.paint(g)
   }
 
   override fun getPathBackground(path: TreePath, row: Int): Color? {

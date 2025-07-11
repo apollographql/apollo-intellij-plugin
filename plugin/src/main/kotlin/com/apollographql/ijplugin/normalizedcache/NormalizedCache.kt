@@ -12,6 +12,7 @@ data class NormalizedCache(
   data class Field(
       val key: String,
       val value: FieldValue,
+      val metadata: Map<String, Any?>?,
   )
 
   sealed interface FieldValue {
@@ -20,8 +21,8 @@ data class NormalizedCache(
     data class BooleanValue(val value: Boolean) : FieldValue
     data class ListValue(val value: List<FieldValue>) : FieldValue
 
-    /** For custom scalars. */
-    data class CompositeValue(val value: List<Field>) : FieldValue
+    /** For custom scalars, and embedded fields */
+    data class CompositeValue(val value: Map<String, FieldValue>) : FieldValue
     data object Null : FieldValue
     data class Reference(val key: String) : FieldValue
     data class ErrorValue(val message: String) : FieldValue
