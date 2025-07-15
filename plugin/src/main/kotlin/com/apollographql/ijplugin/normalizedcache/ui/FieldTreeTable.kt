@@ -16,9 +16,10 @@ import com.intellij.util.ui.UIUtil
 import java.awt.Color
 import java.awt.Component
 import java.awt.Cursor
-import java.awt.Graphics
 import java.awt.Point
 import java.awt.datatransfer.StringSelection
+import java.awt.event.ComponentAdapter
+import java.awt.event.ComponentEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.text.SimpleDateFormat
@@ -112,17 +113,17 @@ class FieldTreeTable(selectRecord: (String) -> Unit) : JBTreeTable(FieldTreeTabl
     table.isStriped = true
 
     installPopupMenu()
-  }
 
-  private var resized = false
-  override fun paint(g: Graphics?) {
-    if (!resized) {
-      val receivedDateColumnWidth = 160
-      table.columnModel.getColumn(0).preferredWidth = table.width - receivedDateColumnWidth
-      table.columnModel.getColumn(1).preferredWidth = receivedDateColumnWidth
-      resized = true
-    }
-    super.paint(g)
+    // Resize the columns so the received date takes up a fixed width
+    addComponentListener(
+        object : ComponentAdapter() {
+          override fun componentResized(e: ComponentEvent?) {
+            val receivedDateColumnWidth = 160
+            table.columnModel.getColumn(0).preferredWidth = table.width - receivedDateColumnWidth
+            table.columnModel.getColumn(1).preferredWidth = receivedDateColumnWidth
+          }
+        }
+    )
   }
 
   override fun getPathBackground(path: TreePath, row: Int): Color? {
