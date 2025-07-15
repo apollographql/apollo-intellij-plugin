@@ -42,6 +42,7 @@ class DatabaseNormalizedCacheProvider : NormalizedCacheProvider<File> {
     UNKNOWN_OR_ERROR,
   }
 
+  @Suppress("SqlResolve", "SqlNoDataSourceInspection")
   private fun checkDatabase(url: String): DbFormat {
     Class.forName("org.sqlite.JDBC")
 
@@ -84,7 +85,7 @@ class DatabaseNormalizedCacheProvider : NormalizedCacheProvider<File> {
           NormalizedCache.Record(
               key = key,
               fields = apolloRecord.map { (fieldKey, fieldValue) ->
-                Field(fieldKey, fieldValue.toFieldValue())
+                Field(key = fieldKey, value = fieldValue.toFieldValue(), metadata = null)
               },
               sizeInBytes = apolloRecord.sizeInBytes
           )
@@ -100,7 +101,7 @@ class DatabaseNormalizedCacheProvider : NormalizedCacheProvider<File> {
           NormalizedCache.Record(
               key = key.key,
               fields = apolloRecord.map { (fieldKey, fieldValue) ->
-                Field(fieldKey, fieldValue.toFieldValue())
+                Field(key = fieldKey, value = fieldValue.toFieldValue(), metadata = apolloRecord.metadata[fieldKey])
               },
               sizeInBytes = apolloRecord.sizeInBytes
           )
@@ -117,7 +118,7 @@ private fun Any?.toFieldValue(): FieldValue {
     is JsonNumber -> NumberValue(this.value)
     is Boolean -> BooleanValue(this)
     is List<*> -> ListValue(map { it.toFieldValue() })
-    is Map<*, *> -> CompositeValue(map { Field(it.key as String, it.value.toFieldValue()) })
+    is Map<*, *> -> CompositeValue(map { it.key as String to it.value.toFieldValue() }.toMap())
     is ApolloClassicCacheKey -> Reference(this.key)
     is ApolloModernCacheKey -> Reference(this.key)
     is Error -> ErrorValue(this.message)

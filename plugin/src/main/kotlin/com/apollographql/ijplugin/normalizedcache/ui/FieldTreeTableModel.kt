@@ -19,6 +19,11 @@ class FieldTreeTableModel : ListTreeTableModel(
           override fun getColumnClass() = NormalizedCache.Field::class.java
           override fun valueOf(item: NormalizedCacheFieldTreeNode) = item.field
         },
+        object :
+          ColumnInfo<NormalizedCacheFieldTreeNode, NormalizedCache.Field>(ApolloBundle.message("normalizedCacheViewer.fields.column.receivedDate")) {
+          override fun getColumnClass() = NormalizedCache.Field::class.java
+          override fun valueOf(item: NormalizedCacheFieldTreeNode) = item.field
+        },
     ),
 ) {
   fun setRecord(record: NormalizedCache.Record) {
@@ -34,8 +39,11 @@ class FieldTreeTableModel : ListTreeTableModel(
       val childNode = NormalizedCacheFieldTreeNode(field)
       add(childNode)
       when (val value = field.value) {
-        is NormalizedCache.FieldValue.ListValue -> childNode.addFields(value.value.mapIndexed { i, v -> NormalizedCache.Field(i.toString(), v) })
-        is NormalizedCache.FieldValue.CompositeValue -> childNode.addFields(value.value)
+        is NormalizedCache.FieldValue.ListValue -> childNode.addFields(value.value.mapIndexed { i, v -> NormalizedCache.Field(key = i.toString(), value = v, metadata = null) })
+        is NormalizedCache.FieldValue.CompositeValue -> childNode.addFields(value.value.map { (k, v) ->
+          NormalizedCache.Field(key = k, value = v, metadata = null)
+        })
+
         else -> {}
       }
     }

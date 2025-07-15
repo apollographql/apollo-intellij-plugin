@@ -33,12 +33,15 @@ class ApolloDebugNormalizedCacheProvider : NormalizedCacheProvider<GetNormalized
 @Suppress("UNCHECKED_CAST")
 private fun Any.toFields(): List<Field> {
   this as Map<String, Any?>
-  return map { (name, value) ->
-    Field(
-        name,
-        value.toFieldValue()
-    )
-  }
+  val metadata = this["__metadata"] as? Map<String, Any?>
+  return this.filterKeys { it != "__metadata" }
+      .map { (name, value) ->
+        Field(
+            key = name,
+            value = value.toFieldValue(),
+            metadata = metadata?.get(name) as? Map<String, Any?>
+        )
+      }
 }
 
 private fun Any?.toFieldValue(): FieldValue {
@@ -62,7 +65,7 @@ private fun Any?.toFieldValue(): FieldValue {
     is JsonNumber -> NumberValue(this.value)
     is Boolean -> BooleanValue(this)
     is List<*> -> ListValue(map { it.toFieldValue() })
-    is Map<*, *> -> CompositeValue(map { Field(it.key as String, it.value.toFieldValue()) })
+    is Map<*, *> -> CompositeValue(map { it.key as String to it.value.toFieldValue() }.toMap())
     else -> error("Unsupported type ${this::class}")
   }
 }
