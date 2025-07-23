@@ -17,7 +17,7 @@ const val CODEGEN_GRADLE_TASK_NAME = "generateApolloSources"
 fun Project.getGradleRootPath(): String? {
   val rootProjectPath = ModuleManager.getInstance(this).modules.firstNotNullOfOrNull {
     ExternalSystemApiUtil.getExternalRootProjectPath(it)
-  }
+  }?.removePrefix("kotlin-scripts:")
   if (rootProjectPath == null) logw("Could not get Gradle root project path")
   return rootProjectPath
 }
