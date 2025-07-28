@@ -88,15 +88,14 @@ class ApolloCodegenService(
       startObserveDocumentChanges()
       startObserveFileEditorChanges()
 
-      startContinuousGradleCodegen()
+      startGradleCodegen()
 
-      // Since we rely on Gradle's continuous build, which is not re-triggered when Gradle build files change, observe that
-      // ourselves and restart the build when it happens.
+      // A Gradle sync is a good indicator that Gradle files have changed - trigger a codegen build when that happens.
       startObserveGradleHasSynced()
     } else {
       stopObserveDocumentChanges()
       stopObserveFileEditorChanges()
-      stopContinuousGradleCodegen()
+      stopCodegen()
       stopObserveGradleHasSynced()
     }
   }
@@ -144,7 +143,7 @@ class ApolloCodegenService(
     fileEditorChangesDisposable = disposable
     project.messageBus.connect(disposable).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
       override fun selectionChanged(event: FileEditorManagerEvent) {
-        logd(event.newFile)
+        logd(event.newFile?.path)
         dirtyGqlDocument?.let {
           dirtyGqlDocument = null
           runWriteActionInEdt {
@@ -156,6 +155,8 @@ class ApolloCodegenService(
               logw(e, "Failed to save document")
             }
           }
+
+          startGradleCodegen()
         }
       }
     })
@@ -167,7 +168,7 @@ class ApolloCodegenService(
     fileEditorChangesDisposable = null
   }
 
-  private fun startContinuousGradleCodegen() {
+  private fun startGradleCodegen() {
     logd()
 
     if (gradleCodegenCancellation != null) {
@@ -178,7 +179,7 @@ class ApolloCodegenService(
     val modules = ModuleManager.getInstance(project).modules
     coroutineScope.launch {
       gradleCodegenCancellation = GradleConnector.newCancellationTokenSource()
-      logd("Start Gradle")
+      logd("Start Gradle codegen build")
       try {
         val cancellationToken = gradleCodegenCancellation!!.token()
         val gradleProjectPath = project.getGradleRootPath()
@@ -186,10 +187,9 @@ class ApolloCodegenService(
           logw("Could not get Gradle root project path")
           return@launch
         }
-        runGradleBuild(project, gradleProjectPath) {
-          it.forTasks(CODEGEN_GRADLE_TASK_NAME)
+        runGradleBuild(project, gradleProjectPath) { buildLauncher ->
+          buildLauncher.forTasks(CODEGEN_GRADLE_TASK_NAME)
               .withCancellationToken(cancellationToken)
-              .addArguments("--continuous")
               .let {
                 if (project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments.isNotEmpty()) {
                   it.addJvmArguments(project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments.split(' '))
@@ -199,7 +199,7 @@ class ApolloCodegenService(
               }
               .addProgressListener(object : SimpleProgressListener() {
                 override fun onSuccess() {
-                  logd("Gradle build success, marking generated source roots as dirty")
+                  logd("Gradle codegen build success, marking generated source roots as dirty")
                   // Mark the generated sources dirty so the files are visible to the IDE
                   val generatedSourceRoots = modules.flatMap { it.apolloGeneratedSourcesRoots() }
                   logd("Mark dirty $generatedSourceRoots")
@@ -207,16 +207,16 @@ class ApolloCodegenService(
                 }
               })
         }
-        logd("Gradle execution finished")
+        logd("Gradle codegen build finished")
       } catch (t: Throwable) {
-        logd(t, "Gradle execution failed")
+        logd(t, "Gradle codegen build failed")
       } finally {
         gradleCodegenCancellation = null
       }
     }
   }
 
-  private fun stopContinuousGradleCodegen() {
+  private fun stopCodegen() {
     logd()
     gradleCodegenCancellation?.cancel()
     gradleCodegenCancellation = null
@@ -235,8 +235,8 @@ class ApolloCodegenService(
     project.messageBus.connect(disposable).subscribe(GradleHasSyncedListener.TOPIC, object : GradleHasSyncedListener {
       override fun gradleHasSynced() {
         logd()
-        stopContinuousGradleCodegen()
-        if (shouldTriggerCodegenAutomatically()) startContinuousGradleCodegen()
+        stopCodegen()
+        if (shouldTriggerCodegenAutomatically()) startGradleCodegen()
       }
     })
   }
@@ -249,6 +249,6 @@ class ApolloCodegenService(
 
   override fun dispose() {
     logd("project=${project.name}")
-    stopContinuousGradleCodegen()
+    stopCodegen()
   }
 }
