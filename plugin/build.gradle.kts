@@ -165,7 +165,7 @@ dependencies {
         )
     )
 
-    pluginModule(implementation(project(":jsgraphql")))
+    pluginComposedModule(implementation(project(":jsgraphql")))
 
     // Uncomment the version if needing a specific one, e.g. if a regression is introduced in the latest version - see https://github.com/JetBrains/intellij-plugin-verifier/releases
     pluginVerifier(/*version = "1.385"*/)
