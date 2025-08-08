@@ -316,3 +316,19 @@ directive @defer(
     label: String
     if: Boolean! = true
 ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+
+"""
+Not part of the specification, but used internally by the plugin.
+"""
+type __QueryIntrospectionMeta {
+  __schema: __Schema!
+  __type(name: String!): __Type
+}
+
+"""
+Not part of the specification, but used internally by the plugin.
+"""
+type __TypeNameMeta {
+  __typename: String!
+}
