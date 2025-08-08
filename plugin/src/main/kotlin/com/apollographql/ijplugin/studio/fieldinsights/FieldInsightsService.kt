@@ -4,7 +4,7 @@ import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.tooling.FieldInsights
 import com.apollographql.ijplugin.gradle.ApolloKotlinService
 import com.apollographql.ijplugin.gradle.ApolloKotlinServiceListener
-import com.apollographql.ijplugin.gradle.GradleToolingModelService
+import com.apollographql.ijplugin.gradle.gradleToolingModelService
 import com.apollographql.ijplugin.settings.ApolloKotlinServiceConfiguration
 import com.apollographql.ijplugin.settings.ProjectSettingsListener
 import com.apollographql.ijplugin.settings.ProjectSettingsState
@@ -85,7 +85,7 @@ class FieldInsightsServiceImpl(private val project: Project) : FieldInsightsServ
 
   override fun fetchLatencies() {
     logd()
-    val apolloKotlinServices = GradleToolingModelService.getApolloKotlinServices(project)
+    val apolloKotlinServices = project.gradleToolingModelService.getApolloKotlinServices()
     val apolloKotlinServicesWithConfigurations: Map<ApolloKotlinService, ApolloKotlinServiceConfiguration> =
       apolloKotlinServices.associateWith { service ->
         project.projectSettingsState.apolloKotlinServiceConfigurations.firstOrNull { configuration ->
@@ -135,7 +135,7 @@ class FieldInsightsServiceImpl(private val project: Project) : FieldInsightsServ
       return fieldLatenciesByService[serviceId]
     }
     // Try upstream services
-    val apolloKotlinService = GradleToolingModelService.getApolloKotlinServices(project).firstOrNull { it.id == serviceId } ?: return null
+    val apolloKotlinService = project.gradleToolingModelService.getApolloKotlinService(serviceId) ?: return null
     for (upstreamServiceId in apolloKotlinService.upstreamServiceIds) {
       return getFieldLatenciesForService(upstreamServiceId) ?: continue
     }

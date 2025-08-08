@@ -4,6 +4,7 @@ import com.apollographql.ijplugin.gradle.CODEGEN_GRADLE_TASK_NAME
 import com.apollographql.ijplugin.gradle.GradleHasSyncedListener
 import com.apollographql.ijplugin.gradle.SimpleProgressListener
 import com.apollographql.ijplugin.gradle.getGradleRootPath
+import com.apollographql.ijplugin.gradle.gradleToolingModelService
 import com.apollographql.ijplugin.gradle.runGradleBuild
 import com.apollographql.ijplugin.project.ApolloProjectListener
 import com.apollographql.ijplugin.project.ApolloProjectService
@@ -12,6 +13,7 @@ import com.apollographql.ijplugin.settings.ProjectSettingsListener
 import com.apollographql.ijplugin.settings.ProjectSettingsState
 import com.apollographql.ijplugin.settings.projectSettingsState
 import com.apollographql.ijplugin.util.apolloGeneratedSourcesRoots
+import com.apollographql.ijplugin.util.apolloKotlinService
 import com.apollographql.ijplugin.util.dispose
 import com.apollographql.ijplugin.util.isNotDisposed
 import com.apollographql.ijplugin.util.logd
@@ -19,6 +21,7 @@ import com.apollographql.ijplugin.util.logw
 import com.apollographql.ijplugin.util.newDisposable
 import com.apollographql.ijplugin.util.runWriteActionInEdt
 import com.intellij.lang.jsgraphql.GraphQLFileType
+import com.intellij.lang.jsgraphql.psi.GraphQLFile
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Document
@@ -33,6 +36,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.CheckedDisposable
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.psi.PsiDocumentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.gradle.tooling.CancellationTokenSource
@@ -88,7 +92,7 @@ class ApolloCodegenService(
       startObserveDocumentChanges()
       startObserveFileEditorChanges()
 
-      startGradleCodegen()
+      startCodegen()
 
       // A Gradle sync is a good indicator that Gradle files have changed - trigger a codegen build when that happens.
       startObserveGradleHasSynced()
@@ -145,6 +149,9 @@ class ApolloCodegenService(
       override fun selectionChanged(event: FileEditorManagerEvent) {
         logd(event.newFile?.path)
         dirtyGqlDocument?.let {
+          val operationGraphQLFile = PsiDocumentManager.getInstance(project).getPsiFile(dirtyGqlDocument!!) as? GraphQLFile
+          val apolloKotlinService = operationGraphQLFile?.apolloKotlinService()
+          logd("apolloKotlinService=$apolloKotlinService")
           dirtyGqlDocument = null
           runWriteActionInEdt {
             try {
@@ -156,7 +163,14 @@ class ApolloCodegenService(
             }
           }
 
-          startGradleCodegen()
+          if (apolloKotlinService?.hasCompilerOptions == true) {
+            // We can use the built-in Apollo compiler
+//            ApolloCompilerHelper(project).generateSources(apolloKotlinService)
+            ApolloCompilerHelper(project).generateAllSources()
+          } else {
+            // Fall back to the Gradle codegen task
+            startGradleCodegen()
+          }
         }
       }
     })
@@ -236,9 +250,19 @@ class ApolloCodegenService(
       override fun gradleHasSynced() {
         logd()
         stopCodegen()
-        if (shouldTriggerCodegenAutomatically()) startGradleCodegen()
+        if (shouldTriggerCodegenAutomatically()) startCodegen()
       }
     })
+  }
+
+  private fun startCodegen() {
+    if (project.gradleToolingModelService.getApolloKotlinServices().any { it.hasCompilerOptions }) {
+      logd("Using Apollo compiler for codegen")
+      ApolloCompilerHelper(project).generateAllSources()
+    } else {
+      logd("Using Gradle codegen task")
+      startGradleCodegen()
+    }
   }
 
   private fun stopObserveGradleHasSynced() {

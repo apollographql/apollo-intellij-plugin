@@ -1,9 +1,13 @@
 package com.apollographql.ijplugin.gradle
 
+import com.apollographql.apollo.compiler.CodegenOptions
+import com.apollographql.apollo.compiler.CodegenSchemaOptions
+import com.apollographql.apollo.compiler.IrOptions
 import com.intellij.util.messages.Topic
 import com.intellij.util.xmlb.annotations.Attribute
 import com.intellij.util.xmlb.annotations.Transient
 import com.intellij.util.xmlb.annotations.XCollection
+import java.io.File
 
 interface ApolloKotlinServiceListener {
   companion object {
@@ -35,8 +39,20 @@ data class ApolloKotlinService(
     @XCollection
     val schemaPaths: List<String> = emptyList(),
 
+    /**
+     * Includes all schema paths, including those from upstream services.
+     */
+    @XCollection
+    val allSchemaPaths: List<String> = emptyList(),
+
     @XCollection
     val operationPaths: List<String> = emptyList(),
+
+    /**
+     * Includes all operation paths, including those from upstream services.
+     */
+    @XCollection
+    val allOperationPaths: List<String> = emptyList(),
 
     @Attribute
     val endpointUrl: String? = null,
@@ -47,8 +63,23 @@ data class ApolloKotlinService(
     @XCollection
     val upstreamServiceIds: List<Id> = emptyList(),
 
+    @XCollection
+    val downstreamServiceIds: List<Id> = emptyList(),
+
     @Attribute
     val useSemanticNaming: Boolean = true,
+
+    @Transient
+    val codegenSchemaOptions: CodegenSchemaOptions? = null,
+
+    @Transient
+    val irOptions: IrOptions? = null,
+
+    @Transient
+    val codegenOptions: CodegenOptions? = null,
+
+    @Transient
+    val codegenOutputDir: File? = null,
 ) {
   data class Id(
       @Attribute
@@ -73,4 +104,8 @@ data class ApolloKotlinService(
   val id: Id
     @Transient
     get() = Id(gradleProjectPath, serviceName)
+
+  val hasCompilerOptions
+    @Transient
+    get() = codegenOptions != null && irOptions != null && codegenSchemaOptions != null
 }
