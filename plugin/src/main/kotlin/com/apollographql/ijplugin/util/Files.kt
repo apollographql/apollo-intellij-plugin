@@ -9,6 +9,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiUtilCore
+import java.io.File
 import java.nio.file.Path
 
 fun Project.findPsiFilesByName(fileName: String, searchScope: GlobalSearchScope): List<PsiFile> {
@@ -18,6 +19,10 @@ fun Project.findPsiFilesByName(fileName: String, searchScope: GlobalSearchScope)
 
 fun Project.findPsiFileByPath(path: String): PsiFile? {
   return VirtualFileManager.getInstance().findFileByNioPath(Path.of(path))?.let { PsiManager.getInstance(this).findFile(it) }
+}
+
+fun File.toVirtualFile(): VirtualFile? {
+  return VirtualFileManager.getInstance().findFileByNioPath(toPath())
 }
 
 fun Project.findPsiFileByUrl(url: String): PsiFile? {

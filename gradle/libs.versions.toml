@@ -1,7 +1,7 @@
 [versions]
 kotlin-plugin = "2.1.21"
 intellij-platform-plugin = "2.7.0"
-apollo = "4.3.1"
+apollo = "5.0.0-alpha.2-SNAPSHOT"
 grammarkit-plugin = "2022.3.2.2"
 changelog-plugin = "2.2.1"
 sqlite-jdbc = "3.43.2.0"
@@ -32,9 +32,10 @@ changelog = { id = "org.jetbrains.changelog", version.ref = "changelog-plugin" }
 apollo-annotations = { group = "com.apollographql.apollo", name = "apollo-annotations", version.ref = "apollo" }
 apollo-api = { group = "com.apollographql.apollo", name = "apollo-api", version.ref = "apollo" }
 apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
-apollo-gradle-plugin-external = { group = "com.apollographql.apollo", name = "apollo-gradle-plugin-external", version.ref = "apollo" }
+apollo-gradle-plugin = { group = "com.apollographql.apollo", name = "apollo-gradle-plugin", version.ref = "apollo" }
 apollo-ast = { group = "com.apollographql.apollo", name = "apollo-ast", version.ref = "apollo" }
 apollo-tooling = { group = "com.apollographql.apollo", name = "apollo-tooling", version.ref = "apollo" }
+apollo-compiler = { group = "com.apollographql.apollo", name = "apollo-compiler", version.ref = "apollo" }
 apollo-normalized-cache-sqlite-classic = { group = "com.apollographql.apollo", name = "apollo-normalized-cache-sqlite", version.ref = "apollo" }
 apollo-normalized-cache-sqlite-new = { group = "com.apollographql.cache", name = "normalized-cache-sqlite", version.ref = "apollo-normalizedcache" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite-jdbc" }

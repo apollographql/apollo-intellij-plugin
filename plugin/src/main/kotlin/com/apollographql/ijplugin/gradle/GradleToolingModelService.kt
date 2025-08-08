@@ -1,5 +1,18 @@
+@file:OptIn(ApolloInternal::class)
+
 package com.apollographql.ijplugin.gradle
 
+import com.apollographql.apollo.annotations.ApolloInternal
+import com.apollographql.apollo.compiler.CodegenOptions
+import com.apollographql.apollo.compiler.CodegenSchemaOptions
+import com.apollographql.apollo.compiler.IrOptions
+import com.apollographql.apollo.compiler.ide.ProjectIdeModel
+import com.apollographql.apollo.compiler.ide.ServiceIdeModel
+import com.apollographql.apollo.compiler.ide.toProjectIdeModel
+import com.apollographql.apollo.compiler.ide.toServiceIdeModel
+import com.apollographql.apollo.compiler.toCodegenOptions
+import com.apollographql.apollo.compiler.toCodegenSchemaOptions
+import com.apollographql.apollo.compiler.toIrOptions
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
 import com.apollographql.ijplugin.project.ApolloProjectListener
 import com.apollographql.ijplugin.project.ApolloProjectService
@@ -19,16 +32,15 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.util.CheckedDisposable
-import com.intellij.openapi.vfs.VfsUtilCore
-import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.gradle.tooling.CancellationTokenSource
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.model.GradleProject
 import java.io.File
+
+const val IDE_MODEL_GRADLE_TASK_NAME = "generateApolloProjectIdeModel"
 
 @Service(Service.Level.PROJECT)
 class GradleToolingModelService(
@@ -39,8 +51,8 @@ class GradleToolingModelService(
 
   private var fetchToolingModelsTask: FetchToolingModelsTask? = null
 
-  var apolloKotlinServices: List<ApolloKotlinService> = project.projectSettingsState.apolloKotlinServices
-    private set
+  private var apolloKotlinServices: Map<ApolloKotlinService.Id, ApolloKotlinService> =
+    project.projectSettingsState.apolloKotlinServices.associateBy { it.id }
 
   init {
     logd("project=${project.name}")
@@ -142,6 +154,14 @@ class GradleToolingModelService(
     fetchToolingModelsTask = FetchToolingModelsTask().also { coroutineScope.launch { it.run() } }
   }
 
+  private class ServiceIdeModelWithOptions(
+      val serviceIdeModel: ServiceIdeModel,
+      val codegenSchemaOptions: CodegenSchemaOptions,
+      val irOptions: IrOptions,
+      val codegenOptions: CodegenOptions,
+      val codegenOutputDir: File,
+  )
+
   private inner class FetchToolingModelsTask : Runnable {
     var abortRequested: Boolean = false
     var gradleCancellation: CancellationTokenSource? = null
@@ -155,34 +175,137 @@ class GradleToolingModelService(
     }
 
     private fun doRun() {
-      logd()
-      gradleCancellation = GradleConnector.newCancellationTokenSource()
-      logd("Fetch Gradle project model")
-      val gradleProjectPath = project.getGradleRootPath()
-      if (gradleProjectPath == null) {
-        logw("Could not get Gradle root project path")
+      val allApolloGradleProjects = getAllApolloGradleProjects()
+      if (allApolloGradleProjects == null) {
+        logw("Failed to fetch Gradle project model, aborting")
         return
       }
-      val rootGradleProject: GradleProject = try {
-        getGradleModel(project, gradleProjectPath) {
-          it.withCancellationToken(gradleCancellation!!.token())
+      val ideModelsFetched = fetchIdeModels(allApolloGradleProjects)
+      logd("ideModelsFetched=$ideModelsFetched")
+      if (!ideModelsFetched) {
+        logd("Failed to fetch IDE model, fall back to fetching tooling models")
+        fetchToolingModels(allApolloGradleProjects)
+      }
+      return
+    }
+
+    private fun fetchIdeModels(allApolloGradleProjects: List<GradleProject>): Boolean {
+      logd()
+      gradleCancellation = GradleConnector.newCancellationTokenSource()
+      logd("Start Gradle $IDE_MODEL_GRADLE_TASK_NAME task")
+      var ideModelsFetched = false
+      try {
+        val cancellationToken = gradleCancellation!!.token()
+        val gradleProjectPath = project.getGradleRootPath()
+        if (gradleProjectPath == null) {
+          logw("Could not get Gradle root project path")
+          return false
         }
+        runGradleBuild(project, gradleProjectPath) { buildLauncher ->
+          buildLauncher.forTasks(IDE_MODEL_GRADLE_TASK_NAME)
+              .withCancellationToken(cancellationToken)
+              .addProgressListener(object : SimpleProgressListener() {
+                override fun onSuccess() {
+                  logd("Gradle $IDE_MODEL_GRADLE_TASK_NAME task success, reading IDE models")
+                  val readIdeModels = readIdeModels(allApolloGradleProjects)
+                  logd("readIdeModels=$readIdeModels")
+                  if (!readIdeModels) {
+                    logw("Failed to read IDE models, falling back to fetching tooling models")
+                    fetchToolingModels(allApolloGradleProjects)
+                  } else {
+                    ideModelsFetched = true
+                  }
+                }
+              })
+        }
+        logd("Gradle $IDE_MODEL_GRADLE_TASK_NAME task finished")
       } catch (t: Throwable) {
-        logw(t, "Couldn't fetch Gradle project model")
-        null
+        logw(t, "Gradle $IDE_MODEL_GRADLE_TASK_NAME task failed")
       } finally {
         gradleCancellation = null
-      } ?: return
-      project.telemetryService.gradleModuleCount = rootGradleProject.children.size + 1
+      }
+      return ideModelsFetched
+    }
 
-      // We're only interested in projects that apply the Apollo plugin - and thus have the codegen task registered
-      val allApolloGradleProjects: List<GradleProject> = rootGradleProject.allChildrenRecursively()
-          .filter { gradleProject -> gradleProject.tasks.any { task -> task.name == CODEGEN_GRADLE_TASK_NAME } }
-      logd("allApolloGradleProjects=${allApolloGradleProjects.map { it.path }}")
+    private fun readIdeModels(allApolloGradleProjects: List<GradleProject>): Boolean {
+      val allServiceIdeModels = mutableListOf<ServiceIdeModelWithOptions>()
+      for (gradleProject in allApolloGradleProjects) {
+        val projectDirectory = gradleProject.projectDirectory
+        val projectIdeModel = readProjectIdeModel(projectDirectory)
+        if (projectIdeModel == null) {
+          logw("Failed to read project IDE model from $projectDirectory")
+          return false
+        }
+        val serviceIdeModels = readServiceIdeModels(projectDirectory, projectIdeModel)
+        if (serviceIdeModels == null) {
+          logw("Failed to read service IDE models from $projectDirectory")
+          return false
+        }
+        allServiceIdeModels.addAll(serviceIdeModels)
+      }
+
+      val apolloKotlinServices = serviceIdeModelsToApolloKotlinServices(allServiceIdeModels)
+      saveApolloKotlinServices(apolloKotlinServices)
+      return true
+    }
+
+
+    private fun readProjectIdeModel(projectDirectory: File): ProjectIdeModel? {
+      val projectIdeModelFile = projectIdeModelFile(projectDirectory)
+      if (!projectIdeModelFile.exists()) {
+        logw("Project IDE model file does not exist: $projectIdeModelFile")
+        return null
+      }
+      return projectIdeModelFile.toProjectIdeModel()
+    }
+
+
+    private fun readServiceIdeModels(projectDirectory: File, projectIdeModel: ProjectIdeModel): List<ServiceIdeModelWithOptions>? {
+      return projectIdeModel.serviceNames.map { serviceName ->
+        val serviceIdeModelFile = serviceIdeModelFile(projectDirectory, serviceName).also {
+          if (!it.exists()) {
+            logw("Service IDE model file does not exist: $it")
+            return@readServiceIdeModels null
+          }
+        }
+
+        val codegenSchemaOptionsFile = codegenSchemaOptionsFile(projectDirectory, serviceName).also {
+          if (!it.exists()) {
+            logw("Codegen schema options file does not exist: $it")
+            return@readServiceIdeModels null
+          }
+        }
+
+        val irOptionsFile = irOptionsFile(projectDirectory, serviceName).also {
+          if (!it.exists()) {
+            logw("IR options file does not exist: $it")
+            return@readServiceIdeModels null
+          }
+        }
+
+        val codegenOptionsFile = codegenOptionsFile(projectDirectory, serviceName).also {
+          if (!it.exists()) {
+            logw("Codegen options file does not exist: $it")
+            return@readServiceIdeModels null
+          }
+        }
+
+        ServiceIdeModelWithOptions(
+            serviceIdeModel = serviceIdeModelFile.toServiceIdeModel(),
+            codegenSchemaOptions = codegenSchemaOptionsFile.toCodegenSchemaOptions(),
+            irOptions = irOptionsFile.toIrOptions(),
+            codegenOptions = codegenOptionsFile.toCodegenOptions(),
+            codegenOutputDir = codegenOutputDir(projectDirectory, serviceName),
+        )
+      }
+    }
+
+    private fun fetchToolingModels(allApolloGradleProjects: List<GradleProject>) {
+      logd()
       project.telemetryService.apolloKotlinModuleCount = allApolloGradleProjects.size
 
-      val allToolingModels = allApolloGradleProjects.mapIndexedNotNull { index, gradleProject ->
-        if (isAbortRequested()) return@doRun
+      val allToolingModels = allApolloGradleProjects.mapNotNull { gradleProject ->
+        if (isAbortRequested()) return
 
         gradleCancellation = GradleConnector.newCancellationTokenSource()
         logd("Fetch tooling model for ${gradleProject.path}")
@@ -206,9 +329,38 @@ class GradleToolingModelService(
       }
 
       logd("allToolingModels=$allToolingModels")
-      if (isAbortRequested()) return
-      computeApolloKotlinServices(allToolingModels)
       project.telemetryService.gradleToolingModels = allToolingModels.toSet()
+      if (isAbortRequested()) return
+
+      val apolloKotlinServices = toolingModelsToApolloKotlinServices(allToolingModels)
+      saveApolloKotlinServices(apolloKotlinServices)
+    }
+
+    private fun getAllApolloGradleProjects(): List<GradleProject>? {
+      logd("Fetch Gradle project model")
+      gradleCancellation = GradleConnector.newCancellationTokenSource()
+      val gradleProjectPath = project.getGradleRootPath()
+      if (gradleProjectPath == null) {
+        logw("Could not get Gradle root project path")
+        return null
+      }
+      val rootGradleProject: GradleProject = try {
+        getGradleModel(project, gradleProjectPath) {
+          it.withCancellationToken(gradleCancellation!!.token())
+        }
+      } catch (t: Throwable) {
+        logw(t, "Couldn't fetch Gradle project model")
+        null
+      } finally {
+        gradleCancellation = null
+      } ?: return null
+      project.telemetryService.gradleModuleCount = rootGradleProject.children.size + 1
+
+      // We're only interested in projects that apply the Apollo plugin - and thus have the codegen task registered
+      val allApolloGradleProjects: List<GradleProject> = rootGradleProject.allChildrenRecursively()
+          .filter { gradleProject -> gradleProject.tasks.any { task -> task.name == CODEGEN_GRADLE_TASK_NAME } }
+      logd("allApolloGradleProjects=${allApolloGradleProjects.map { it.path }}")
+      return allApolloGradleProjects
     }
 
     private fun isAbortRequested(): Boolean {
@@ -226,8 +378,8 @@ class GradleToolingModelService(
     }
   }
 
-  private fun computeApolloKotlinServices(toolingModels: List<ApolloGradleToolingModel>) {
-    // Compute the ApolloKotlinServices, taking into account the dependencies between projects
+  // Compute the ApolloKotlinServices, taking into account the dependencies between projects
+  private fun toolingModelsToApolloKotlinServices(toolingModels: List<ApolloGradleToolingModel>): List<ApolloKotlinService> {
     val allKnownProjectPaths = toolingModels.map { it.projectPathCompat }
     val projectServiceToApolloKotlinServices = mutableMapOf<String, ApolloKotlinService>()
 
@@ -243,11 +395,13 @@ class GradleToolingModelService(
         ApolloKotlinService(
             gradleProjectPath = projectPath,
             serviceName = serviceName,
-            schemaPaths = (serviceInfo.schemaFiles.mapNotNull { it.toProjectLocalPathOrNull() } +
-                upstreamApolloKotlinServices.flatMap { it.schemaPaths })
+            schemaPaths = serviceInfo.schemaFiles.map { it.absolutePath },
+            allSchemaPaths = (serviceInfo.schemaFiles.map { it.absolutePath } +
+                upstreamApolloKotlinServices.flatMap { it.allSchemaPaths })
                 .distinct(),
-            operationPaths = (serviceInfo.graphqlSrcDirs.mapNotNull { it.toProjectLocalPathOrNull() } +
-                upstreamApolloKotlinServices.flatMap { it.operationPaths })
+            operationPaths = serviceInfo.graphqlSrcDirs.map { it.absolutePath },
+            allOperationPaths = (serviceInfo.graphqlSrcDirs.map { it.absolutePath } +
+                upstreamApolloKotlinServices.flatMap { it.allOperationPaths })
                 .distinct(),
             endpointUrl = serviceInfo.endpointUrlCompat(toolingModel),
             endpointHeaders = serviceInfo.endpointHeadersCompat(toolingModel),
@@ -263,19 +417,63 @@ class GradleToolingModelService(
         apolloKotlinServices += getApolloKotlinService(toolingModel.projectPathCompat, serviceInfo.name)
       }
     }
-    logd("apolloKotlinServices=$apolloKotlinServices")
-    this.apolloKotlinServices = apolloKotlinServices
+    logd("apolloKotlinServices=\n${apolloKotlinServices.joinToString(",\n")}")
+    return apolloKotlinServices
+  }
+
+  // Compute the ApolloKotlinServices, taking into account the dependencies between projects
+  private fun serviceIdeModelsToApolloKotlinServices(serviceIdeModels: List<ServiceIdeModelWithOptions>): List<ApolloKotlinService> {
+    val projectServiceToApolloKotlinServices = mutableMapOf<String, ApolloKotlinService>()
+
+    fun getApolloKotlinService(projectPath: String, serviceName: String): ApolloKotlinService {
+      val key = "$projectPath/$serviceName"
+      return projectServiceToApolloKotlinServices.getOrPut(key) {
+        val serviceIdeModelWithOptions =
+          serviceIdeModels.first { it.serviceIdeModel.projectPath == projectPath && it.serviceIdeModel.serviceName == serviceName }
+        val serviceIdeModel = serviceIdeModelWithOptions.serviceIdeModel
+        val upstreamApolloKotlinServices = serviceIdeModel.upstreamProjectPaths
+            .map { upstreamProjectPath -> getApolloKotlinService(upstreamProjectPath, serviceName) }
+        ApolloKotlinService(
+            gradleProjectPath = projectPath,
+            serviceName = serviceName,
+            schemaPaths = serviceIdeModel.schemaFiles.toList(),
+            allSchemaPaths = (serviceIdeModel.schemaFiles.toList() +
+                upstreamApolloKotlinServices.flatMap { it.allSchemaPaths })
+                .distinct(),
+            operationPaths = serviceIdeModel.graphqlSrcDirs.toList(),
+            allOperationPaths = (serviceIdeModel.graphqlSrcDirs.toList() +
+                upstreamApolloKotlinServices.flatMap { it.allOperationPaths })
+                .distinct(),
+            endpointUrl = serviceIdeModel.endpointUrl,
+            endpointHeaders = serviceIdeModel.endpointHeaders,
+            upstreamServiceIds = upstreamApolloKotlinServices.map { it.id },
+            downstreamServiceIds = serviceIdeModel.downstreamProjectPaths.map { downstreamProjectPath -> ApolloKotlinService.Id(downstreamProjectPath, serviceName) },
+            useSemanticNaming = serviceIdeModel.useSemanticNaming,
+
+            codegenSchemaOptions = serviceIdeModelWithOptions.codegenSchemaOptions,
+            irOptions = serviceIdeModelWithOptions.irOptions,
+            codegenOptions = serviceIdeModelWithOptions.codegenOptions,
+
+            codegenOutputDir = serviceIdeModelWithOptions.codegenOutputDir,
+        )
+      }
+    }
+
+    val apolloKotlinServices = mutableListOf<ApolloKotlinService>()
+    for (serviceIdeModel in serviceIdeModels) {
+      apolloKotlinServices += getApolloKotlinService(serviceIdeModel.serviceIdeModel.projectPath, serviceIdeModel.serviceIdeModel.serviceName)
+    }
+    logd("apolloKotlinServices=\n${apolloKotlinServices.joinToString(",\n")}")
+    return apolloKotlinServices
+  }
+
+  private fun saveApolloKotlinServices(apolloKotlinServices: List<ApolloKotlinService>) {
+    this@GradleToolingModelService.apolloKotlinServices = apolloKotlinServices.associateBy { it.id }
     // Cache the ApolloKotlinServices into the project settings
     project.projectSettingsState.apolloKotlinServices = apolloKotlinServices
 
     // Services are available, notify interested parties
     project.messageBus.syncPublisher(ApolloKotlinServiceListener.TOPIC).apolloKotlinServicesAvailable()
-  }
-
-  private fun File.toProjectLocalPathOrNull(): String? {
-    val projectDir = project.guessProjectDir() ?: return null
-    val virtualFile = VirtualFileManager.getInstance().findFileByNioPath(toPath()) ?: return null
-    return VfsUtilCore.getRelativeLocation(virtualFile, projectDir)
   }
 
   private fun abortFetchToolingModels() {
@@ -290,11 +488,12 @@ class GradleToolingModelService(
     abortFetchToolingModels()
   }
 
-  companion object {
-    fun getApolloKotlinServices(project: Project): List<ApolloKotlinService> {
-      if (!project.apolloProjectService.isInitialized) return emptyList()
-      return project.service<GradleToolingModelService>().apolloKotlinServices
-    }
+  fun getApolloKotlinServices(): List<ApolloKotlinService> {
+    return apolloKotlinServices.values.toList()
+  }
+
+  fun getApolloKotlinService(id: ApolloKotlinService.Id): ApolloKotlinService? {
+    return apolloKotlinServices[id]
   }
 }
 

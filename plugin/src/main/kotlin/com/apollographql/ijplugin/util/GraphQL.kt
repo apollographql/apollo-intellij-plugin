@@ -102,7 +102,7 @@ fun GraphQLElement.apolloKotlinService(): ApolloKotlinService? {
   val projectConfig = GraphQLConfigProvider.getInstance(project).resolveProjectConfig(containingFile) ?: return null
   val apolloKotlinServiceId =
     projectConfig.extensions[ApolloGraphQLConfigContributor.EXTENSION_APOLLO_KOTLIN_SERVICE_ID] as? String ?: return null
-  return project.gradleToolingModelService.apolloKotlinServices.firstOrNull { it.id.toString() == apolloKotlinServiceId }
+  return project.gradleToolingModelService.getApolloKotlinService(ApolloKotlinService.Id.fromString(apolloKotlinServiceId)!!)
 }
 
 fun GraphQLDirective.argumentValue(argumentName: String): GraphQLValue? =

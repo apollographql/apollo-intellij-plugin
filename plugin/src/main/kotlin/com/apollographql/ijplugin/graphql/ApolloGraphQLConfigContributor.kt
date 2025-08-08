@@ -1,7 +1,7 @@
 package com.apollographql.ijplugin.graphql
 
 import com.apollographql.ijplugin.gradle.ApolloKotlinService
-import com.apollographql.ijplugin.gradle.GradleToolingModelService
+import com.apollographql.ijplugin.gradle.gradleToolingModelService
 import com.apollographql.ijplugin.project.apolloProjectService
 import com.apollographql.ijplugin.settings.projectSettingsState
 import com.apollographql.ijplugin.util.logd
@@ -11,9 +11,11 @@ import com.intellij.lang.jsgraphql.ide.config.loader.GraphQLRawConfig
 import com.intellij.lang.jsgraphql.ide.config.loader.GraphQLRawProjectConfig
 import com.intellij.lang.jsgraphql.ide.config.loader.GraphQLRawSchemaPointer
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLConfig
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.vfs.VfsUtilCore
+import com.intellij.openapi.vfs.VirtualFileManager
+import java.io.File
 
 class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
   override fun contributeConfigs(project: Project): Collection<GraphQLConfig> {
@@ -30,17 +32,17 @@ class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
             dir = projectDir,
             file = null,
             rawData = GraphQLRawConfig(
-                projects = project.service<GradleToolingModelService>().apolloKotlinServices.associate { apolloKotlinService ->
-                  apolloKotlinService.id.toString() to apolloKotlinService.toGraphQLRawProjectConfig()
+                projects = project.gradleToolingModelService.getApolloKotlinServices().associate { apolloKotlinService ->
+                  apolloKotlinService.id.toString() to apolloKotlinService.toGraphQLRawProjectConfig(project)
                 }
             )
         )
     )
   }
 
-  private fun ApolloKotlinService.toGraphQLRawProjectConfig() = GraphQLRawProjectConfig(
-      schema = schemaPaths.map { GraphQLRawSchemaPointer(it) },
-      include = operationPaths.map { "$it/**/*.graphql" },
+  private fun ApolloKotlinService.toGraphQLRawProjectConfig(project: Project) = GraphQLRawProjectConfig(
+      schema = allSchemaPaths.map { GraphQLRawSchemaPointer(it.toProjectRelativePath(project)) },
+      include = allOperationPaths.map { "${it.toProjectRelativePath(project)}/**/*.graphql" },
       extensions = mapOf(EXTENSION_APOLLO_KOTLIN_SERVICE_ID to this.id.toString()) +
           (endpointUrl?.let {
             mapOf(
@@ -59,4 +61,10 @@ class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
   companion object {
     const val EXTENSION_APOLLO_KOTLIN_SERVICE_ID = "apolloKotlinServiceId"
   }
+}
+
+private fun String.toProjectRelativePath(project: Project): String {
+  val projectDir = project.guessProjectDir() ?: return ""
+  val virtualFile = VirtualFileManager.getInstance().findFileByNioPath(File(this).toPath()) ?: return ""
+  return VfsUtilCore.getRelativeLocation(virtualFile, projectDir) ?: ""
 }
