@@ -13,6 +13,7 @@ import com.apollographql.ijplugin.util.isGradlePluginPresent
 import com.apollographql.ijplugin.util.isKotlinPluginPresent
 import com.apollographql.ijplugin.util.isLspAvailable
 import com.apollographql.ijplugin.util.logd
+import com.intellij.ide.lightEdit.project.LightEditDumbService
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.components.service
@@ -40,7 +41,13 @@ class ApolloProjectActivity : ProjectActivity {
     // Initialize all services on project open.
     // But wait for 'smart mode' to do it.
     // Most of these services can't operate without the Kotlin and Gradle plugins (e.g. in RustRover).
-    DumbService.getInstance(project).runWhenSmart {
+    val dumbService = DumbService.getInstance(project)
+    if (dumbService is LightEditDumbService) {
+      // In LightEdit mode, we'll never be in 'smart mode', and calling runWhenSmart throws. So give up.
+      logd("LightEdit mode detected, skipping service initialization.")
+      return
+    }
+    dumbService.runWhenSmart {
       logd("apolloVersion=" + project.apolloProjectService.apolloVersion)
       if (isKotlinPluginPresent && isGradlePluginPresent) {
         project.service<ApolloCodegenService>()
