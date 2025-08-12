@@ -3,11 +3,11 @@ package com.apollographql.ijplugin.gradle
 import com.apollographql.ijplugin.util.capitalizeFirstLetter
 import java.io.File
 
-fun projectIdeModelFile(projectDirectory: File) =
-  File(projectDirectory, "build/generated/apollo/ide/project.json")
+fun projectModelFile(projectDirectory: File) =
+  File(projectDirectory, "build/gtask/generateApolloProjectModel/projectModelFile")
 
-fun serviceIdeModelFile(projectDirectory: File, serviceName: String) =
-  File(projectDirectory, "build/generated/apollo/ide/services/$serviceName.json")
+fun serviceModelFile(projectDirectory: File, serviceName: String) =
+  File(projectDirectory, "build/gtask/generate${serviceName.capitalizeFirstLetter()}ApolloServiceModel/serviceModelFile")
 
 fun codegenSchemaOptionsFile(projectDirectory: File, serviceName: String) =
   File(projectDirectory, "build/gtask/generate${serviceName.capitalizeFirstLetter()}ApolloOptions/codegenSchemaOptionsFile")
