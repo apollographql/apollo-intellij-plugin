@@ -3,8 +3,8 @@ package com.apollographql.ijplugin.codegen
 import com.apollographql.ijplugin.gradle.CODEGEN_GRADLE_TASK_NAME
 import com.apollographql.ijplugin.gradle.GradleHasSyncedListener
 import com.apollographql.ijplugin.gradle.SimpleProgressListener
+import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.gradle.getGradleRootPath
-import com.apollographql.ijplugin.gradle.gradleToolingModelService
 import com.apollographql.ijplugin.gradle.runGradleBuild
 import com.apollographql.ijplugin.project.ApolloProjectListener
 import com.apollographql.ijplugin.project.ApolloProjectService
@@ -87,7 +87,7 @@ class ApolloCodegenService(
 
   private fun startOrStopCodegenObservers() {
     if (shouldTriggerCodegenAutomatically()) {
-      // To make the codegen more reactive, any touched GraphQL document will automatically be saved (thus triggering Gradle)
+      // To make the codegen more reactive, any touched GraphQL document will automatically be saved (thus triggering the codegen)
       // as soon as the current editor is changed.
       startObserveDocumentChanges()
       startObserveFileEditorChanges()
@@ -165,8 +165,7 @@ class ApolloCodegenService(
 
           if (apolloKotlinService?.hasCompilerOptions == true) {
             // We can use the built-in Apollo compiler
-//            ApolloCompilerHelper(project).generateSources(apolloKotlinService)
-            ApolloCompilerHelper(project).generateAllSources()
+            ApolloCompilerHelper(project).generateSources(apolloKotlinService)
           } else {
             // Fall back to the Gradle codegen task
             startGradleCodegen()
@@ -256,7 +255,7 @@ class ApolloCodegenService(
   }
 
   private fun startCodegen() {
-    if (project.gradleToolingModelService.getApolloKotlinServices().any { it.hasCompilerOptions }) {
+    if (project.apolloKotlinProjectModelService.getApolloKotlinServices().any { it.hasCompilerOptions }) {
       logd("Using Apollo compiler for codegen")
       ApolloCompilerHelper(project).generateAllSources()
     } else {

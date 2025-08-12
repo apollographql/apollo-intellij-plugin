@@ -2,7 +2,7 @@ package com.apollographql.ijplugin.settings.studio
 
 import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.gradle.ApolloKotlinService
-import com.apollographql.ijplugin.gradle.gradleToolingModelService
+import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.util.validationOnApplyNotBlank
 import com.intellij.openapi.observable.util.whenItemSelectedFromUi
 import com.intellij.openapi.observable.util.whenTextChanged
@@ -106,11 +106,11 @@ class ApiKeyDialog(
   }.withPreferredWidth(450)
 
   private fun getGradleProjectNames(): List<String> {
-    return project.gradleToolingModelService.getApolloKotlinServices().map { it.id.gradleProjectPath }.distinct().sorted()
+    return project.apolloKotlinProjectModelService.getApolloKotlinServices().map { it.id.gradleProjectPath }.distinct().sorted()
   }
 
   private fun getApolloKotlinServiceNames(gradleProjectName: String): List<String> {
-    return project.gradleToolingModelService.getApolloKotlinServices()
+    return project.apolloKotlinProjectModelService.getApolloKotlinServices()
         .filter { it.id.gradleProjectPath == gradleProjectName }
         .map { it.id.serviceName }
         .sorted()

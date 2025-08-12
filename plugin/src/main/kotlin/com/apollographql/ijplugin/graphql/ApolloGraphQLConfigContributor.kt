@@ -1,7 +1,7 @@
 package com.apollographql.ijplugin.graphql
 
 import com.apollographql.ijplugin.gradle.ApolloKotlinService
-import com.apollographql.ijplugin.gradle.gradleToolingModelService
+import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.project.apolloProjectService
 import com.apollographql.ijplugin.settings.projectSettingsState
 import com.apollographql.ijplugin.util.logd
@@ -32,7 +32,7 @@ class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
             dir = projectDir,
             file = null,
             rawData = GraphQLRawConfig(
-                projects = project.gradleToolingModelService.getApolloKotlinServices().associate { apolloKotlinService ->
+                projects = project.apolloKotlinProjectModelService.getApolloKotlinServices().associate { apolloKotlinService ->
                   apolloKotlinService.id.toString() to apolloKotlinService.toGraphQLRawProjectConfig(project)
                 }
             )

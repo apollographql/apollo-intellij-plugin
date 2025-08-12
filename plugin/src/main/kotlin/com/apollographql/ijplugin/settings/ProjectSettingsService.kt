@@ -145,7 +145,7 @@ interface ProjectSettingsState {
 
   /**
    * Cache of the ApolloKotlinServices constructed from the Gradle tooling models.
-   * @see com.apollographql.ijplugin.gradle.GradleToolingModelService
+   * @see com.apollographql.ijplugin.gradle.ApolloKotlinProjectModelService
    */
   var apolloKotlinServices: List<ApolloKotlinService>
   var lspPassPathToSuperGraphYaml: Boolean

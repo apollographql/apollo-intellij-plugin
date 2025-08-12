@@ -10,7 +10,7 @@ import com.apollographql.apollo.compiler.ir.IrOperations
 import com.apollographql.apollo.compiler.toInputFiles
 import com.apollographql.ijplugin.gradle.ApolloKotlinService
 import com.apollographql.ijplugin.gradle.ApolloKotlinService.Id
-import com.apollographql.ijplugin.gradle.gradleToolingModelService
+import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.intellij.openapi.project.Project
@@ -20,39 +20,30 @@ import java.io.File
 class ApolloCompilerHelper(
     private val project: Project,
 ) {
-  private val logger = object : ApolloCompiler.Logger {
-    override fun debug(message: String) {
-      logd("Apollo Compiler: $message")
-    }
-
-    override fun info(message: String) {
-      logd("Apollo Compiler: $message")
-    }
-
-    override fun warning(message: String) {
-      logw("Apollo Compiler: $message")
-    }
-
-    override fun error(message: String) {
-      logw("Apollo Compiler: $message")
-    }
-  }
-
   fun generateAllSources() {
     logd()
-    val schemaServices = project.gradleToolingModelService.getApolloKotlinServices().filter { it.upstreamServiceIds.isEmpty() }
-    for (service in schemaServices) {
-      generateSources(service)
+    val allServices = project.apolloKotlinProjectModelService.getApolloKotlinServices()
+    val leafServices = allServices.filter { candidateService -> allServices.none { it.upstreamServiceIds.contains(candidateService.id) } }
+    val outputDirs = mutableSetOf<File>()
+    for (service in leafServices) {
+      outputDirs.addAll(internalGenerateSources(service))
     }
+    VfsUtil.markDirtyAndRefresh(true, true, true, *outputDirs.toTypedArray())
+    logd("Apollo compiler sources generated for ${leafServices.map { it.id }}")
   }
 
   fun generateSources(service: ApolloKotlinService) {
+    val outputDirs = internalGenerateSources(service)
+    VfsUtil.markDirtyAndRefresh(true, true, true, *outputDirs.toTypedArray())
+  }
+
+  private fun internalGenerateSources(service: ApolloKotlinService): Set<File> {
     try {
       logd("Running Apollo compiler for service ${service.id}")
       val schemaService = service.findSchemaService()
       if (schemaService == null) {
         logw("No schema service found for ${service.id}. Cannot generate sources.")
-        return
+        return emptySet()
       }
 
       val codegenSchema = ApolloCompiler.buildCodegenSchema(
@@ -66,12 +57,12 @@ class ApolloCompilerHelper(
       val allUpstreamServiceIds = service.allUpstreamServiceIds()
       if (allUpstreamServiceIds == null) {
         logw("Failed to find upstream services for ${service.id}. Cannot generate sources.")
-        return
+        return emptySet()
       }
       val allDownstreamServiceIds = schemaService.allDownstreamServiceIds()
       if (allDownstreamServiceIds == null) {
         logw("Failed to find downstream services for ${service.id}. Cannot generate sources.")
-        return
+        return emptySet()
       }
 
       val irOperationsById = mutableMapOf<Id, IrOperations>()
@@ -97,12 +88,12 @@ class ApolloCompilerHelper(
         val allDownstreamServiceIds = service.allDownstreamServiceIds()
         if (allDownstreamServiceIds == null) {
           logw("Failed to find downstream services for ${service.id}. Cannot generate sources.")
-          return
+          return outputDirs
         }
         val allUpstreamServiceIds = service.allUpstreamServiceIds()
         if (allUpstreamServiceIds == null) {
           logw("Failed to find upstream services for ${service.id}. Cannot generate sources.")
-          return
+          return outputDirs
         }
         val schemaAndOperationsSources = ApolloCompiler.buildSchemaAndOperationsSourcesFromIr(
             codegenSchema = codegenSchema,
@@ -123,11 +114,11 @@ class ApolloCompilerHelper(
       }
 
       logd("Apollo compiler sources generated for service ${service.id} at ${service.codegenOutputDir}")
-      VfsUtil.markDirtyAndRefresh(true, true, true, *outputDirs.toTypedArray())
-
+      return outputDirs
     } catch (e: Exception) {
       logw(e, "Failed to generate sources for service ${service.id}")
     }
+    return emptySet()
   }
 
   private fun ApolloKotlinService.findSchemaService(): ApolloKotlinService? {
@@ -167,7 +158,6 @@ class ApolloCompilerHelper(
     }
   }
 
-
   private fun ApolloKotlinService.executableFiles(): List<File> {
     val executableFiles = mutableListOf<File>()
     for (operationPath in operationPaths.map { File(it) }) {
@@ -180,6 +170,23 @@ class ApolloCompilerHelper(
     return executableFiles
   }
 
+  private fun service(id: Id): ApolloKotlinService? = project.apolloKotlinProjectModelService.getApolloKotlinService(id)
 
-  private fun service(id: Id): ApolloKotlinService? = project.gradleToolingModelService.getApolloKotlinService(id)
+  private val logger = object : ApolloCompiler.Logger {
+    override fun debug(message: String) {
+      logd("Apollo Compiler: $message")
+    }
+
+    override fun info(message: String) {
+      logd("Apollo Compiler: $message")
+    }
+
+    override fun warning(message: String) {
+      logw("Apollo Compiler: $message")
+    }
+
+    override fun error(message: String) {
+      logw("Apollo Compiler: $message")
+    }
+  }
 }

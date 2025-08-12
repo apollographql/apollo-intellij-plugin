@@ -25,7 +25,7 @@ interface ApolloKotlinServiceListener {
  * These are built from the [com.apollographql.apollo.gradle.api.ApolloGradleToolingModel] and are used to configure the GraphQL plugin,
  * and are cached into the project settings.
  *
- * @see com.apollographql.ijplugin.gradle.GradleToolingModelService
+ * @see com.apollographql.ijplugin.gradle.ApolloKotlinProjectModelService
  * @see com.apollographql.ijplugin.graphql.ApolloGraphQLConfigContributor
  * @see com.apollographql.ijplugin.settings.ProjectSettingsService
  */
