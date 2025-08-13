@@ -245,6 +245,7 @@ class ApolloKotlinProjectModelService(
 
     private fun readProjectModels(allApolloGradleProjects: List<GradleProject>): Boolean {
       val allServiceModels = mutableListOf<ServiceModelWithOptions>()
+      val projectModels = mutableListOf<ProjectModel>()
       for (gradleProject in allApolloGradleProjects) {
         val projectDirectory = gradleProject.projectDirectory
         val projectModel = readProjectModel(projectDirectory)
@@ -252,6 +253,7 @@ class ApolloKotlinProjectModelService(
           logw("Failed to read project model from $projectDirectory")
           return false
         }
+        projectModels.add(projectModel)
         val serviceModels = readServiceModels(projectDirectory, projectModel)
         if (serviceModels == null) {
           logw("Failed to read service models from $projectDirectory")
@@ -259,8 +261,11 @@ class ApolloKotlinProjectModelService(
         }
         allServiceModels.addAll(serviceModels)
       }
-
       val apolloKotlinServices = serviceModelsToApolloKotlinServices(allServiceModels)
+      project.telemetryService.telemetryProperties = projectModels.flatMap { it.toTelemetryProperties() }.toSet() +
+          apolloKotlinServices.flatMap { it.toTelemetryProperties() }.toSet() +
+          allServiceModels.flatMap { it.serviceModel.toTelemetryProperties() }.toSet()
+
       saveApolloKotlinServices(apolloKotlinServices)
       return true
     }
@@ -320,8 +325,6 @@ class ApolloKotlinProjectModelService(
      */
     private fun fetchToolingModels(allApolloGradleProjects: List<GradleProject>) {
       logd()
-      project.telemetryService.apolloKotlinModuleCount = allApolloGradleProjects.size
-
       val allToolingModels = allApolloGradleProjects.mapNotNull { gradleProject ->
         if (isAbortRequested()) return
 
@@ -347,7 +350,7 @@ class ApolloKotlinProjectModelService(
       }
 
       logd("allToolingModels=$allToolingModels")
-      project.telemetryService.gradleToolingModels = allToolingModels.toSet()
+      project.telemetryService.telemetryProperties = allToolingModels.flatMap { it.toTelemetryProperties() }.toSet()
       if (isAbortRequested()) return
 
       val apolloKotlinServices = toolingModelsToApolloKotlinServices(allToolingModels)
@@ -378,6 +381,8 @@ class ApolloKotlinProjectModelService(
       val allApolloGradleProjects: List<GradleProject> = rootGradleProject.allChildrenRecursively()
           .filter { gradleProject -> gradleProject.tasks.any { task -> task.name == CODEGEN_GRADLE_TASK_NAME } }
       logd("allApolloGradleProjects=${allApolloGradleProjects.map { it.path }}")
+
+      project.telemetryService.apolloKotlinModuleCount = allApolloGradleProjects.size
       return allApolloGradleProjects
     }
 
