@@ -3,9 +3,9 @@ package com.apollographql.ijplugin.gradle
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.TargetLanguage
-import com.apollographql.apollo.compiler.model.ProjectModel
-import com.apollographql.apollo.compiler.model.ServiceModel
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
+import com.apollographql.apollo.tooling.model.ProjectModel
+import com.apollographql.apollo.tooling.model.ServiceModel
 import com.apollographql.ijplugin.telemetry.TelemetryProperty
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.AndroidCompileSdk
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.AndroidGradlePluginVersion
@@ -90,7 +90,7 @@ fun ApolloGradleToolingModel.toTelemetryProperties(): Set<TelemetryProperty> = b
 }
 
 @OptIn(ApolloInternal::class)
-fun ProjectModel.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
+fun ProjectModel.TelemetryData.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
   gradleVersion?.let { add(GradleVersion(it)) }
 
   androidMinSdk?.let { add(AndroidMinSdk(it)) }

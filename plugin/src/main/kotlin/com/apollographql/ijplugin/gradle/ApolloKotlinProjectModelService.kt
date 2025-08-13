@@ -6,14 +6,14 @@ import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.CodegenOptions
 import com.apollographql.apollo.compiler.CodegenSchemaOptions
 import com.apollographql.apollo.compiler.IrOptions
-import com.apollographql.apollo.compiler.model.ProjectModel
-import com.apollographql.apollo.compiler.model.ServiceModel
-import com.apollographql.apollo.compiler.model.toProjectModel
-import com.apollographql.apollo.compiler.model.toServiceModel
 import com.apollographql.apollo.compiler.toCodegenOptions
 import com.apollographql.apollo.compiler.toCodegenSchemaOptions
 import com.apollographql.apollo.compiler.toIrOptions
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
+import com.apollographql.apollo.tooling.model.ProjectModel
+import com.apollographql.apollo.tooling.model.ServiceModel
+import com.apollographql.apollo.tooling.model.toProjectModel
+import com.apollographql.apollo.tooling.model.toServiceModel
 import com.apollographql.ijplugin.project.ApolloProjectListener
 import com.apollographql.ijplugin.project.ApolloProjectService
 import com.apollographql.ijplugin.project.apolloProjectService
@@ -262,7 +262,7 @@ class ApolloKotlinProjectModelService(
         allServiceModels.addAll(serviceModels)
       }
       val apolloKotlinServices = serviceModelsToApolloKotlinServices(allServiceModels)
-      project.telemetryService.telemetryProperties = projectModels.flatMap { it.toTelemetryProperties() }.toSet() +
+      project.telemetryService.telemetryProperties = projectModels.flatMap { it.telemetryData.toTelemetryProperties() }.toSet() +
           apolloKotlinServices.flatMap { it.toTelemetryProperties() }.toSet() +
           allServiceModels.flatMap { it.serviceModel.toTelemetryProperties() }.toSet()
 
