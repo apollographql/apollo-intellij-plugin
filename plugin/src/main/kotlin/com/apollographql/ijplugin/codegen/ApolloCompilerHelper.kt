@@ -113,6 +113,7 @@ class ApolloCompilerHelper(
           return outputDirs
         }
         val upstreamCodegenMetadata = allUpstreamServiceIds.map { schemaAndOperationsSourcesById[it]!!.codegenMetadata }
+        service.operationManifestFile!!.parentFile.mkdirs()
         val schemaAndOperationsSources = ApolloCompiler.buildSchemaAndOperationsSourcesFromIr(
             codegenSchema = codegenSchema,
             irOperations = irOperationsById[service.id]!!,
@@ -124,7 +125,7 @@ class ApolloCompilerHelper(
             irOperationsTransform = registry.irOperationsTransform(),
             javaOutputTransform = registry.javaOutputTransform(),
             kotlinOutputTransform = registry.kotlinOutputTransform(),
-            operationManifestFile = null, // TODO
+            operationManifestFile = service.operationManifestFile,
         )
         schemaAndOperationsSourcesById[service.id] = schemaAndOperationsSources
         schemaAndOperationsSources.writeTo(service.codegenOutputDir!!, true, null)

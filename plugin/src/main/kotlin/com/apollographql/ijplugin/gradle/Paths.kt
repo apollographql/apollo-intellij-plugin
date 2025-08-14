@@ -20,3 +20,6 @@ fun codegenOptionsFile(projectDirectory: File, serviceName: String) =
 
 fun codegenOutputDir(projectDirectory: File, serviceName: String) =
   File(projectDirectory, "build/generated/source/apollo/$serviceName")
+
+fun operationManifestFile(projectDirectory: File, serviceName: String) =
+  File(projectDirectory, "build/generated/manifest/apollo/$serviceName/persistedQueryManifest.json")

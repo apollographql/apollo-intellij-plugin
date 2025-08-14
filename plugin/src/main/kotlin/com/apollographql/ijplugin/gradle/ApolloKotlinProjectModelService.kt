@@ -173,6 +173,7 @@ class ApolloKotlinProjectModelService(
       val irOptions: IrOptions,
       val codegenOptions: CodegenOptions,
       val codegenOutputDir: File,
+      val operationManifestFile: File,
   )
 
   private inner class FetchProjectModelTask : Runnable {
@@ -316,6 +317,7 @@ class ApolloKotlinProjectModelService(
             irOptions = irOptionsFile.toIrOptions(),
             codegenOptions = codegenOptionsFile.toCodegenOptions(),
             codegenOutputDir = codegenOutputDir(projectDirectory, serviceName),
+            operationManifestFile = operationManifestFile(projectDirectory, serviceName),
         )
       }
     }
@@ -439,6 +441,7 @@ class ApolloKotlinProjectModelService(
             pluginDependencies = serviceModelWithOptions.serviceModel.pluginDependencies,
 
             codegenOutputDir = serviceModelWithOptions.codegenOutputDir,
+            operationManifestFile = serviceModelWithOptions.operationManifestFile,
         )
       }
     }
