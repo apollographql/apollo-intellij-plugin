@@ -79,6 +79,9 @@ data class ApolloKotlinService(
     val codegenOptions: CodegenOptions? = null,
 
     @Transient
+    val pluginDependencies: Set<String>? = null,
+
+    @Transient
     val codegenOutputDir: File? = null,
 ) {
   data class Id(
@@ -107,5 +110,5 @@ data class ApolloKotlinService(
 
   val hasCompilerOptions
     @Transient
-    get() = codegenOptions != null && irOptions != null && codegenSchemaOptions != null
+    get() = codegenOptions != null && irOptions != null && codegenSchemaOptions != null && pluginDependencies != null
 }

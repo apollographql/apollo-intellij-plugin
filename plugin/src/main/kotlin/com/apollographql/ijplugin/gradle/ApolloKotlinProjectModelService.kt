@@ -1,7 +1,8 @@
-@file:OptIn(ApolloInternal::class)
+@file:OptIn(ApolloInternal::class, ApolloExperimental::class)
 
 package com.apollographql.ijplugin.gradle
 
+import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.CodegenOptions
 import com.apollographql.apollo.compiler.CodegenSchemaOptions
@@ -435,6 +436,7 @@ class ApolloKotlinProjectModelService(
             codegenSchemaOptions = serviceModelWithOptions.codegenSchemaOptions,
             irOptions = serviceModelWithOptions.irOptions,
             codegenOptions = serviceModelWithOptions.codegenOptions,
+            pluginDependencies = serviceModelWithOptions.serviceModel.pluginDependencies,
 
             codegenOutputDir = serviceModelWithOptions.codegenOutputDir,
         )

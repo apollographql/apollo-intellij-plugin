@@ -1,9 +1,13 @@
-@file:Suppress("OPT_IN_USAGE")
+@file:OptIn(ApolloInternal::class, ApolloExperimental::class)
 
 package com.apollographql.ijplugin.codegen
 
+import com.apollographql.apollo.annotations.ApolloExperimental
+import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.ApolloCompiler
+import com.apollographql.apollo.compiler.ApolloCompilerPlugin
 import com.apollographql.apollo.compiler.UsedCoordinates
+import com.apollographql.apollo.compiler.apolloCompilerRegistry
 import com.apollographql.apollo.compiler.codegen.SourceOutput
 import com.apollographql.apollo.compiler.codegen.writeTo
 import com.apollographql.apollo.compiler.ir.IrOperations
@@ -16,6 +20,7 @@ import com.apollographql.ijplugin.util.logw
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
+import java.net.URLClassLoader
 
 class ApolloCompilerHelper(
     private val project: Project,
@@ -40,18 +45,30 @@ class ApolloCompilerHelper(
   private fun internalGenerateSources(service: ApolloKotlinService): Set<File> {
     try {
       logd("Running Apollo compiler for service ${service.id}")
+
       val schemaService = service.findSchemaService()
       if (schemaService == null) {
         logw("No schema service found for ${service.id}. Cannot generate sources.")
         return emptySet()
       }
 
+      // TODO Can only the schema service declare compiler plugins?
+      val registry = apolloCompilerRegistry(
+          arguments = mapOf("com.apollographql.cache.packageName" to "com.example"),
+          logger = logger,
+          warnIfNotFound = true,
+          classLoader = URLClassLoader(
+              schemaService.pluginDependencies!!.map { File(it).toURI().toURL() }.toTypedArray(),
+              ApolloCompilerPlugin::class.java.classLoader
+          )
+      )
+
       val codegenSchema = ApolloCompiler.buildCodegenSchema(
           schemaFiles = schemaService.schemaPaths.map { File(it) }.toInputFiles(),
           logger = logger,
           codegenSchemaOptions = schemaService.codegenSchemaOptions!!,
-          foreignSchemas = emptyList(),
-          schemaTransform = null,
+          foreignSchemas = registry.foreignSchemas(),
+          schemaTransform = registry.schemaDocumentTransform()
       )
 
       val allUpstreamServiceIds = service.allUpstreamServiceIds()
@@ -75,7 +92,7 @@ class ApolloCompilerHelper(
             upstreamCodegenModels = service.upstreamServiceIds.map { irOperationsById[it]!!.codegenModels },
             upstreamFragmentDefinitions = service.upstreamServiceIds.flatMap { irOperationsById[it]!!.fragmentDefinitions },
             options = service.irOptions!!,
-            documentTransform = null,
+            documentTransform = registry.executableDocumentTransform(),
             logger = logger,
         )
         irOperationsById[service.id] = irOperations
@@ -95,21 +112,28 @@ class ApolloCompilerHelper(
           logw("Failed to find upstream services for ${service.id}. Cannot generate sources.")
           return outputDirs
         }
+        val upstreamCodegenMetadata = allUpstreamServiceIds.map { schemaAndOperationsSourcesById[it]!!.codegenMetadata }
         val schemaAndOperationsSources = ApolloCompiler.buildSchemaAndOperationsSourcesFromIr(
             codegenSchema = codegenSchema,
             irOperations = irOperationsById[service.id]!!,
             downstreamUsedCoordinates = mergedDownstreamUsedCoordinates(irOperationsById, allDownstreamServiceIds + service.id),
-            upstreamCodegenMetadata = allUpstreamServiceIds.map { schemaAndOperationsSourcesById[it]!!.codegenMetadata },
+            upstreamCodegenMetadata = upstreamCodegenMetadata,
             codegenOptions = service.codegenOptions!!,
-            layout = null,
-            operationIdsGenerator = null,
-            irOperationsTransform = null,
-            javaOutputTransform = null,
-            kotlinOutputTransform = null,
-            operationManifestFile = null,
+            layout = registry.layout(codegenSchema),
+            operationIdsGenerator = registry.toOperationIdsGenerator(),
+            irOperationsTransform = registry.irOperationsTransform(),
+            javaOutputTransform = registry.javaOutputTransform(),
+            kotlinOutputTransform = registry.kotlinOutputTransform(),
+            operationManifestFile = null, // TODO
         )
         schemaAndOperationsSourcesById[service.id] = schemaAndOperationsSources
         schemaAndOperationsSources.writeTo(service.codegenOutputDir!!, true, null)
+
+        // TODO check this works
+        if (upstreamCodegenMetadata.isEmpty()) {
+          registry.schemaCodeGenerator().generate(codegenSchema.schema.toGQLDocument(), service.codegenOutputDir)
+        }
+
         outputDirs.add(service.codegenOutputDir)
       }
 
@@ -118,6 +142,9 @@ class ApolloCompilerHelper(
     } catch (e: Exception) {
       logw(e, "Failed to generate sources for service ${service.id}")
     }
+
+    // TODO DataBuilders
+
     return emptySet()
   }
 
