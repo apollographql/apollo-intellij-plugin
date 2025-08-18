@@ -4,10 +4,13 @@ import com.apollographql.ijplugin.util.capitalizeFirstLetter
 import java.io.File
 
 fun projectModelFile(projectDirectory: File) =
-  File(projectDirectory, "build/gtask/generateApolloProjectModel/projectModelFile")
+  File(projectDirectory, "build/gtask/generateApolloProjectModel/projectModel")
 
-fun serviceModelFile(projectDirectory: File, serviceName: String) =
-  File(projectDirectory, "build/gtask/generate${serviceName.capitalizeFirstLetter()}ApolloServiceModel/serviceModelFile")
+fun telemetryDataFile(projectDirectory: File) =
+  File(projectDirectory, "build/gtask/generateApolloProjectModel/telemetryData")
+
+fun compilationUnitModelFile(projectDirectory: File, serviceName: String) =
+  File(projectDirectory, "build/gtask/generate${serviceName.capitalizeFirstLetter()}ApolloCompilationUnitModel/compilationUnitModel")
 
 fun codegenSchemaOptionsFile(projectDirectory: File, serviceName: String) =
   File(projectDirectory, "build/gtask/generate${serviceName.capitalizeFirstLetter()}ApolloOptions/codegenSchemaOptionsFile")

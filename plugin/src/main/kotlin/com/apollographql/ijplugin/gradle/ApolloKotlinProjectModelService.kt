@@ -7,14 +7,16 @@ import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.CodegenOptions
 import com.apollographql.apollo.compiler.CodegenSchemaOptions
 import com.apollographql.apollo.compiler.IrOptions
+import com.apollographql.apollo.compiler.model.CompilationUnitModel
+import com.apollographql.apollo.compiler.model.ProjectModel
+import com.apollographql.apollo.compiler.model.toCompilationUnitModel
+import com.apollographql.apollo.compiler.model.toProjectModel
 import com.apollographql.apollo.compiler.toCodegenOptions
 import com.apollographql.apollo.compiler.toCodegenSchemaOptions
 import com.apollographql.apollo.compiler.toIrOptions
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
-import com.apollographql.apollo.tooling.model.ProjectModel
-import com.apollographql.apollo.tooling.model.ServiceModel
-import com.apollographql.apollo.tooling.model.toProjectModel
-import com.apollographql.apollo.tooling.model.toServiceModel
+import com.apollographql.apollo.tooling.model.TelemetryData
+import com.apollographql.apollo.tooling.model.toTelemetryData
 import com.apollographql.ijplugin.project.ApolloProjectListener
 import com.apollographql.ijplugin.project.ApolloProjectService
 import com.apollographql.ijplugin.project.apolloProjectService
@@ -167,8 +169,8 @@ class ApolloKotlinProjectModelService(
     fetchProjectModelTask = FetchProjectModelTask().also { coroutineScope.launch { it.run() } }
   }
 
-  private class ServiceModelWithOptions(
-      val serviceModel: ServiceModel,
+  private class CompilationUnitModelWithOptions(
+      val compilationUnitModel: CompilationUnitModel,
       val codegenSchemaOptions: CodegenSchemaOptions,
       val irOptions: IrOptions,
       val codegenOptions: CodegenOptions,
@@ -246,8 +248,8 @@ class ApolloKotlinProjectModelService(
     }
 
     private fun readProjectModels(allApolloGradleProjects: List<GradleProject>): Boolean {
-      val allServiceModels = mutableListOf<ServiceModelWithOptions>()
-      val projectModels = mutableListOf<ProjectModel>()
+      val allCompilationUnitModels = mutableListOf<CompilationUnitModelWithOptions>()
+      val allTelemetryData = mutableListOf<TelemetryData>()
       for (gradleProject in allApolloGradleProjects) {
         val projectDirectory = gradleProject.projectDirectory
         val projectModel = readProjectModel(projectDirectory)
@@ -255,18 +257,25 @@ class ApolloKotlinProjectModelService(
           logw("Failed to read project model from $projectDirectory")
           return false
         }
-        projectModels.add(projectModel)
-        val serviceModels = readServiceModels(projectDirectory, projectModel)
-        if (serviceModels == null) {
-          logw("Failed to read service models from $projectDirectory")
+
+        val telemetryData = readTelemetryData(projectDirectory)
+        if (telemetryData != null) {
+          allTelemetryData.add(telemetryData)
+        } else {
+          logw("Failed to read telemetry data from $projectDirectory")
+        }
+
+        val compilationUnitModels = readCompilationUnitModels(projectDirectory, projectModel)
+        if (compilationUnitModels == null) {
+          logw("Failed to read compilation unit models from $projectDirectory")
           return false
         }
-        allServiceModels.addAll(serviceModels)
+        allCompilationUnitModels.addAll(compilationUnitModels)
       }
-      val apolloKotlinServices = serviceModelsToApolloKotlinServices(allServiceModels)
-      project.telemetryService.telemetryProperties = projectModels.flatMap { it.telemetryData.toTelemetryProperties() }.toSet() +
-          apolloKotlinServices.flatMap { it.toTelemetryProperties() }.toSet() +
-          allServiceModels.flatMap { it.serviceModel.toTelemetryProperties() }.toSet()
+      val apolloKotlinServices = compilationUnitModelsToApolloKotlinServices(allCompilationUnitModels)
+
+      project.telemetryService.telemetryProperties = allTelemetryData.flatMap { it.toTelemetryProperties() }.toSet() +
+          apolloKotlinServices.flatMap { it.toTelemetryProperties() }.toSet()
 
       saveApolloKotlinServices(apolloKotlinServices)
       return true
@@ -281,38 +290,47 @@ class ApolloKotlinProjectModelService(
       return projectModelFile.toProjectModel()
     }
 
-    private fun readServiceModels(projectDirectory: File, projectModel: ProjectModel): List<ServiceModelWithOptions>? {
+    private fun readTelemetryData(projectDirectory: File): TelemetryData? {
+      val telemetryDataFile = telemetryDataFile(projectDirectory)
+      if (!telemetryDataFile.exists()) {
+        logw("Telemetry data file does not exist: $telemetryDataFile")
+        return null
+      }
+      return telemetryDataFile.toTelemetryData()
+    }
+
+    private fun readCompilationUnitModels(projectDirectory: File, projectModel: ProjectModel): List<CompilationUnitModelWithOptions>? {
       return projectModel.serviceNames.map { serviceName ->
-        val serviceModelFile = serviceModelFile(projectDirectory, serviceName).also {
+        val compilationUnitModelFile = compilationUnitModelFile(projectDirectory, serviceName).also {
           if (!it.exists()) {
-            logw("Service model file does not exist: $it")
-            return@readServiceModels null
+            logw("Compilation unit model file does not exist: $it")
+            return@readCompilationUnitModels null
           }
         }
 
         val codegenSchemaOptionsFile = codegenSchemaOptionsFile(projectDirectory, serviceName).also {
           if (!it.exists()) {
             logw("Codegen schema options file does not exist: $it")
-            return@readServiceModels null
+            return@readCompilationUnitModels null
           }
         }
 
         val irOptionsFile = irOptionsFile(projectDirectory, serviceName).also {
           if (!it.exists()) {
             logw("IR options file does not exist: $it")
-            return@readServiceModels null
+            return@readCompilationUnitModels null
           }
         }
 
         val codegenOptionsFile = codegenOptionsFile(projectDirectory, serviceName).also {
           if (!it.exists()) {
             logw("Codegen options file does not exist: $it")
-            return@readServiceModels null
+            return@readCompilationUnitModels null
           }
         }
 
-        ServiceModelWithOptions(
-            serviceModel = serviceModelFile.toServiceModel(),
+        CompilationUnitModelWithOptions(
+            compilationUnitModel = compilationUnitModelFile.toCompilationUnitModel(),
             codegenSchemaOptions = codegenSchemaOptionsFile.toCodegenSchemaOptions(),
             irOptions = irOptionsFile.toIrOptions(),
             codegenOptions = codegenOptionsFile.toCodegenOptions(),
@@ -407,48 +425,48 @@ class ApolloKotlinProjectModelService(
   /**
    * Compute the ApolloKotlinServices from service models, taking into account the dependencies between projects.
    */
-  private fun serviceModelsToApolloKotlinServices(serviceModels: List<ServiceModelWithOptions>): List<ApolloKotlinService> {
+  private fun compilationUnitModelsToApolloKotlinServices(compilationUnitModels: List<CompilationUnitModelWithOptions>): List<ApolloKotlinService> {
     val projectServiceToApolloKotlinServices = mutableMapOf<String, ApolloKotlinService>()
 
     fun getApolloKotlinService(projectPath: String, serviceName: String): ApolloKotlinService {
       val key = "$projectPath/$serviceName"
       return projectServiceToApolloKotlinServices.getOrPut(key) {
-        val serviceModelWithOptions =
-          serviceModels.first { it.serviceModel.gradleProjectPath == projectPath && it.serviceModel.serviceName == serviceName }
-        val serviceModel = serviceModelWithOptions.serviceModel
-        val upstreamApolloKotlinServices = serviceModel.upstreamGradleProjectPaths
+        val compilationUnitModelWithOptions =
+          compilationUnitModels.first { it.compilationUnitModel.gradleProjectPath == projectPath && it.compilationUnitModel.serviceName == serviceName }
+        val compilationUnitModel = compilationUnitModelWithOptions.compilationUnitModel
+        val upstreamApolloKotlinServices = compilationUnitModel.upstreamGradleProjectPaths
             .map { upstreamProjectPath -> getApolloKotlinService(upstreamProjectPath, serviceName) }
         ApolloKotlinService(
             gradleProjectPath = projectPath,
             serviceName = serviceName,
-            schemaPaths = serviceModel.schemaFiles.toList(),
-            allSchemaPaths = (serviceModel.schemaFiles.toList() +
+            schemaPaths = compilationUnitModel.schemaFiles.toList(),
+            allSchemaPaths = (compilationUnitModel.schemaFiles.toList() +
                 upstreamApolloKotlinServices.flatMap { it.allSchemaPaths })
                 .distinct(),
-            operationPaths = serviceModel.graphqlSrcDirs.toList(),
-            allOperationPaths = (serviceModel.graphqlSrcDirs.toList() +
+            operationPaths = compilationUnitModel.graphqlSrcDirs.toList(),
+            allOperationPaths = (compilationUnitModel.graphqlSrcDirs.toList() +
                 upstreamApolloKotlinServices.flatMap { it.allOperationPaths })
                 .distinct(),
-            endpointUrl = serviceModel.endpointUrl,
-            endpointHeaders = serviceModel.endpointHeaders,
+            endpointUrl = compilationUnitModel.endpointUrl,
+            endpointHeaders = compilationUnitModel.endpointHeaders,
             upstreamServiceIds = upstreamApolloKotlinServices.map { it.id },
-            downstreamServiceIds = serviceModel.downstreamGradleProjectPaths.map { downstreamProjectPath -> ApolloKotlinService.Id(downstreamProjectPath, serviceName) },
-            useSemanticNaming = serviceModelWithOptions.codegenOptions.useSemanticNaming ?: true,
+            downstreamServiceIds = compilationUnitModel.downstreamGradleProjectPaths.map { downstreamProjectPath -> ApolloKotlinService.Id(downstreamProjectPath, serviceName) },
+            useSemanticNaming = compilationUnitModelWithOptions.codegenOptions.useSemanticNaming ?: true,
 
-            codegenSchemaOptions = serviceModelWithOptions.codegenSchemaOptions,
-            irOptions = serviceModelWithOptions.irOptions,
-            codegenOptions = serviceModelWithOptions.codegenOptions,
-            pluginDependencies = serviceModelWithOptions.serviceModel.pluginDependencies,
+            codegenSchemaOptions = compilationUnitModelWithOptions.codegenSchemaOptions,
+            irOptions = compilationUnitModelWithOptions.irOptions,
+            codegenOptions = compilationUnitModelWithOptions.codegenOptions,
+            pluginDependencies = compilationUnitModelWithOptions.compilationUnitModel.pluginDependencies,
 
-            codegenOutputDir = serviceModelWithOptions.codegenOutputDir,
-            operationManifestFile = serviceModelWithOptions.operationManifestFile,
+            codegenOutputDir = compilationUnitModelWithOptions.codegenOutputDir,
+            operationManifestFile = compilationUnitModelWithOptions.operationManifestFile,
         )
       }
     }
 
     val apolloKotlinServices = mutableListOf<ApolloKotlinService>()
-    for (serviceModel in serviceModels) {
-      apolloKotlinServices += getApolloKotlinService(serviceModel.serviceModel.gradleProjectPath, serviceModel.serviceModel.serviceName)
+    for (compilationUnitModel in compilationUnitModels) {
+      apolloKotlinServices += getApolloKotlinService(compilationUnitModel.compilationUnitModel.gradleProjectPath, compilationUnitModel.compilationUnitModel.serviceName)
     }
     logd("apolloKotlinServices=\n${apolloKotlinServices.joinToString(",\n")}")
     return apolloKotlinServices

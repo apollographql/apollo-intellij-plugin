@@ -4,8 +4,7 @@ import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.TargetLanguage
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
-import com.apollographql.apollo.tooling.model.ProjectModel
-import com.apollographql.apollo.tooling.model.ServiceModel
+import com.apollographql.apollo.tooling.model.TelemetryData
 import com.apollographql.ijplugin.telemetry.TelemetryProperty
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.AndroidCompileSdk
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.AndroidGradlePluginVersion
@@ -90,7 +89,7 @@ fun ApolloGradleToolingModel.toTelemetryProperties(): Set<TelemetryProperty> = b
 }
 
 @OptIn(ApolloInternal::class)
-fun ProjectModel.TelemetryData.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
+fun TelemetryData.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
   gradleVersion?.let { add(GradleVersion(it)) }
 
   androidMinSdk?.let { add(AndroidMinSdk(it)) }
@@ -100,6 +99,7 @@ fun ProjectModel.TelemetryData.toTelemetryProperties(): Set<TelemetryProperty> =
 
   apolloGenerateSourcesDuringGradleSync?.let { add(ApolloGenerateSourcesDuringGradleSync(it)) }
   apolloLinkSqlite?.let { add(ApolloLinkSqlite(it)) }
+  add(ApolloUsedOptions(usedServiceOptions.toList()))
 }
 
 @OptIn(ApolloExperimental::class)
@@ -133,7 +133,3 @@ fun ApolloKotlinService.toTelemetryProperties(): Set<TelemetryProperty> = buildS
   irOptions?.flattenModels?.let { add(ApolloFlattenModels(it)) }
   irOptions?.fieldsOnDisjointTypesMustMerge?.let { add(ApolloFieldsOnDisjointTypesMustMerge(it)) }
 }
-
-@OptIn(ApolloInternal::class)
-fun ServiceModel.toTelemetryProperties(): Set<TelemetryProperty> = setOf(ApolloUsedOptions(telemetryUsedOptions.toList()))
-
