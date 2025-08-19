@@ -6,12 +6,12 @@ import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.ApolloCompiler
 import com.apollographql.apollo.compiler.ApolloCompilerPlugin
+import com.apollographql.apollo.compiler.ApolloCompilerPluginEnvironment
+import com.apollographql.apollo.compiler.EntryPoints
 import com.apollographql.apollo.compiler.UsedCoordinates
-import com.apollographql.apollo.compiler.apolloCompilerRegistry
-import com.apollographql.apollo.compiler.codegen.SourceOutput
-import com.apollographql.apollo.compiler.codegen.writeTo
-import com.apollographql.apollo.compiler.ir.IrOperations
 import com.apollographql.apollo.compiler.toInputFiles
+import com.apollographql.apollo.compiler.toIrOperations
+import com.apollographql.apollo.compiler.writeTo
 import com.apollographql.ijplugin.gradle.ApolloKotlinService
 import com.apollographql.ijplugin.gradle.ApolloKotlinService.Id
 import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
@@ -21,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
 import java.net.URLClassLoader
+import java.util.ServiceLoader
 
 class ApolloCompilerHelper(
     private val project: Project,
@@ -52,24 +53,16 @@ class ApolloCompilerHelper(
         return emptySet()
       }
 
-      // TODO Can only the schema service declare compiler plugins?
-      val registry = apolloCompilerRegistry(
-          arguments = mapOf("com.apollographql.cache.packageName" to "com.example"),
+      val codegenSchemaFile = File.createTempFile("codegenSchemaFile", null)
+      EntryPoints.buildCodegenSchema(
+          plugins = schemaService.loadPlugins(),
           logger = logger,
-          warnIfNotFound = true,
-          classLoader = URLClassLoader(
-              schemaService.pluginDependencies!!.map { File(it).toURI().toURL() }.toTypedArray(),
-              ApolloCompilerPlugin::class.java.classLoader
-          )
+          arguments = schemaService.pluginArguments!!,
+          normalizedSchemaFiles = schemaService.schemaPaths.map { File(it) }.toInputFiles(),
+          codegenSchemaOptionsFile = schemaService.codegenSchemaOptionsFile!!,
+          codegenSchemaFile = codegenSchemaFile,
       )
 
-      val codegenSchema = ApolloCompiler.buildCodegenSchema(
-          schemaFiles = schemaService.schemaPaths.map { File(it) }.toInputFiles(),
-          logger = logger,
-          codegenSchemaOptions = schemaService.codegenSchemaOptions!!,
-          foreignSchemas = registry.foreignSchemas(),
-          schemaTransform = registry.schemaDocumentTransform()
-      )
 
       val allUpstreamServiceIds = service.allUpstreamServiceIds()
       if (allUpstreamServiceIds == null) {
@@ -82,23 +75,33 @@ class ApolloCompilerHelper(
         return emptySet()
       }
 
-      val irOperationsById = mutableMapOf<Id, IrOperations>()
+      val irOperationsById = mutableMapOf<Id, File>()
       val allServiceIds = (allUpstreamServiceIds + service.id + allDownstreamServiceIds).distinct()
       for (serviceId in allServiceIds) {
         val service = service(serviceId)!!
-        val irOperations = ApolloCompiler.buildIrOperations(
-            codegenSchema = codegenSchema,
-            executableFiles = service.executableFiles().toInputFiles(),
-            upstreamCodegenModels = service.upstreamServiceIds.map { irOperationsById[it]!!.codegenModels },
-            upstreamFragmentDefinitions = service.upstreamServiceIds.flatMap { irOperationsById[it]!!.fragmentDefinitions },
-            options = service.irOptions!!,
-            documentTransform = registry.executableDocumentTransform(),
+        val irOperationsFile = File.createTempFile("irOperationsFile", null)
+        EntryPoints.buildIr(
+            plugins = service.loadPlugins(),
             logger = logger,
+            arguments = service.pluginArguments!!,
+            graphqlFiles = service.executableFiles().toInputFiles(),
+            codegenSchemaFiles = listOf(codegenSchemaFile).toInputFiles(),
+            upstreamIrOperations = irOperationsById.values.toInputFiles(),
+            irOptionsFile = service.irOptionsFile!!,
+            irOperationsFile = irOperationsFile,
         )
-        irOperationsById[service.id] = irOperations
+        irOperationsById[service.id] = irOperationsFile
       }
 
-      val schemaAndOperationsSourcesById = mutableMapOf<Id, SourceOutput>()
+      val usedCoordinatesFile = File.createTempFile("usedCoordinates", null)
+      val usedCoordinates: UsedCoordinates = irOperationsById.values.map {
+        it.toIrOperations().usedCoordinates
+      }.fold(UsedCoordinates()) { acc, element ->
+        acc.mergeWith(element)
+      }
+      usedCoordinates.writeTo(usedCoordinatesFile)
+
+      val upstreamMetadata = mutableListOf<File>()
       val outputDirs = mutableSetOf<File>()
       for (serviceId in allServiceIds) {
         val service = service(serviceId)!!
@@ -112,40 +115,35 @@ class ApolloCompilerHelper(
           logw("Failed to find upstream services for ${service.id}. Cannot generate sources.")
           return outputDirs
         }
-        val upstreamCodegenMetadata = allUpstreamServiceIds.map { schemaAndOperationsSourcesById[it]!!.codegenMetadata }
-        service.operationManifestFile!!.parentFile.mkdirs()
-        val schemaAndOperationsSources = ApolloCompiler.buildSchemaAndOperationsSourcesFromIr(
-            codegenSchema = codegenSchema,
-            irOperations = irOperationsById[service.id]!!,
-            downstreamUsedCoordinates = mergedDownstreamUsedCoordinates(irOperationsById, allDownstreamServiceIds + service.id),
-            upstreamCodegenMetadata = upstreamCodegenMetadata,
-            codegenOptions = service.codegenOptions!!,
-            layout = registry.layout(codegenSchema),
-            operationIdsGenerator = registry.toOperationIdsGenerator(),
-            irOperationsTransform = registry.irOperationsTransform(),
-            javaOutputTransform = registry.javaOutputTransform(),
-            kotlinOutputTransform = registry.kotlinOutputTransform(),
-            operationManifestFile = service.operationManifestFile,
-        )
-        schemaAndOperationsSourcesById[service.id] = schemaAndOperationsSources
-        schemaAndOperationsSources.writeTo(service.codegenOutputDir!!, true, null)
 
-        // TODO check this works
-        if (upstreamCodegenMetadata.isEmpty()) {
-          registry.schemaCodeGenerator().generate(codegenSchema.schema.toGQLDocument(), service.codegenOutputDir)
-        }
+        service.operationManifestFile!!.parentFile.mkdirs()
+        val metadataOutput = File.createTempFile("metadataOutput", null)
+        EntryPoints.buildSourcesFromIr(
+            plugins = service.loadPlugins(),
+            logger = logger,
+            arguments = service.pluginArguments!!,
+            codegenSchemas = listOf(codegenSchemaFile).toInputFiles(),
+            upstreamMetadata = upstreamMetadata.toInputFiles(),
+            irOperations = irOperationsById[service.id]!!,
+            usedCoordinates = usedCoordinatesFile,
+            codegenOptions = service.codegenOptionsFile!!,
+            operationManifest = service.operationManifestFile,
+            outputDirectory = service.codegenOutputDir!!,
+            metadataOutput = metadataOutput,
+        )
+        upstreamMetadata.add(metadataOutput)
 
         outputDirs.add(service.codegenOutputDir)
       }
+
+      // TODO DataBuilders
+
 
       logd("Apollo compiler sources generated for service ${service.id} at ${service.codegenOutputDir}")
       return outputDirs
     } catch (e: Exception) {
       logw(e, "Failed to generate sources for service ${service.id}")
     }
-
-    // TODO DataBuilders
-
     return emptySet()
   }
 
@@ -175,15 +173,6 @@ class ApolloCompilerHelper(
       allDownstreamServiceIds.addAll(downstreamServiceDownstreamServices)
     }
     return allDownstreamServiceIds.distinct()
-  }
-
-  private fun mergedDownstreamUsedCoordinates(
-      irOperationsById: Map<Id, IrOperations>,
-      serviceIds: List<Id>,
-  ): UsedCoordinates {
-    return serviceIds.fold(UsedCoordinates()) { acc, serviceId ->
-      acc.mergeWith(irOperationsById[serviceId]!!.usedCoordinates)
-    }
   }
 
   private fun ApolloKotlinService.executableFiles(): List<File> {
@@ -216,5 +205,20 @@ class ApolloCompilerHelper(
     override fun error(message: String) {
       logw("Apollo Compiler: $message")
     }
+  }
+
+  private fun ApolloKotlinService.loadPlugins(): List<ApolloCompilerPlugin> {
+    val classLoader = URLClassLoader(
+        pluginDependencies!!.map { File(it).toURI().toURL() }.toTypedArray(),
+        ApolloCompilerPlugin::class.java.classLoader
+    )
+    val plugins = ServiceLoader.load(ApolloCompilerPlugin::class.java, classLoader).toMutableList()
+    val pluginProviders =
+      @Suppress("DEPRECATION")
+      ServiceLoader.load(com.apollographql.apollo.compiler.ApolloCompilerPluginProvider::class.java, classLoader).toList()
+    for (pluginProvider in pluginProviders) {
+      plugins.add(pluginProvider.create(ApolloCompilerPluginEnvironment(pluginArguments!!, logger)))
+    }
+    return plugins
   }
 }

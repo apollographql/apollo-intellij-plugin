@@ -4,16 +4,11 @@ package com.apollographql.ijplugin.gradle
 
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
-import com.apollographql.apollo.compiler.CodegenOptions
-import com.apollographql.apollo.compiler.CodegenSchemaOptions
-import com.apollographql.apollo.compiler.IrOptions
 import com.apollographql.apollo.compiler.model.CompilationUnitModel
 import com.apollographql.apollo.compiler.model.ProjectModel
 import com.apollographql.apollo.compiler.model.toCompilationUnitModel
 import com.apollographql.apollo.compiler.model.toProjectModel
 import com.apollographql.apollo.compiler.toCodegenOptions
-import com.apollographql.apollo.compiler.toCodegenSchemaOptions
-import com.apollographql.apollo.compiler.toIrOptions
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
 import com.apollographql.apollo.tooling.model.TelemetryData
 import com.apollographql.apollo.tooling.model.toTelemetryData
@@ -29,6 +24,7 @@ import com.apollographql.ijplugin.util.isNotDisposed
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.apollographql.ijplugin.util.newDisposable
+import com.apollographql.ijplugin.util.toAny
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -171,9 +167,9 @@ class ApolloKotlinProjectModelService(
 
   private class CompilationUnitModelWithOptions(
       val compilationUnitModel: CompilationUnitModel,
-      val codegenSchemaOptions: CodegenSchemaOptions,
-      val irOptions: IrOptions,
-      val codegenOptions: CodegenOptions,
+      val codegenSchemaOptionsFile: File,
+      val irOptionsFile: File,
+      val codegenOptionsFile: File,
       val codegenOutputDir: File,
       val operationManifestFile: File,
   )
@@ -331,9 +327,9 @@ class ApolloKotlinProjectModelService(
 
         CompilationUnitModelWithOptions(
             compilationUnitModel = compilationUnitModelFile.toCompilationUnitModel(),
-            codegenSchemaOptions = codegenSchemaOptionsFile.toCodegenSchemaOptions(),
-            irOptions = irOptionsFile.toIrOptions(),
-            codegenOptions = codegenOptionsFile.toCodegenOptions(),
+            codegenSchemaOptionsFile = codegenSchemaOptionsFile,
+            irOptionsFile = irOptionsFile,
+            codegenOptionsFile = codegenOptionsFile,
             codegenOutputDir = codegenOutputDir(projectDirectory, serviceName),
             operationManifestFile = operationManifestFile(projectDirectory, serviceName),
         )
@@ -451,12 +447,13 @@ class ApolloKotlinProjectModelService(
             endpointHeaders = compilationUnitModel.endpointHeaders,
             upstreamServiceIds = upstreamApolloKotlinServices.map { it.id },
             downstreamServiceIds = compilationUnitModel.downstreamGradleProjectPaths.map { downstreamProjectPath -> ApolloKotlinService.Id(downstreamProjectPath, serviceName) },
-            useSemanticNaming = compilationUnitModelWithOptions.codegenOptions.useSemanticNaming ?: true,
+            useSemanticNaming = compilationUnitModelWithOptions.codegenOptionsFile.toCodegenOptions().useSemanticNaming ?: true,
 
-            codegenSchemaOptions = compilationUnitModelWithOptions.codegenSchemaOptions,
-            irOptions = compilationUnitModelWithOptions.irOptions,
-            codegenOptions = compilationUnitModelWithOptions.codegenOptions,
+            codegenSchemaOptionsFile = compilationUnitModelWithOptions.codegenSchemaOptionsFile,
+            irOptionsFile = compilationUnitModelWithOptions.irOptionsFile,
+            codegenOptionsFile = compilationUnitModelWithOptions.codegenOptionsFile,
             pluginDependencies = compilationUnitModelWithOptions.compilationUnitModel.pluginDependencies,
+            pluginArguments = compilationUnitModelWithOptions.compilationUnitModel.pluginArguments.mapValues { (_, v) -> v.toAny() },
 
             codegenOutputDir = compilationUnitModelWithOptions.codegenOutputDir,
             operationManifestFile = compilationUnitModelWithOptions.operationManifestFile,

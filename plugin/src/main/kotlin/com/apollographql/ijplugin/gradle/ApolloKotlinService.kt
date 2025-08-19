@@ -1,8 +1,5 @@
 package com.apollographql.ijplugin.gradle
 
-import com.apollographql.apollo.compiler.CodegenOptions
-import com.apollographql.apollo.compiler.CodegenSchemaOptions
-import com.apollographql.apollo.compiler.IrOptions
 import com.intellij.util.messages.Topic
 import com.intellij.util.xmlb.annotations.Attribute
 import com.intellij.util.xmlb.annotations.Transient
@@ -70,16 +67,19 @@ data class ApolloKotlinService(
     val useSemanticNaming: Boolean = true,
 
     @Transient
-    val codegenSchemaOptions: CodegenSchemaOptions? = null,
+    val codegenSchemaOptionsFile: File? = null,
 
     @Transient
-    val irOptions: IrOptions? = null,
+    val irOptionsFile: File? = null,
 
     @Transient
-    val codegenOptions: CodegenOptions? = null,
+    val codegenOptionsFile: File? = null,
 
     @Transient
     val pluginDependencies: Set<String>? = null,
+
+    @Transient
+    val pluginArguments: Map<String, Any?>? = null,
 
     @Transient
     val codegenOutputDir: File? = null,
@@ -113,5 +113,5 @@ data class ApolloKotlinService(
 
   val hasCompilerOptions
     @Transient
-    get() = codegenOptions != null && irOptions != null && codegenSchemaOptions != null && pluginDependencies != null && codegenOutputDir != null && operationManifestFile != null
+    get() = codegenOptionsFile != null && irOptionsFile != null && codegenSchemaOptionsFile != null && operationManifestFile != null
 }

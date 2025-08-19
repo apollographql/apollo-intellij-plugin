@@ -3,6 +3,9 @@ package com.apollographql.ijplugin.gradle
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.TargetLanguage
+import com.apollographql.apollo.compiler.toCodegenOptions
+import com.apollographql.apollo.compiler.toCodegenSchemaOptions
+import com.apollographql.apollo.compiler.toIrOptions
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
 import com.apollographql.apollo.tooling.model.TelemetryData
 import com.apollographql.ijplugin.telemetry.TelemetryProperty
@@ -103,33 +106,38 @@ fun TelemetryData.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
 }
 
 @OptIn(ApolloExperimental::class)
-fun ApolloKotlinService.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
-  irOptions?.codegenModels?.let { add(ApolloCodegenModels(it)) }
-  codegenOptions?.operationManifestFormat?.let { add(ApolloOperationManifestFormat(it)) }
-  irOptions?.warnOnDeprecatedUsages?.let { add(ApolloWarnOnDeprecatedUsages(it)) }
-  irOptions?.failOnWarnings?.let { add(ApolloFailOnWarnings(it)) }
-  codegenOptions?.targetLanguage?.let { add(ApolloGenerateKotlinModels(it != TargetLanguage.JAVA)) }
-  codegenOptions?.targetLanguage?.let {
-    if (it.name.startsWith("KOTLIN_")) {
-      add(ApolloLanguageVersion(it.name.removePrefix("KOTLIN_").replace("_", ".")))
+fun ApolloKotlinService.toTelemetryProperties(): Set<TelemetryProperty> {
+  val irOptions = irOptionsFile!!.toIrOptions()
+  val codegenOptions = codegenOptionsFile!!.toCodegenOptions()
+  val codegenSchemaOptions = codegenSchemaOptionsFile!!.toCodegenSchemaOptions()
+  return buildSet {
+    irOptions.codegenModels?.let { add(ApolloCodegenModels(it)) }
+    codegenOptions.operationManifestFormat?.let { add(ApolloOperationManifestFormat(it)) }
+    irOptions.warnOnDeprecatedUsages?.let { add(ApolloWarnOnDeprecatedUsages(it)) }
+    irOptions.failOnWarnings?.let { add(ApolloFailOnWarnings(it)) }
+    codegenOptions.targetLanguage?.let { add(ApolloGenerateKotlinModels(it != TargetLanguage.JAVA)) }
+    codegenOptions.targetLanguage?.let {
+      if (it.name.startsWith("KOTLIN_")) {
+        add(ApolloLanguageVersion(it.name.removePrefix("KOTLIN_").replace("_", ".")))
+      }
     }
+    codegenOptions.useSemanticNaming?.let { add(ApolloUseSemanticNaming(it)) }
+    codegenOptions.addJvmOverloads?.let { add(ApolloAddJvmOverloads(it)) }
+    codegenOptions.generateAsInternal?.let { add(ApolloGenerateAsInternal(it)) }
+    codegenOptions.generateFragmentImplementations?.let { add(ApolloGenerateFragmentImplementations(it)) }
+    codegenOptions.generateQueryDocument?.let { add(ApolloGenerateQueryDocument(it)) }
+    codegenOptions.generateSchema?.let { add(ApolloGenerateSchema(it)) }
+    irOptions.generateOptionalOperationVariables?.let { add(ApolloGenerateOptionalOperationVariables(it)) }
+    add(ApolloGenerateDataBuilders(codegenSchemaOptions.generateDataBuilders))
+    codegenOptions.generateModelBuilders?.let { add(ApolloGenerateModelBuilders(it)) }
+    codegenOptions.generateMethods?.let { add(ApolloGenerateMethods(it.map { it.name.toCamelCase() })) }
+    codegenOptions.generatePrimitiveTypes?.let { add(ApolloGeneratePrimitiveTypes(it)) }
+    codegenOptions.generateInputBuilders?.let { add(ApolloGenerateInputBuilders(it)) }
+    codegenOptions.nullableFieldStyle?.let { add(ApolloNullableFieldStyle(it.name.toCamelCase())) }
+    codegenOptions.decapitalizeFields?.let { add(ApolloDecapitalizeFields(it)) }
+    codegenOptions.jsExport?.let { add(ApolloJsExport(it)) }
+    irOptions.addTypename?.let { add(ApolloAddTypename(it)) }
+    irOptions.flattenModels?.let { add(ApolloFlattenModels(it)) }
+    irOptions.fieldsOnDisjointTypesMustMerge?.let { add(ApolloFieldsOnDisjointTypesMustMerge(it)) }
   }
-  codegenOptions?.useSemanticNaming?.let { add(ApolloUseSemanticNaming(it)) }
-  codegenOptions?.addJvmOverloads?.let { add(ApolloAddJvmOverloads(it)) }
-  codegenOptions?.generateAsInternal?.let { add(ApolloGenerateAsInternal(it)) }
-  codegenOptions?.generateFragmentImplementations?.let { add(ApolloGenerateFragmentImplementations(it)) }
-  codegenOptions?.generateQueryDocument?.let { add(ApolloGenerateQueryDocument(it)) }
-  codegenOptions?.generateSchema?.let { add(ApolloGenerateSchema(it)) }
-  irOptions?.generateOptionalOperationVariables?.let { add(ApolloGenerateOptionalOperationVariables(it)) }
-  codegenSchemaOptions?.generateDataBuilders?.let { add(ApolloGenerateDataBuilders(it)) }
-  codegenOptions?.generateModelBuilders?.let { add(ApolloGenerateModelBuilders(it)) }
-  codegenOptions?.generateMethods?.let { add(ApolloGenerateMethods(it.map { it.name.toCamelCase() })) }
-  codegenOptions?.generatePrimitiveTypes?.let { add(ApolloGeneratePrimitiveTypes(it)) }
-  codegenOptions?.generateInputBuilders?.let { add(ApolloGenerateInputBuilders(it)) }
-  codegenOptions?.nullableFieldStyle?.let { add(ApolloNullableFieldStyle(it.name.toCamelCase())) }
-  codegenOptions?.decapitalizeFields?.let { add(ApolloDecapitalizeFields(it)) }
-  codegenOptions?.jsExport?.let { add(ApolloJsExport(it)) }
-  irOptions?.addTypename?.let { add(ApolloAddTypename(it)) }
-  irOptions?.flattenModels?.let { add(ApolloFlattenModels(it)) }
-  irOptions?.fieldsOnDisjointTypesMustMerge?.let { add(ApolloFieldsOnDisjointTypesMustMerge(it)) }
 }
