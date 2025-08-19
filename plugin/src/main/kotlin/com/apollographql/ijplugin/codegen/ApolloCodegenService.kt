@@ -151,7 +151,7 @@ class ApolloCodegenService(
         dirtyGqlDocument?.let {
           val operationGraphQLFile = PsiDocumentManager.getInstance(project).getPsiFile(dirtyGqlDocument!!) as? GraphQLFile
           val apolloKotlinService = operationGraphQLFile?.apolloKotlinService()
-          logd("apolloKotlinService=$apolloKotlinService")
+          logd("apolloKotlinService=${apolloKotlinService?.id}")
           dirtyGqlDocument = null
           runWriteActionInEdt {
             try {
