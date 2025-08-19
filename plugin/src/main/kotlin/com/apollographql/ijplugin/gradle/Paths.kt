@@ -26,3 +26,6 @@ fun codegenOutputDir(projectDirectory: File, serviceName: String) =
 
 fun operationManifestFile(projectDirectory: File, serviceName: String) =
   File(projectDirectory, "build/generated/manifest/apollo/$serviceName/persistedQueryManifest.json")
+
+fun dataBuildersOutputDir(projectDirectory: File, serviceName: String) =
+  File(projectDirectory, "build/generated/dataBuildersSource/apollo/$serviceName")

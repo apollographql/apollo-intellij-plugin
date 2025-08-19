@@ -86,6 +86,9 @@ data class ApolloKotlinService(
 
     @Transient
     val operationManifestFile: File? = null,
+
+    @Transient
+    val dataBuildersOutputDir: File? = null,
 ) {
   data class Id(
       @Attribute

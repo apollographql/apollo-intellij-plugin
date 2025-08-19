@@ -9,6 +9,7 @@ import com.apollographql.apollo.compiler.ApolloCompilerPlugin
 import com.apollographql.apollo.compiler.ApolloCompilerPluginEnvironment
 import com.apollographql.apollo.compiler.EntryPoints
 import com.apollographql.apollo.compiler.UsedCoordinates
+import com.apollographql.apollo.compiler.toCodegenSchemaOptions
 import com.apollographql.apollo.compiler.toInputFiles
 import com.apollographql.apollo.compiler.toIrOperations
 import com.apollographql.apollo.compiler.writeTo
@@ -93,12 +94,12 @@ class ApolloCompilerHelper(
         irOperationsById[service.id] = irOperationsFile
       }
 
-      val usedCoordinatesFile = File.createTempFile("usedCoordinates", null)
       val usedCoordinates: UsedCoordinates = irOperationsById.values.map {
         it.toIrOperations().usedCoordinates
       }.fold(UsedCoordinates()) { acc, element ->
         acc.mergeWith(element)
       }
+      val usedCoordinatesFile = File.createTempFile("usedCoordinates", null)
       usedCoordinates.writeTo(usedCoordinatesFile)
 
       val upstreamMetadata = mutableListOf<File>()
@@ -132,12 +133,25 @@ class ApolloCompilerHelper(
             metadataOutput = metadataOutput,
         )
         upstreamMetadata.add(metadataOutput)
-
         outputDirs.add(service.codegenOutputDir)
       }
 
-      // TODO DataBuilders
-
+      for (serviceId in allServiceIds) {
+        val service = service(serviceId)!!
+        if (service.codegenSchemaOptionsFile!!.toCodegenSchemaOptions().generateDataBuilders) {
+          EntryPoints.buildDataBuilders(
+              plugins = service.loadPlugins(),
+              arguments = service.pluginArguments!!,
+              logger = logger,
+              codegenSchemas = listOf(codegenSchemaFile).toInputFiles(),
+              upstreamMetadatas = upstreamMetadata.toInputFiles(),
+              downstreamUsedCoordinates = usedCoordinatesFile,
+              codegenOptions = service.codegenOptionsFile!!,
+              outputDirectory = service.dataBuildersOutputDir!!,
+          )
+          outputDirs.add(service.dataBuildersOutputDir)
+        }
+      }
 
       logd("Apollo compiler sources generated for service ${service.id} at ${service.codegenOutputDir}")
       return outputDirs
