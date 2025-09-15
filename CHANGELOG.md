@@ -23,3 +23,7 @@ _2025-09-01_
 - Support descriptions on executable definitions (#53)
 - Make the graphql folder stand out (#54)
 - Various crash and bug fixes
+
+#### Compatibility
+
+This version supports projects using Apollo Kotlin v3.x, v4.x and v5.x.
