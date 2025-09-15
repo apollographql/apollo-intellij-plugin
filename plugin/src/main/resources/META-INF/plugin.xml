@@ -16,7 +16,8 @@
   <depends optional="true" config-file="com.apollographql.ijplugin-kotlin.xml">org.jetbrains.kotlin</depends>
   <depends optional="true" config-file="com.apollographql.ijplugin-gradle.xml">com.intellij.gradle</depends>
   <depends optional="true" config-file="com.apollographql.ijplugin-android.xml">org.jetbrains.android</depends>
-  <depends optional="true" config-file="com.apollographql.ijplugin-ultimate.xml">com.intellij.modules.ultimate</depends>
+  <!-- See https://plugins.jetbrains.com/docs/intellij/language-server-protocol.html#pluginxml -->
+  <depends optional="true" config-file="com.apollographql.ijplugin-lsp.xml">com.intellij.modules.lsp</depends>
 
   <depends optional="true" config-file="graphql-javascript.xml">JavaScript</depends>
   <depends optional="true" config-file="graphql-intellilang.xml">org.intellij.intelliLang</depends>
