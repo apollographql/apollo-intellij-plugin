@@ -41,7 +41,9 @@ tasks {
 
 dependencies {
   intellijPlatform {
-    intellijIdeaUltimate(libs.versions.intellij.platform.version.get())
+    intellijIdeaUltimate(libs.versions.intellij.platform.version.get()) {
+      useCache = true
+    }
     bundledPlugins(
         listOf(
             "org.jetbrains.kotlin",

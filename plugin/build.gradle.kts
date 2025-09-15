@@ -143,7 +143,9 @@ dependencies {
   // IntelliJ Platform dependencies must be declared before the intellijPlatform block
   // See https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1784
   intellijPlatform {
-    intellijIdeaUltimate(libs.versions.intellij.platform.version.get())
+    intellijIdeaUltimate(libs.versions.intellij.platform.version.get()) {
+      useCache = true
+    }
 
     // Plugin dependencies
     // See https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
