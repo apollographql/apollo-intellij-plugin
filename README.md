@@ -10,7 +10,6 @@ This plugin for Android Studio and IntelliJ helps you work with the
 
 ## Features
 - Automatic code generation: models are re-generated whenever GraphQL files change
-- Integration with the [GraphQL IntelliJ Plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql): the structure of the Apollo project is automatically contributed, so there is no need to create a `graphql.config.yml` / `.graphqlconfig` file
 - Navigation Kotlin code ⇄ GraphQL definitions
 - Unused operations and fields highlighting
 - Normalized cache viewer
@@ -52,3 +51,7 @@ Repositories</kbd> > <kbd>+</kbd> > <kbd>https://go.apollo.dev/ij-plugin-snapsho
 <img src="assets/instructions-2-add-repository.png" width="600" />
 
 Then search for "Apollo GraphQL" and install the plugin as usual.
+
+## Acknowledgements
+
+This plugin incorporates code from the [JetBrains GraphQL plugin](https://github.com/JetBrains/js-graphql-intellij-plugin).
