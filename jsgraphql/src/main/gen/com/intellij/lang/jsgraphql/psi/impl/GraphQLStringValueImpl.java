@@ -37,5 +37,4 @@ public class GraphQLStringValueImpl extends GraphQLValueImpl implements GraphQLS
   public @NotNull String getValueAsString() {
     return GraphQLPsiImplUtil.getValueAsString(this);
   }
-
 }

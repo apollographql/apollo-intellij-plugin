@@ -186,6 +186,7 @@
     <annotator language="GraphQL"
                implementationClass="com.intellij.lang.jsgraphql.ide.validation.GraphQLSchemaAnnotator"/>
     <colorSettingsPage implementation="com.intellij.lang.jsgraphql.ide.highlighting.GraphQLColorSettingsPage"/>
+    <daemon.highlightInfoFilter implementation="com.intellij.lang.jsgraphql.ide.highlighting.GraphQLInjectionHighlightInfoFilter" />
 
     <!-- Formatting and folding -->
     <lang.formatter language="GraphQL"
