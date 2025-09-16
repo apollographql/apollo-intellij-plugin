@@ -7,6 +7,7 @@ import com.apollographql.ijplugin.graphql.GraphQLConfigService
 import com.apollographql.ijplugin.lsp.ApolloLspAppService
 import com.apollographql.ijplugin.lsp.ApolloLspProjectService
 import com.apollographql.ijplugin.settings.ProjectSettingsService
+import com.apollographql.ijplugin.settings.appSettingsState
 import com.apollographql.ijplugin.studio.fieldinsights.FieldInsightsService
 import com.apollographql.ijplugin.telemetry.TelemetryService
 import com.apollographql.ijplugin.util.isGradlePluginPresent
@@ -16,11 +17,13 @@ import com.apollographql.ijplugin.util.logd
 import com.intellij.ide.lightEdit.project.LightEditDumbService
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.runInEdt
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.dsl.builder.panel
@@ -60,9 +63,26 @@ class ApolloProjectActivity : ProjectActivity {
       if (isLspAvailable) {
         project.service<ApolloLspProjectService>()
         application.service<ApolloLspAppService>()
+
+        switchToLspModeIfSupergraphYamlPresent(project)
       }
 
       project.apolloProjectService.isInitialized = true
+    }
+  }
+
+  private fun switchToLspModeIfSupergraphYamlPresent(project: Project) {
+    if (appSettingsState.lspModeEnabled) {
+      // Already in LSP mode.
+      return
+    }
+
+    val superGraphYamlFilePath = project.guessProjectDir()?.findChild("supergraph.yaml")?.path
+    if (superGraphYamlFilePath != null) {
+      logd("supergraph.yaml found at ${superGraphYamlFilePath}, switching to LSP mode")
+      runWriteAction {
+        appSettingsState.lspModeEnabled = true
+      }
     }
   }
 }
