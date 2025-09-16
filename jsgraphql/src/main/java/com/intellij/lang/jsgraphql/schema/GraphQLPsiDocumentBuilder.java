@@ -97,9 +97,6 @@ public final class GraphQLPsiDocumentBuilder {
     else if (definition instanceof GraphQLTypeSystemDefinition) {
       return createTypeSystemDefinition(((GraphQLTypeSystemDefinition)definition));
     }
-    else if (definition instanceof GraphQLTemplateDefinition) {
-      return null;
-    }
     else {
       return assertShouldNeverHappen();
     }
@@ -173,7 +170,7 @@ public final class GraphQLPsiDocumentBuilder {
       GraphQLTypeName typeName = typeCondition.getTypeName();
       if (typeName != null) {
         fragmentDefinition.typeCondition(checkNode(
-          TypeName.newTypeName().name(typeName.getName()).build()));
+            TypeName.newTypeName().name(typeName.getName()).build()));
       }
     }
 
@@ -190,10 +187,6 @@ public final class GraphQLPsiDocumentBuilder {
     SelectionSet.Builder builder = SelectionSet.newSelectionSet();
     addCommonData(builder, selectionSet);
     List<Selection> selections = mapNotNull(selectionSet.getSelectionList(), selection -> {
-      GraphQLTemplateSelection templateSelection = selection.getTemplateSelection();
-      // ignore templates
-      if (templateSelection != null) return null;
-
       GraphQLField field = selection.getField();
       if (field != null) {
         return createField(field);
@@ -396,7 +389,7 @@ public final class GraphQLPsiDocumentBuilder {
     GraphQLOperationTypeDefinitions operationTypeDefinitions = schemaDefinition.getOperationTypeDefinitions();
     if (operationTypeDefinitions != null) {
       def.operationTypeDefinitions(mapNotNull(operationTypeDefinitions.getOperationTypeDefinitionList(),
-                                              this::createOperationTypeDefinition));
+          this::createOperationTypeDefinition));
     }
     return def.build();
   }
@@ -409,7 +402,7 @@ public final class GraphQLPsiDocumentBuilder {
     GraphQLOperationTypeDefinitions operationTypeDefinitions = extension.getOperationTypeDefinitions();
     if (operationTypeDefinitions != null) {
       def.operationTypeDefinitions(mapNotNull(operationTypeDefinitions.getOperationTypeDefinitionList(),
-                                              this::createOperationTypeDefinition));
+          this::createOperationTypeDefinition));
     }
     return def.build();
   }
@@ -610,7 +603,7 @@ public final class GraphQLPsiDocumentBuilder {
     GraphQLEnumValueDefinitions enumValueDefinitions = enumTypeDefinition.getEnumValueDefinitions();
     if (enumValueDefinitions != null) {
       def.enumValueDefinitions(
-        mapNotNull(enumValueDefinitions.getEnumValueDefinitionList(), this::createEnumValueDefinition));
+          mapNotNull(enumValueDefinitions.getEnumValueDefinitionList(), this::createEnumValueDefinition));
     }
     return checkNode(def.build());
   }
@@ -626,7 +619,7 @@ public final class GraphQLPsiDocumentBuilder {
     GraphQLEnumValueDefinitions enumValueDefinitions = extensionDefinition.getEnumValueDefinitions();
     if (enumValueDefinitions != null) {
       def.enumValueDefinitions(
-        mapNotNull(enumValueDefinitions.getEnumValueDefinitionList(), this::createEnumValueDefinition));
+          mapNotNull(enumValueDefinitions.getEnumValueDefinitionList(), this::createEnumValueDefinition));
     }
     return checkNode(def.build());
   }
@@ -733,7 +726,7 @@ public final class GraphQLPsiDocumentBuilder {
     }
     else if (value instanceof GraphQLBooleanValue) {
       BooleanValue.Builder booleanValue = BooleanValue.newBooleanValue()
-        .value(Boolean.parseBoolean(value.getText()));
+          .value(Boolean.parseBoolean(value.getText()));
       addCommonData(booleanValue, value);
       return booleanValue.build();
     }
@@ -744,7 +737,7 @@ public final class GraphQLPsiDocumentBuilder {
     }
     else if (value instanceof GraphQLStringValue) {
       StringValue.Builder stringValue = StringValue.newStringValue()
-        .value(((GraphQLStringValue)value).getValueAsString());
+          .value(((GraphQLStringValue) value).getValueAsString());
       addCommonData(stringValue, value);
       return stringValue.build();
     }
@@ -771,9 +764,9 @@ public final class GraphQLPsiDocumentBuilder {
       List<ObjectField> objectFields = new ArrayList<>();
       for (GraphQLObjectField field : ((GraphQLObjectValue)value).getObjectFieldList()) {
         ObjectField objectField = checkNode(ObjectField.newObjectField()
-                                              .name(field.getName())
-                                              .value(createValue(field.getValue()))
-                                              .build());
+            .name(field.getName())
+            .value(createValue(field.getValue()))
+            .build());
         if (objectField != null) {
           objectFields.add(objectField);
         }
@@ -782,12 +775,9 @@ public final class GraphQLPsiDocumentBuilder {
     }
     else if (value instanceof GraphQLVariable) {
       VariableReference.Builder variableReference = VariableReference.newVariableReference()
-        .name(((GraphQLVariable)value).getName());
+          .name(((GraphQLVariable) value).getName());
       addCommonData(variableReference, value);
       return checkNode(variableReference.build());
-    }
-    else if (value instanceof GraphQLTemplateVariable) {
-      return null;
     }
     return assertShouldNeverHappen();
   }
@@ -808,7 +798,7 @@ public final class GraphQLPsiDocumentBuilder {
     String content = description.getText();
 
     PsiLanguageInjectionHost injectionHost =
-      InjectedLanguageManager.getInstance(description.getProject()).getInjectionHost(description);
+        InjectedLanguageManager.getInstance(description.getProject()).getInjectionHost(description);
     GraphQLInjectedLanguage injectedLanguage = injectionHost != null ? GraphQLInjectedLanguage.forElement(injectionHost) : null;
     if (injectedLanguage != null) {
       String escaped = injectedLanguage.escapeHostElements(content);

@@ -4,6 +4,7 @@ package com.intellij.lang.jsgraphql.schema
 
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.lang.jsgraphql.psi.GraphQLElement
+import com.intellij.lang.jsgraphql.types.GraphQLError
 import com.intellij.lang.jsgraphql.types.language.EnumTypeExtensionDefinition
 import com.intellij.lang.jsgraphql.types.language.InputObjectTypeExtensionDefinition
 import com.intellij.lang.jsgraphql.types.language.InterfaceTypeExtensionDefinition
@@ -21,6 +22,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafElement
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 
 fun isExtensionDefinition(definition: SDLDefinition<*>?): Boolean {
   return definition is SchemaExtensionDefinition ||
@@ -32,6 +34,7 @@ fun isExtensionDefinition(definition: SDLDefinition<*>?): Boolean {
       definition is EnumTypeExtensionDefinition
 }
 
+@get:RequiresReadLock
 val GraphQLElement.sourceLocation: SourceLocation
   get() {
     val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
@@ -56,12 +59,12 @@ val GraphQLElement.sourceLocation: SourceLocation
   }
 
 private val GraphQLElement.locationOffset: Int
-  get() {
-    return navigationElement.textRange.startOffset
-  }
+  get() = navigationElement.textRange.startOffset
 
+@RequiresReadLock
 fun Node<*>.findElement(project: Project): PsiElement? = sourceLocation.findElement(project)
 
+@RequiresReadLock
 fun SourceLocation.findElement(project: Project): PsiElement? {
   if (line == -1 || column == -1 || sourceName.isNullOrEmpty()) return null
   val file = findVirtualFile()?.findPsiFile(project) ?: return null
@@ -77,6 +80,10 @@ fun SourceLocation.findElement(project: Project): PsiElement? {
 
   return element
 }
+
+@RequiresReadLock
+fun GraphQLError.findElement(project: Project): PsiElement? =
+  node?.findElement(project) ?: locations?.firstNotNullOfOrNull { it.findElement(project) }
 
 private fun SourceLocation.findVirtualFile(): VirtualFile? {
   val file = LocalFileSystem.getInstance().findFileByPath(sourceName)?.takeIf { it.isValid }

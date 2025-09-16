@@ -1,6 +1,12 @@
 package com.intellij.lang.jsgraphql.ide.resolve;
 
-import com.intellij.lang.jsgraphql.psi.*;
+import com.intellij.lang.jsgraphql.psi.GraphQLDefinition;
+import com.intellij.lang.jsgraphql.psi.GraphQLEnumValue;
+import com.intellij.lang.jsgraphql.psi.GraphQLFile;
+import com.intellij.lang.jsgraphql.psi.GraphQLIdentifier;
+import com.intellij.lang.jsgraphql.psi.GraphQLNamedElement;
+import com.intellij.lang.jsgraphql.psi.GraphQLReferenceElement;
+import com.intellij.lang.jsgraphql.psi.GraphQLTypeNameDefinition;
 import com.intellij.lang.jsgraphql.schema.library.GraphQLLibrary;
 import com.intellij.lang.jsgraphql.schema.library.GraphQLLibraryDescriptor;
 import com.intellij.lang.jsgraphql.schema.library.GraphQLLibraryRootsProvider;
@@ -28,8 +34,8 @@ public final class GraphQLResolveUtil {
   }
 
   public static void processFilesInLibrary(@NotNull GraphQLLibraryDescriptor libraryDescriptor,
-                                           @NotNull PsiElement context,
-                                           @NotNull Processor<? super GraphQLFile> processor) {
+      @NotNull PsiElement context,
+      @NotNull Processor<? super GraphQLFile> processor) {
     GraphQLLibrary library = GraphQLLibraryRootsProvider.findLibrary(context.getProject(), libraryDescriptor);
     if (library == null) {
       LOG.warn("Library is not found: " + libraryDescriptor);
@@ -49,18 +55,14 @@ public final class GraphQLResolveUtil {
   }
 
   public static @NotNull Collection<GraphQLFile> getLibraryFiles(@NotNull GraphQLLibraryDescriptor libraryDescriptor,
-                                                                 @NotNull PsiElement context) {
+      @NotNull PsiElement context) {
     CommonProcessors.CollectUniquesProcessor<GraphQLFile> processor = new CommonProcessors.CollectUniquesProcessor<>();
     processFilesInLibrary(libraryDescriptor, context, processor);
     return processor.getResults();
   }
 
   public static @Nullable GraphQLDefinition findContainingDefinition(@Nullable PsiElement element) {
-    GraphQLDefinition definition = PsiTreeUtil.getParentOfType(element, GraphQLDefinition.class, false);
-    if (definition instanceof GraphQLTemplateDefinition) {
-      return null; // this is unexpected for most cases
-    }
-    return definition;
+    return PsiTreeUtil.getParentOfType(element, GraphQLDefinition.class, false);
   }
 
   /**
@@ -104,8 +106,8 @@ public final class GraphQLResolveUtil {
   }
 
   public static void processDirectoriesUpToContentRoot(@NotNull Project project,
-                                                       @NotNull VirtualFile fileOrDir,
-                                                       @NotNull Processor<? super VirtualFile> directoryProcessor) {
+      @NotNull VirtualFile fileOrDir,
+      @NotNull Processor<? super VirtualFile> directoryProcessor) {
     if (project.isDisposed()) {
       return;
     }

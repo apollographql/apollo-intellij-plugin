@@ -15,12 +15,13 @@ import com.intellij.lang.jsgraphql.types.schema.GraphQLSchema
 import com.intellij.lang.jsgraphql.types.schema.idl.TypeDefinitionRegistry
 import com.intellij.lang.jsgraphql.types.schema.idl.errors.SchemaProblem
 import com.intellij.lang.jsgraphql.types.schema.validation.InvalidSchemaException
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.Project
 
 class GraphQLSchemaInfo(
-  val schema: GraphQLSchema,
-  private val additionalErrors: List<GraphQLException>,
-  private val registryInfo: GraphQLRegistryInfo,
+    val schema: GraphQLSchema,
+    private val additionalErrors: List<GraphQLException>,
+    private val registryInfo: GraphQLRegistryInfo,
 ) {
   val registry: TypeDefinitionRegistry
     get() = registryInfo.typeDefinitionRegistry
@@ -47,9 +48,11 @@ class GraphQLSchemaInfo(
       }
     }
 
-    return errors.filter { error: GraphQLError ->
-      GraphQLErrorFilter.EP_NAME.extensionList.none { filter: GraphQLErrorFilter ->
-        filter.isGraphQLErrorSuppressed(project, error, null)
+    return runReadAction {
+      errors.filter { error: GraphQLError ->
+        GraphQLErrorFilter.EP_NAME.extensionList.none { filter: GraphQLErrorFilter ->
+          filter.isGraphQLErrorSuppressed(project, error, error.findElement(project))
+        }
       }
     }
   }
