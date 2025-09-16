@@ -172,6 +172,7 @@ class TelemetryService(
         ?.let {
           add(ApolloIjPluginHighLatencyFieldThreshold(it.thresholdMs))
         }
+    add(ApolloIjPluginHasConfiguredGraphOsApiKeys(appSettingsState.telemetryEnabled))
   }
 
   private fun scheduleSendTelemetry() {
