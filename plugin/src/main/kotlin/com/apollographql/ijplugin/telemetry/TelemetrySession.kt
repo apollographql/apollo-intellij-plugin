@@ -255,30 +255,36 @@ sealed class TelemetryProperty(
   class IdeOS(os: String) : TelemetryProperty("ide_os", os)
 
   /**
-   * Version of the Apollo Kotlin IntelliJ plugin.
+   * Version of the Apollo IntelliJ plugin.
    */
   class ApolloIjPluginVersion(version: String) : TelemetryProperty("akij_version", version)
 
   /**
-   * Whether the Apollo Kotlin IntelliJ plugin option `automaticCodegenTriggering` is enabled.
+   * Whether the Apollo IntelliJ plugin option `automaticCodegenTriggering` is enabled.
    */
   class ApolloIjPluginAutomaticCodegenTriggering(automaticCodegenTriggering: Boolean) :
     TelemetryProperty("akij_automatic_codegen_triggering", automaticCodegenTriggering)
 
   /**
-   * Whether the Apollo Kotlin IntelliJ plugin option `contributeConfigurationToGraphqlPlugin` is enabled.
+   * Whether the Apollo IntelliJ plugin option `contributeConfigurationToGraphqlPlugin` is enabled.
    */
   class ApolloIjPluginContributeConfigurationToGraphqlPlugin(contributeConfigurationToGraphqlPlugin: Boolean) :
     TelemetryProperty("akij_contribute_configuration_to_graphql_plugin", contributeConfigurationToGraphqlPlugin)
 
   /**
-   * Whether any GraphOS API key are configured in the Apollo Kotlin IntelliJ plugin.
+   * Whether any GraphOS API key are configured in the Apollo IntelliJ plugin.
    */
   class ApolloIjPluginHasConfiguredGraphOsApiKeys(hasConfiguredGraphOsApiKeys: Boolean) :
     TelemetryProperty("akij_has_configured_graphos_api_keys", hasConfiguredGraphOsApiKeys)
 
   /**
-   * Value of the `threshold` option of the 'High latency field' inspection of the Apollo Kotlin IntelliJ plugin.
+   * Whether the Apollo IntelliJ plugin option `lspModeEnabled` is enabled.
+   */
+  class ApolloIjPluginLspMode(lspModeEnabled: Boolean) :
+    TelemetryProperty("akij_lsp_mode", lspModeEnabled)
+
+  /**
+   * Value of the `threshold` option of the 'High latency field' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjPluginHighLatencyFieldThreshold(threshold: Int) : TelemetryProperty("akij_high_latency_field_threshold", threshold)
 }
@@ -299,12 +305,12 @@ sealed class TelemetryEvent(
   }
 
   /**
-   * User used the 'Migrate to Apollo Kotlin 3' Apollo Kotlin IntelliJ plugin action.
+   * User used the 'Migrate to Apollo Kotlin 3' Apollo IntelliJ plugin action.
    */
   class ApolloIjMigrateToApollo3 : TelemetryEvent("akij_migrate_to_apollo3", null)
 
   /**
-   * User used the 'Migrate to Apollo Kotlin 4' Apollo Kotlin IntelliJ plugin action.
+   * User used the 'Migrate to Apollo Kotlin 4' Apollo IntelliJ plugin action.
    */
   class ApolloIjMigrateToApollo4 : TelemetryEvent("akij_migrate_to_apollo4", null)
 
@@ -324,95 +330,95 @@ sealed class TelemetryEvent(
   class ApolloIjNormalizedCacheOpenApolloDebugCache : TelemetryEvent("akij_normalized_cache_open_apollo_debug_cache", null)
 
   /**
-   * User used the 'Migrate to operationBased codegen' Apollo Kotlin IntelliJ plugin action.
+   * User used the 'Migrate to operationBased codegen' Apollo IntelliJ plugin action.
    */
   class ApolloIjMigrateToOperationBasedCodegen : TelemetryEvent("akij_migrate_to_operation_based_codegen", null)
 
   /**
-   * User used the Apollo Kotlin IntelliJ plugin marker icon to navigate from Kotlin to the GraphQL source.
+   * User used the Apollo IntelliJ plugin marker icon to navigate from Kotlin to the GraphQL source.
    */
   class ApolloIjMarkerToGraphQl : TelemetryEvent("akij_marker_to_graphql_element", null)
 
   /**
-   * User used the Apollo Kotlin IntelliJ plugin action to navigate from Kotlin to the GraphQL source.
+   * User used the Apollo IntelliJ plugin action to navigate from Kotlin to the GraphQL source.
    */
   class ApolloIjNavigateToGraphQl : TelemetryEvent("akij_navigate_to_graphql_element", null)
 
   /**
-   * User used the Apollo Kotlin IntelliJ plugin action to navigate from GraphQL to the Kotlin generated code.
+   * User used the Apollo IntelliJ plugin action to navigate from GraphQL to the Kotlin generated code.
    */
   class ApolloIjNavigateToKotlin : TelemetryEvent("akij_navigate_to_kotlin_element", null)
 
   /**
-   * User used the 'Open in Apollo Sandbox' Apollo Kotlin IntelliJ plugin action.
+   * User used the 'Open in Apollo Sandbox' Apollo IntelliJ plugin action.
    */
   class ApolloIjOpenInApolloSandbox : TelemetryEvent("akij_open_in_apollo_sandbox", null)
 
   /**
-   * User used the 'Download schema' Apollo Kotlin IntelliJ plugin action.
+   * User used the 'Download schema' Apollo IntelliJ plugin action.
    */
   class ApolloIjDownloadSchema : TelemetryEvent("akij_download_schema", null)
 
   /**
-   * User applied the quickfix for the 'Apollo 4 available' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the quickfix for the 'Apollo 4 available' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjApollo4AvailableQuickFix : TelemetryEvent("akij_apollo4_available_quickfix", null)
 
   /**
-   * User applied the quickfix for the 'GraphQL config file present' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the quickfix for the 'GraphQL config file present' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjGraphQLConfigFilePresentQuickFix : TelemetryEvent("akij_graphql_config_file_present_quickfix", null)
 
   /**
-   * User applied the quickfix for the 'Endpoint not configured' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the quickfix for the 'Endpoint not configured' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjEndpointNotConfiguredQuickFix : TelemetryEvent("akij_endpoint_not_configured_quickfix", null)
 
   /**
-   * User applied the quickfix for the 'Schema in .graphql file' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the quickfix for the 'Schema in .graphql file' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjSchemaInGraphqlFileQuickFix : TelemetryEvent("akij_schema_in_graphql_file_quickfix", null)
 
   /**
-   * User applied the 'ignore field' quickfix for the 'Unused field' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the 'ignore field' quickfix for the 'Unused field' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjUnusedFieldIgnoreFieldQuickFix : TelemetryEvent("akij_unused_field_ignore_field_quickfix", null)
 
   /**
-   * User applied the 'delete field' quickfix for the 'Unused field' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the 'delete field' quickfix for the 'Unused field' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjUnusedFieldDeleteFieldQuickFix : TelemetryEvent("akij_unused_field_delete_field_quickfix", null)
 
   /**
-   * User applied the quickfix for the 'Unused operation' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the quickfix for the 'Unused operation' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjUnusedOperationQuickFix : TelemetryEvent("akij_unused_operation_quickfix", null)
 
   /**
-   * User applied the quickfix for the 'High latency field' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the quickfix for the 'High latency field' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjHighLatencyFieldQuickFix : TelemetryEvent("akij_high_latency_field_quickfix", null)
 
   /**
-   * User applied the 'Add names to call arguments' quickfix for the 'Input class constructor issue' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the 'Add names to call arguments' quickfix for the 'Input class constructor issue' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjInputConstructorNamedArgsAddArgumentNamesQuickFix :
     TelemetryEvent("akij_input_constructor_named_args_add_argument_names_quickfix", null)
 
   /**
-   * User applied the 'Change to builder construction' quickfix for the 'Input class constructor issue' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the 'Change to builder construction' quickfix for the 'Input class constructor issue' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjInputConstructorNamedArgsChangeToBuilderQuickFix :
     TelemetryEvent("akij_input_constructor_named_args_change_to_builder_quickfix", null)
 
   /**
-   * User applied the 'Change input class constructor to builder' intention of the Apollo Kotlin IntelliJ plugin.
+   * User applied the 'Change input class constructor to builder' intention of the Apollo IntelliJ plugin.
    */
   class ApolloIjInputConstructorChangeToBuilderIntentionApply :
     TelemetryEvent("akij_input_constructor_change_to_builder_intention_apply", null)
 
   /**
-   * User applied the 'Import directive' quickfix for the 'Missing GraphQL definition import' inspection of the Apollo Kotlin IntelliJ plugin.
+   * User applied the 'Import directive' quickfix for the 'Missing GraphQL definition import' inspection of the Apollo IntelliJ plugin.
    */
   class ApolloIjMissingGraphQLDefinitionImportQuickFix : TelemetryEvent("akij_missing_graphql_definition_import_quickfix", null)
 }
