@@ -39,6 +39,7 @@ import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloIjPluginAuto
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloIjPluginContributeConfigurationToGraphqlPlugin
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloIjPluginHasConfiguredGraphOsApiKeys
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloIjPluginHighLatencyFieldThreshold
+import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloIjPluginLspMode
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloIjPluginVersion
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloJsExport
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloKotlinModuleCount
@@ -172,7 +173,7 @@ class TelemetryService(
         ?.let {
           add(ApolloIjPluginHighLatencyFieldThreshold(it.thresholdMs))
         }
-    add(ApolloIjPluginHasConfiguredGraphOsApiKeys(appSettingsState.telemetryEnabled))
+    add(ApolloIjPluginLspMode(appSettingsState.lspModeEnabled))
   }
 
   private fun scheduleSendTelemetry() {
