@@ -4,6 +4,7 @@ import com.intellij.util.messages.Topic
 import com.intellij.util.xmlb.annotations.Attribute
 import com.intellij.util.xmlb.annotations.Transient
 import com.intellij.util.xmlb.annotations.XCollection
+import java.io.File
 
 interface ApolloKotlinServiceListener {
   companion object {
@@ -21,7 +22,7 @@ interface ApolloKotlinServiceListener {
  * These are built from the [com.apollographql.apollo.gradle.api.ApolloGradleToolingModel] and are used to configure the GraphQL plugin,
  * and are cached into the project settings.
  *
- * @see com.apollographql.ijplugin.gradle.GradleToolingModelService
+ * @see com.apollographql.ijplugin.gradle.ApolloKotlinProjectModelService
  * @see com.apollographql.ijplugin.graphql.ApolloGraphQLConfigContributor
  * @see com.apollographql.ijplugin.settings.ProjectSettingsService
  */
@@ -35,8 +36,20 @@ data class ApolloKotlinService(
     @XCollection
     val schemaPaths: List<String> = emptyList(),
 
+    /**
+     * Includes all schema paths, including those from upstream services.
+     */
+    @XCollection
+    val allSchemaPaths: List<String> = emptyList(),
+
     @XCollection
     val operationPaths: List<String> = emptyList(),
+
+    /**
+     * Includes all operation paths, including those from upstream services.
+     */
+    @XCollection
+    val allOperationPaths: List<String> = emptyList(),
 
     @Attribute
     val endpointUrl: String? = null,
@@ -47,8 +60,35 @@ data class ApolloKotlinService(
     @XCollection
     val upstreamServiceIds: List<Id> = emptyList(),
 
+    @XCollection
+    val downstreamServiceIds: List<Id> = emptyList(),
+
     @Attribute
     val useSemanticNaming: Boolean = true,
+
+    @Transient
+    val codegenSchemaOptionsFile: File? = null,
+
+    @Transient
+    val irOptionsFile: File? = null,
+
+    @Transient
+    val codegenOptionsFile: File? = null,
+
+    @Transient
+    val pluginDependencies: Set<String>? = null,
+
+    @Transient
+    val pluginArguments: Map<String, Any?>? = null,
+
+    @Transient
+    val codegenOutputDir: File? = null,
+
+    @Transient
+    val operationManifestFile: File? = null,
+
+    @Transient
+    val dataBuildersOutputDir: File? = null,
 ) {
   data class Id(
       @Attribute
@@ -73,4 +113,8 @@ data class ApolloKotlinService(
   val id: Id
     @Transient
     get() = Id(gradleProjectPath, serviceName)
+
+  val hasCompilerOptions
+    @Transient
+    get() = codegenOptionsFile != null && irOptionsFile != null && codegenSchemaOptionsFile != null && operationManifestFile != null
 }

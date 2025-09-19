@@ -15,3 +15,5 @@ fun String.capitalizeFirstLetter() = replaceFirstChar { if (it.isLowerCase()) it
 fun String.decapitalizeFirstLetter() = replaceFirstChar { if (it.isUpperCase()) it.lowercase(Locale.ROOT) else it.toString() }
 
 fun String.urlEncoded(): String = URLEncoder.encode(this, "UTF-8")
+
+fun String.toCamelCase() = split("_").joinToString("") { it.capitalizeFirstLetter() }.decapitalizeFirstLetter()

@@ -2,7 +2,7 @@ package com.apollographql.ijplugin.project
 
 import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.codegen.ApolloCodegenService
-import com.apollographql.ijplugin.gradle.GradleToolingModelService
+import com.apollographql.ijplugin.gradle.ApolloKotlinProjectModelService
 import com.apollographql.ijplugin.graphql.GraphQLConfigService
 import com.apollographql.ijplugin.lsp.ApolloLspAppService
 import com.apollographql.ijplugin.lsp.ApolloLspProjectService
@@ -55,7 +55,7 @@ class ApolloProjectActivity : ProjectActivity {
       if (isKotlinPluginPresent && isGradlePluginPresent) {
         project.service<ApolloCodegenService>()
         project.service<GraphQLConfigService>()
-        project.service<GradleToolingModelService>()
+        project.service<ApolloKotlinProjectModelService>()
         project.service<ProjectSettingsService>()
         project.service<FieldInsightsService>()
         project.service<TelemetryService>()

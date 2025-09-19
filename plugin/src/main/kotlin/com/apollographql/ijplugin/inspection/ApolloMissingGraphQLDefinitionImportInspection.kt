@@ -11,7 +11,7 @@ import com.apollographql.apollo.ast.GQLNamed
 import com.apollographql.apollo.ast.GQLScalarTypeDefinition
 import com.apollographql.apollo.ast.rawType
 import com.apollographql.ijplugin.ApolloBundle
-import com.apollographql.ijplugin.gradle.gradleToolingModelService
+import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.graphql.ForeignSchemas
 import com.apollographql.ijplugin.graphql.url
 import com.apollographql.ijplugin.project.apolloProjectService
@@ -138,7 +138,7 @@ private class ImportDefinitionQuickFix(
           directory.add(it)
 
           // There's a new schema file, reload the configuration
-          project.gradleToolingModelService.triggerFetchToolingModels()
+          project.apolloKotlinProjectModelService.triggerFetchProjectModel()
         }
       } else {
         val addedElement = extraSchemaFile.addBefore(linkDirectiveSchemaExtension, extraSchemaFile.firstChild)

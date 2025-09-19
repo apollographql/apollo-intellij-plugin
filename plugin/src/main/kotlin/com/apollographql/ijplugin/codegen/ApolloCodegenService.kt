@@ -3,6 +3,7 @@ package com.apollographql.ijplugin.codegen
 import com.apollographql.ijplugin.gradle.CODEGEN_GRADLE_TASK_NAME
 import com.apollographql.ijplugin.gradle.GradleHasSyncedListener
 import com.apollographql.ijplugin.gradle.SimpleProgressListener
+import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.gradle.getGradleRootPath
 import com.apollographql.ijplugin.gradle.runGradleBuild
 import com.apollographql.ijplugin.project.ApolloProjectListener
@@ -12,6 +13,7 @@ import com.apollographql.ijplugin.settings.ProjectSettingsListener
 import com.apollographql.ijplugin.settings.ProjectSettingsState
 import com.apollographql.ijplugin.settings.projectSettingsState
 import com.apollographql.ijplugin.util.apolloGeneratedSourcesRoots
+import com.apollographql.ijplugin.util.apolloKotlinService
 import com.apollographql.ijplugin.util.dispose
 import com.apollographql.ijplugin.util.isNotDisposed
 import com.apollographql.ijplugin.util.logd
@@ -19,6 +21,7 @@ import com.apollographql.ijplugin.util.logw
 import com.apollographql.ijplugin.util.newDisposable
 import com.apollographql.ijplugin.util.runWriteActionInEdt
 import com.intellij.lang.jsgraphql.GraphQLFileType
+import com.intellij.lang.jsgraphql.psi.GraphQLFile
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Document
@@ -33,6 +36,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.CheckedDisposable
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.psi.PsiDocumentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.gradle.tooling.CancellationTokenSource
@@ -83,20 +87,19 @@ class ApolloCodegenService(
 
   private fun startOrStopCodegenObservers() {
     if (shouldTriggerCodegenAutomatically()) {
-      // To make the codegen more reactive, any touched GraphQL document will automatically be saved (thus triggering Gradle)
+      // To make the codegen more reactive, any touched GraphQL document will automatically be saved (thus triggering the codegen)
       // as soon as the current editor is changed.
       startObserveDocumentChanges()
       startObserveFileEditorChanges()
 
-      startContinuousGradleCodegen()
+      startCodegen()
 
-      // Since we rely on Gradle's continuous build, which is not re-triggered when Gradle build files change, observe that
-      // ourselves and restart the build when it happens.
+      // A Gradle sync is a good indicator that Gradle files have changed - trigger a codegen build when that happens.
       startObserveGradleHasSynced()
     } else {
       stopObserveDocumentChanges()
       stopObserveFileEditorChanges()
-      stopContinuousGradleCodegen()
+      stopCodegen()
       stopObserveGradleHasSynced()
     }
   }
@@ -144,8 +147,11 @@ class ApolloCodegenService(
     fileEditorChangesDisposable = disposable
     project.messageBus.connect(disposable).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
       override fun selectionChanged(event: FileEditorManagerEvent) {
-        logd(event.newFile)
+        logd(event.newFile?.path)
         dirtyGqlDocument?.let {
+          val operationGraphQLFile = PsiDocumentManager.getInstance(project).getPsiFile(dirtyGqlDocument!!) as? GraphQLFile
+          val apolloKotlinService = operationGraphQLFile?.apolloKotlinService()
+          logd("apolloKotlinService=${apolloKotlinService?.id}")
           dirtyGqlDocument = null
           runWriteActionInEdt {
             try {
@@ -155,6 +161,14 @@ class ApolloCodegenService(
             } catch (e: Exception) {
               logw(e, "Failed to save document")
             }
+          }
+
+          if (apolloKotlinService?.hasCompilerOptions == true) {
+            // We can use the built-in Apollo compiler
+            ApolloCompilerHelper(project).generateSources(apolloKotlinService)
+          } else {
+            // Fall back to the Gradle codegen task
+            startGradleCodegen()
           }
         }
       }
@@ -167,7 +181,7 @@ class ApolloCodegenService(
     fileEditorChangesDisposable = null
   }
 
-  private fun startContinuousGradleCodegen() {
+  private fun startGradleCodegen() {
     logd()
 
     if (gradleCodegenCancellation != null) {
@@ -178,7 +192,7 @@ class ApolloCodegenService(
     val modules = ModuleManager.getInstance(project).modules
     coroutineScope.launch {
       gradleCodegenCancellation = GradleConnector.newCancellationTokenSource()
-      logd("Start Gradle")
+      logd("Start Gradle codegen build")
       try {
         val cancellationToken = gradleCodegenCancellation!!.token()
         val gradleProjectPath = project.getGradleRootPath()
@@ -186,10 +200,9 @@ class ApolloCodegenService(
           logw("Could not get Gradle root project path")
           return@launch
         }
-        runGradleBuild(project, gradleProjectPath) {
-          it.forTasks(CODEGEN_GRADLE_TASK_NAME)
+        runGradleBuild(project, gradleProjectPath) { buildLauncher ->
+          buildLauncher.forTasks(CODEGEN_GRADLE_TASK_NAME)
               .withCancellationToken(cancellationToken)
-              .addArguments("--continuous")
               .let {
                 if (project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments.isNotEmpty()) {
                   it.addJvmArguments(project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments.split(' '))
@@ -199,7 +212,7 @@ class ApolloCodegenService(
               }
               .addProgressListener(object : SimpleProgressListener() {
                 override fun onSuccess() {
-                  logd("Gradle build success, marking generated source roots as dirty")
+                  logd("Gradle codegen build success, marking generated source roots as dirty")
                   // Mark the generated sources dirty so the files are visible to the IDE
                   val generatedSourceRoots = modules.flatMap { it.apolloGeneratedSourcesRoots() }
                   logd("Mark dirty $generatedSourceRoots")
@@ -207,16 +220,16 @@ class ApolloCodegenService(
                 }
               })
         }
-        logd("Gradle execution finished")
+        logd("Gradle codegen build finished")
       } catch (t: Throwable) {
-        logd(t, "Gradle execution failed")
+        logd(t, "Gradle codegen build failed")
       } finally {
         gradleCodegenCancellation = null
       }
     }
   }
 
-  private fun stopContinuousGradleCodegen() {
+  private fun stopCodegen() {
     logd()
     gradleCodegenCancellation?.cancel()
     gradleCodegenCancellation = null
@@ -235,10 +248,20 @@ class ApolloCodegenService(
     project.messageBus.connect(disposable).subscribe(GradleHasSyncedListener.TOPIC, object : GradleHasSyncedListener {
       override fun gradleHasSynced() {
         logd()
-        stopContinuousGradleCodegen()
-        if (shouldTriggerCodegenAutomatically()) startContinuousGradleCodegen()
+        stopCodegen()
+        if (shouldTriggerCodegenAutomatically()) startCodegen()
       }
     })
+  }
+
+  private fun startCodegen() {
+    if (project.apolloKotlinProjectModelService.getApolloKotlinServices().any { it.hasCompilerOptions }) {
+      logd("Using Apollo compiler for codegen")
+      ApolloCompilerHelper(project).generateAllSources()
+    } else {
+      logd("Using Gradle codegen task")
+      startGradleCodegen()
+    }
   }
 
   private fun stopObserveGradleHasSynced() {
@@ -249,6 +272,6 @@ class ApolloCodegenService(
 
   override fun dispose() {
     logd("project=${project.name}")
-    stopContinuousGradleCodegen()
+    stopCodegen()
   }
 }

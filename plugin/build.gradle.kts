@@ -20,10 +20,10 @@ plugins {
 }
 
 repositories {
-//    mavenLocal()
 //    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
 //    maven("https://storage.googleapis.com/apollo-previews/m2/")
   mavenCentral()
+//  mavenLocal()
 
   intellijPlatform {
     defaultRepositories()
@@ -143,7 +143,9 @@ dependencies {
   // IntelliJ Platform dependencies must be declared before the intellijPlatform block
   // See https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1784
   intellijPlatform {
-    intellijIdeaUltimate(libs.versions.intellij.platform.version.get())
+    intellijIdeaUltimate(libs.versions.intellij.platform.version.get()) {
+      useCache = true
+    }
 
     // Plugin dependencies
     // See https://plugins.jetbrains.com/docs/intellij/plugin-dependencies.html
@@ -178,7 +180,7 @@ dependencies {
 
   // Coroutines must be excluded to avoid a conflict with the version bundled with the IDE
   // See https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#coroutinesLibraries
-  implementation(libs.apollo.gradle.plugin.external) {
+  implementation(libs.apollo.gradle.plugin) {
     exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
   }
   implementation(libs.apollo.ast)
@@ -193,7 +195,10 @@ dependencies {
   implementation(libs.apollo.runtime) {
     exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
   }
+  implementation(libs.apollo.compiler)
+
   runtimeOnly(libs.slf4j.simple)
+
   testImplementation(libs.google.testparameterinjector)
 
   // Temporary workaround for https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1663
@@ -230,7 +235,7 @@ intellijPlatform {
         if (isSnapshotBuild()) {
           "Weekly snapshot builds contain the latest changes from the <code>main</code> branch."
         } else {
-          "See the <a href=\"https://github.com/apollographql/apollo-kotlin/releases/tag/v${project.version}\">release notes</a>."
+          "See the <a href=\"https://github.com/apollographql/apollo-intellij-plugin/releases/tag/v${project.version}\">release notes</a>."
         }
     )
   }
