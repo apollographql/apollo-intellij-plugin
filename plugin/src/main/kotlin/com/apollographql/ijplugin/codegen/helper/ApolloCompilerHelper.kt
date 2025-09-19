@@ -1,6 +1,6 @@
 @file:OptIn(ApolloInternal::class, ApolloExperimental::class)
 
-package com.apollographql.ijplugin.codegen
+package com.apollographql.ijplugin.codegen.helper
 
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
