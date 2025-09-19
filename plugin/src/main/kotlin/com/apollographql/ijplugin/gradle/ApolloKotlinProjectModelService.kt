@@ -58,6 +58,9 @@ class ApolloKotlinProjectModelService(
   private var apolloKotlinServices: Map<ApolloKotlinService.Id, ApolloKotlinService> =
     project.projectSettingsState.apolloKotlinServices.associateBy { it.id }
 
+  var apolloTasksDependencies: Set<String>? = null
+    private set
+
   init {
     logd("project=${project.name}")
     startObserveApolloProject()
@@ -267,6 +270,9 @@ class ApolloKotlinProjectModelService(
           return false
         }
         allCompilationUnitModels.addAll(compilationUnitModels)
+
+        // The apolloTasksDependencies should be the same for all projects
+        apolloTasksDependencies = projectModel.apolloTasksDependencies
       }
       val apolloKotlinServices = compilationUnitModelsToApolloKotlinServices(allCompilationUnitModels)
 
