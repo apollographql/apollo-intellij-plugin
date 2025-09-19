@@ -11,6 +11,7 @@ import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.getParameterNames
 import com.apollographql.ijplugin.util.originalClassName
 import com.apollographql.ijplugin.util.registerProblem
+import com.apollographql.ijplugin.util.safeResolve
 import com.intellij.codeInsight.intention.FileModifier
 import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils
 import com.intellij.codeInspection.LocalInspectionTool
@@ -110,7 +111,7 @@ class ChangeToBuilderQuickFix(
   private fun KtValueArgument.unwrapOptional(): String? {
     val argumentExpression = getArgumentExpression() ?: return "?"
     val dotQualifiedExpression = argumentExpression.cast<KtDotQualifiedExpression>()
-    val receiverClassName = dotQualifiedExpression?.receiverExpression?.mainReference?.resolve()?.kotlinFqName?.asString()
+    val receiverClassName = dotQualifiedExpression?.receiverExpression?.mainReference?.safeResolve()?.kotlinFqName?.asString()
     val isOptional = receiverClassName == "$apollo3.api.Optional" || receiverClassName == "$apollo4.api.Optional"
     val isOptionalCompanion =
       receiverClassName == "$apollo3.api.Optional.Companion" || receiverClassName == "$apollo4.api.Optional.Companion"

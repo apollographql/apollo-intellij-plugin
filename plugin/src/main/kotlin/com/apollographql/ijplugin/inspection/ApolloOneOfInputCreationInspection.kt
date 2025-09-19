@@ -10,6 +10,7 @@ import com.apollographql.ijplugin.util.canBeNull
 import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.className
 import com.apollographql.ijplugin.util.getCalleeExpressionIfAny
+import com.apollographql.ijplugin.util.safeResolve
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
@@ -59,7 +60,7 @@ class ApolloOneOfInputCreationInspection : LocalInspectionTool() {
         super.visitDotQualifiedExpression(expression)
         if (!expression.project.apolloProjectService.apolloVersion.isAtLeastV4) return
         val expressionClass =
-          expression.selectorExpression.getCalleeExpressionIfAny()?.mainReference?.resolve()?.parentOfType<KtClass>(withSelf = true)
+          expression.selectorExpression.getCalleeExpressionIfAny()?.mainReference?.safeResolve()?.parentOfType<KtClass>(withSelf = true)
               ?: return
         if (expressionClass.name != "Builder") return
         val containingClass = expressionClass.containingClass() ?: return
