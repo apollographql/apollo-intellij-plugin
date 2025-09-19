@@ -41,7 +41,7 @@ fun getVersionName(): String {
   return if (isReleaseBuild()) {
     projectVersion.removeSuffix("-SNAPSHOT")
   } else {
-    projectVersion + ".${SimpleDateFormat("YYYY-MM-dd").format(Date())}." + System.getenv("GITHUB_SHA").take(7)
+    projectVersion + ".${SimpleDateFormat("YYYY-MM-dd").format(Date())}." + System.getenv("GITHUB_SHA")?.take(7)
   }
 }
 
