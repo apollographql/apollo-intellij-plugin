@@ -8,7 +8,7 @@ sqlite-jdbc = "3.43.2.0"
 apollo-normalizedcache = "1.0.0-alpha.3"
 slf4j = "2.0.13"
 google-testparameterinjector = "1.11"
-cdimascio-dotenv = "6.4.1"
+cdimascio-dotenv = "6.5.1"
 atlassian-commonmark = "0.17.0"
 
 # XXX Do update the supported versions in the README.md, and in docs/source/testing/android-studio-plugin.mdx file when updating these values!
