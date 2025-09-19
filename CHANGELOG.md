@@ -17,7 +17,7 @@ _2025-09-01_
   Code generation is now using the Apollo Compiler directly, instead of
   invoking the Gradle codegen task, when possible (projects using Apollo Kotlin v5+). This results in faster code generation
   and lower memory consumption. For projects using Apollo Kotlin < v5, the Gradle task is still invoked, but no longer with
-  the`--continuous` flag, which causes a dedicated Gradle daemon to be busy at all times (#36).
+  the`--continuous` flag, which avoids running a dedicated Gradle daemon (#36).
 - Better `@link` support (#55)
 - Add received date to the cache viewer (#56)
 - Support descriptions on executable definitions (#53)
