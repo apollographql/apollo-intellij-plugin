@@ -23,7 +23,6 @@ jobs:
       - name: Publish snapshot to JetBrains Marketplace
         run: ./gradlew :plugin:publishPlugin
         env:
-          IJ_PLUGIN_SNAPSHOT: true
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
