@@ -4,6 +4,7 @@ import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.navigation.findFragmentSpreads
 import com.apollographql.ijplugin.util.rawType
 import com.apollographql.ijplugin.util.resolve
+import com.apollographql.ijplugin.util.safeResolve
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.lang.jsgraphql.psi.GraphQLArgument
@@ -49,7 +50,7 @@ class ApolloOneOfGraphQLViolationInspection : LocalInspectionTool() {
               // Look for the parent operation - if there isn't one, we're in a fragment: search for an operation using this fragment
               val operationDefinition = field.parentOfType<GraphQLTypedOperationDefinition>()
                   ?: field.parentOfType<GraphQLFragmentDefinition>()?.let { fragmentParent ->
-                    findFragmentSpreads(fragmentParent.project) { it.nameIdentifier.reference?.resolve() == fragmentParent.nameIdentifier }.firstOrNull()
+                    findFragmentSpreads(fragmentParent.project) { it.nameIdentifier.reference?.safeResolve() == fragmentParent.nameIdentifier }.firstOrNull()
                         ?.parentOfType<GraphQLTypedOperationDefinition>()
                   }
                   ?: return

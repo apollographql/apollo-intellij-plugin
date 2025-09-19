@@ -3,6 +3,7 @@ package com.apollographql.ijplugin.util
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.idea.references.KtSimpleNameReference
 import org.jetbrains.kotlin.idea.references.mainReference
@@ -64,13 +65,7 @@ inline fun <reified T : PsiElement> PsiElement.findChildrenOfType(
       }
 }
 
-fun PsiElement.resolveKtName(): PsiElement? = runCatching {
-  references.firstIsInstanceOrNull<KtSimpleNameReference>()?.resolve()
-}.onFailure { t ->
-  // Sometimes KotlinIdeaResolutionException is thrown
-  // But ControlFlowException is a normal thing to happen, so no need to log
-  if (t !is ControlFlowException) logw(t, "Could not resolve $this")
-}.getOrNull()
+fun PsiElement.resolveKtName(): PsiElement? = references.firstIsInstanceOrNull<KtSimpleNameReference>()?.safeResolve()
 
 fun PsiElement.asKtClass(): KtClass? = cast<KtClass>() ?: cast<KtConstructor<*>>()?.containingClass()
 
@@ -118,3 +113,11 @@ fun KtClass.allSuperTypes(): List<KtClass> {
   }
   return superTypes
 }
+
+fun PsiReference.safeResolve(): PsiElement? = runCatching {
+  resolve()
+}.onFailure { t ->
+  // Sometimes KotlinIdeaResolutionException or PsiInvalidElementAccessException unpredictably, just log it for now
+  // But ControlFlowException is a normal thing to happen, so no need to log
+  if (t !is ControlFlowException) logw(t, "Could not resolve $this")
+}.getOrNull()

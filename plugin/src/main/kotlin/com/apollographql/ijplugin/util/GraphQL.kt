@@ -109,11 +109,10 @@ fun GraphQLDirective.argumentValue(argumentName: String): GraphQLValue? =
   arguments?.argumentList.orEmpty().firstOrNull { it.name == argumentName }?.value
 
 inline fun <reified T : PsiElement> GraphQLNamedElement.resolve(): T? =
-  nameIdentifier?.reference?.resolve()?.parentOfTypes(T::class)
+  nameIdentifier?.reference?.safeResolve()?.parentOfTypes(T::class)
 
 val GraphQLType.rawType: GraphQLTypeName?
   get() {
-    @Suppress("RecursivePropertyAccessor")
     return when (this) {
       is GraphQLTypeName -> return this
       is GraphQLNonNullType -> return this.type.rawType
