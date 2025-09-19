@@ -10,7 +10,7 @@ import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
 
-fun isSnapshotBuild() = System.getenv("IJ_PLUGIN_SNAPSHOT").toBoolean()
+fun isReleaseBuild() = System.getenv("IJ_PLUGIN_RELEASE").toBoolean()
 
 plugins {
   alias(libs.plugins.kotlin.jvm)
@@ -32,12 +32,17 @@ repositories {
 
 group = "com.apollographql"
 
-// Use the global version defined in the root project + dedicated suffix if building a snapshot from the CI
-version = project.findProperty("VERSION_NAME").toString() + getSnapshotVersionSuffix()
+version =  getVersionName()
 
-fun getSnapshotVersionSuffix(): String {
-  if (!isSnapshotBuild()) return ""
-  return ".${SimpleDateFormat("YYYY-MM-dd").format(Date())}." + System.getenv("GITHUB_SHA").take(7)
+// Use the global version defined in the root project + dedicated suffix if building a snapshot from the CI.
+// For releases, remove the -SNAPSHOT suffix.
+fun getVersionName(): String {
+  val projectVersion = project.findProperty("VERSION_NAME").toString()
+  return if (isReleaseBuild()) {
+    projectVersion.removeSuffix("-SNAPSHOT")
+  } else {
+    projectVersion + ".${SimpleDateFormat("YYYY-MM-dd").format(Date())}." + System.getenv("GITHUB_SHA").take(7)
+  }
 }
 
 kotlin {
@@ -232,10 +237,10 @@ intellijPlatform {
         }.joinToString("\n").run { markdownToHTML(this) }
     )
     changeNotes.set(
-        if (isSnapshotBuild()) {
-          "Weekly snapshot builds contain the latest changes from the <code>main</code> branch."
-        } else {
+        if (isReleaseBuild()) {
           "See the <a href=\"https://github.com/apollographql/apollo-intellij-plugin/releases/tag/v${project.version}\">release notes</a>."
+        } else {
+          "Weekly snapshot builds contain the latest changes from the <code>main</code> branch."
         }
     )
   }
@@ -248,7 +253,7 @@ intellijPlatform {
 
   publishing {
     token.set(System.getenv("PUBLISH_TOKEN"))
-    if (isSnapshotBuild()) {
+    if (!isReleaseBuild()) {
       // Read more: https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html#specifying-a-release-channel
       channels.set(listOf("snapshots"))
     }
