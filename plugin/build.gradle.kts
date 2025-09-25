@@ -32,7 +32,7 @@ repositories {
 
 group = "com.apollographql"
 
-version =  getVersionName()
+version = getVersionName()
 
 // Use the global version defined in the root project + dedicated suffix if building a snapshot from the CI.
 // For releases, remove the -SNAPSHOT suffix.
@@ -241,7 +241,19 @@ intellijPlatform {
           "See the <a href=\"https://github.com/apollographql/apollo-intellij-plugin/releases/tag/v${project.version}\">release notes</a>."
         } else {
           "Weekly snapshot builds contain the latest changes from the <code>main</code> branch."
-        }
+        } +
+            """
+            <br><br>
+            <quote>
+            Note: in previous versions, the plugin had a dependency on the <a href="https://plugins.jetbrains.com/plugin/8097-graphql">JetBrains GraphQL plugin</a>.
+            Starting with v5. we have forked and integrated that plugin’s code to allow us to implement certain Apollo specific features
+            (e.g. `@link` support).<br>
+            Since both plugins now handle `*.graphql` files, they can’t be used at the same time, and if you are upgrading the plugin from v4,
+            the IDE will therefore ask you to choose which plugin to use.<br>
+            Note that at the moment, all features of the GraphQL plugin are still present in the Apollo one, and we aim to backport bug fixes
+            and new features.
+            </quote>
+            """.trimIndent()
     )
   }
 
