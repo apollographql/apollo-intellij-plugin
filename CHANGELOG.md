@@ -7,11 +7,12 @@ PUT_CHANGELOG_HERE
 _2025-09-01_
 
 > [!NOTE]
-> Starting with this release, the plugin no longer depends on the [JetBrains GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-graphql).
-> Instead, it includes a fork of that plugin's code which has been adapted to work better with Apollo Kotlin (#43).
+> In previous versions, the plugin had a dependency on the [JetBrains GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-graphql).
+> Starting with v5. we have forked and integrated that plugin’s code to allow us to implement certain Apollo specific features (e.g. `@link` support).
 >
-> If you are upgrading the plugin from 4.x, the IDE will ask you to disable or uninstall the JetBrains GraphQL plugin,
-> as both plugins cannot be used at the same time.
+> Since both plugins now handle `*.graphql` files, they can’t be used at the same time, and if you are upgrading the plugin from v4, the IDE will therefore ask you to choose which plugin to use.
+>
+> Note that at the moment, all features of the GraphQL plugin are still present in the Apollo one, and we aim to backport bug fixes and new features.
 
 - Overhaul of the code generation mechanism (#62).<br>
   Code generation is now using the Apollo Compiler directly, instead of
