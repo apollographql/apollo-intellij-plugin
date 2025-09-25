@@ -114,10 +114,11 @@ fun KtClass.allSuperTypes(): List<KtClass> {
   return superTypes
 }
 
-fun PsiReference.safeResolve(): PsiElement? = runCatching {
-  resolve()
-}.onFailure { t ->
+fun PsiReference.safeResolve(): PsiElement? = try {
+  this.resolve()
+} catch (t: Throwable) {
   // Sometimes KotlinIdeaResolutionException or PsiInvalidElementAccessException unpredictably, just log it for now
   // But ControlFlowException is a normal thing to happen, so no need to log
   if (t !is ControlFlowException) logw(t, "Could not resolve $this")
-}.getOrNull()
+  null
+}
