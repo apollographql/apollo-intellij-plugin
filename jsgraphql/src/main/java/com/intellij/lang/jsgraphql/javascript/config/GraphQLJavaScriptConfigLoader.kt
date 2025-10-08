@@ -8,7 +8,6 @@ import com.intellij.javascript.nodejs.execution.NodeTargetRun
 import com.intellij.javascript.nodejs.execution.NodeTargetRunOptions
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreter
 import com.intellij.javascript.nodejs.interpreter.NodeJsInterpreterManager
-import com.intellij.javascript.nodejs.settings.NodeSettingsConfigurable
 import com.intellij.lang.javascript.buildTools.npm.PackageJsonUtil
 import com.intellij.lang.javascript.ecmascript6.TypeScriptUtil
 import com.intellij.lang.javascript.library.JSLibraryUtil
@@ -47,11 +46,11 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
     if (interpreter == null) {
       if (interpreterNotificationShown.compareAndSet(false, true)) {
         val notification = Notification(
-          GRAPHQL_NOTIFICATION_GROUP_ID,
-          GraphQLBundle.message("graphql.config.error.title"),
-          GraphQLBundle.message("graphql.config.evaluation.interpreter.not.found.error", file.name),
-          NotificationType.WARNING
-        ).addAction(NodeSettingsConfigurable.createConfigureInterpreterAction(project, null))
+            GRAPHQL_NOTIFICATION_GROUP_ID,
+            GraphQLBundle.message("graphql.config.error.title"),
+            GraphQLBundle.message("graphql.config.evaluation.interpreter.not.found.error", file.name),
+            NotificationType.WARNING
+        )
         Notifications.Bus.notify(notification)
       }
 
@@ -73,20 +72,18 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
 
       try {
         return parseJsonResult(result)
-      }
-      catch (e: Exception) {
+      } catch (e: Exception) {
         LOG.warn("${e.message}\nstdout: ${stdout}\nstderr: $stderr", e)
         throw RuntimeException(GraphQLBundle.message("graphql.config.evaluation.error"), e)
       }
-    }
-    else {
+    } else {
       completeExceptionally(file, run)
     }
   }
 
   private fun completeExceptionally(file: VirtualFile, run: ProcessOutput): Nothing {
     LOG.warn(
-      """
+        """
             Failed to evaluate ${file.path} config. Exit code: ${run.exitCode}${if (run.isTimeout) ", timed out" else ""}
             stdout: ${run.stdout}
             stderr: ${run.stderr}
@@ -96,8 +93,7 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
     val errorDetails = run.stderr.trim()
     if (errorDetails.isNotEmpty()) {
       throw RuntimeException(GraphQLBundle.message("graphql.config.evaluation.error"), Throwable(run.stderr))
-    }
-    else {
+    } else {
       throw RuntimeException(GraphQLBundle.message("graphql.config.evaluation.error"))
     }
   }
@@ -107,9 +103,9 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
   }
 
   private fun run(
-    project: Project,
-    interpreter: NodeJsInterpreter,
-    file: VirtualFile,
+      project: Project,
+      interpreter: NodeJsInterpreter,
+      file: VirtualFile,
   ): Pair<NodeTargetRun, ProcessOutput> {
     val packageJson = findPackageJson(file)
     val workingDir = file.parent
@@ -130,9 +126,9 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
   }
 
   private fun configureCommandLine(
-    targetRun: NodeTargetRun,
-    path: String,
-    isESM: Boolean,
+      targetRun: NodeTargetRun,
+      path: String,
+      isESM: Boolean,
   ) {
     val filePath = "./${PathUtil.getFileName(path)}"
 
@@ -146,8 +142,7 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
       if (isESM) {
         commandLine.addParameter("--loader")
         commandLine.addParameter("ts-node/esm")
-      }
-      else {
+      } else {
         commandLine.addParameter("-r")
         commandLine.addParameter("ts-node/register")
       }
@@ -158,8 +153,7 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
       """
             import(modulePath).then(config => printConfig(config)).catch(err => console.error(err));
             """.trimIndent()
-    }
-    else {
+    } else {
       //language=JavaScript
       """
             var config = require(modulePath);
@@ -170,7 +164,7 @@ class GraphQLJavaScriptConfigLoader : GraphQLConfigCustomLoader {
     commandLine.addParameter("-e")
     //language=JavaScript
     commandLine.addParameter(
-      """
+        """
             function printConfig(config) {
               if (config.default !== undefined) config = config.default;
 
