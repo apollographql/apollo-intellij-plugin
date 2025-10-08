@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.codegen
 
+import com.apollographql.ijplugin.codegen.helper.DynamicApolloCompilerHelper
 import com.apollographql.ijplugin.gradle.CODEGEN_GRADLE_TASK_NAME
 import com.apollographql.ijplugin.gradle.GradleHasSyncedListener
 import com.apollographql.ijplugin.gradle.SimpleProgressListener
@@ -163,9 +164,9 @@ class ApolloCodegenService(
             }
           }
 
-          if (apolloKotlinService?.hasCompilerOptions == true) {
+          if (apolloKotlinService?.hasCompilerOptions == true && project.apolloKotlinProjectModelService.apolloTasksDependencies != null) {
             // We can use the built-in Apollo compiler
-            ApolloCompilerHelper(project).generateSources(apolloKotlinService)
+            DynamicApolloCompilerHelper(project, project.apolloKotlinProjectModelService.apolloTasksDependencies!!).generateSources(apolloKotlinService)
           } else {
             // Fall back to the Gradle codegen task
             startGradleCodegen()
@@ -255,9 +256,11 @@ class ApolloCodegenService(
   }
 
   private fun startCodegen() {
-    if (project.apolloKotlinProjectModelService.getApolloKotlinServices().any { it.hasCompilerOptions }) {
+    if (project.apolloKotlinProjectModelService.getApolloKotlinServices()
+            .any { it.hasCompilerOptions } && project.apolloKotlinProjectModelService.apolloTasksDependencies != null
+    ) {
       logd("Using Apollo compiler for codegen")
-      ApolloCompilerHelper(project).generateAllSources()
+      DynamicApolloCompilerHelper(project, project.apolloKotlinProjectModelService.apolloTasksDependencies!!).generateAllSources()
     } else {
       logd("Using Gradle codegen task")
       startGradleCodegen()
