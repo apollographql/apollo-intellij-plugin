@@ -9,6 +9,7 @@ import com.apollographql.ijplugin.util.apollo3
 import com.apollographql.ijplugin.util.apollo4
 import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.getParameterNames
+import com.apollographql.ijplugin.util.isInKotlinFile
 import com.apollographql.ijplugin.util.originalClassName
 import com.apollographql.ijplugin.util.registerProblem
 import com.apollographql.ijplugin.util.safeResolve
@@ -35,6 +36,7 @@ class ApolloInputConstructorNamedArgsInspection : LocalInspectionTool() {
     return object : KtVisitorVoid() {
       override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
+        if (!expression.isInKotlinFile()) return
         val projectApolloVersion = expression.project.apolloProjectService.apolloVersion
         if (!projectApolloVersion.isAtLeastV3) return
         val reference = expression.calleeExpression.cast<KtNameReferenceExpression>()

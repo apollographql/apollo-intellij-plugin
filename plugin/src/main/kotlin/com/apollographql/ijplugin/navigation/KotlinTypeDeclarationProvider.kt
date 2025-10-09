@@ -20,7 +20,7 @@ class KotlinTypeDeclarationProvider : TypeDeclarationProvider {
 
     // Get the original declaration(s)
     val ktTypeDeclarations = TypeDeclarationProvider.EP_NAME.extensionList.filterNot { it is KotlinTypeDeclarationProvider }
-        .map { it.getSymbolTypeDeclarations(symbol) }.filterNotNull().firstOrNull()
+        .firstNotNullOfOrNull { it.getSymbolTypeDeclarations(symbol) }
     val ktTypeDeclaration = ktTypeDeclarations?.firstOrNull() ?: return null
 
     val gqlElements = when {
