@@ -5,6 +5,7 @@ import com.apollographql.ijplugin.icons.ApolloIcons
 import com.apollographql.ijplugin.project.apolloProjectService
 import com.apollographql.ijplugin.telemetry.TelemetryEvent
 import com.apollographql.ijplugin.telemetry.telemetryService
+import com.apollographql.ijplugin.util.isInKotlinFile
 import com.apollographql.ijplugin.util.originalClassName
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
@@ -27,6 +28,7 @@ class KotlinDefinitionMarkerProvider : RelatedItemLineMarkerProvider() {
   override fun getIcon() = ApolloIcons.Gutter.GraphQL
 
   override fun collectNavigationMarkers(element: PsiElement, result: MutableCollection<in RelatedItemLineMarkerInfo<*>>) {
+    if (!element.isInKotlinFile()) return
     if (!element.project.apolloProjectService.apolloVersion.isAtLeastV3) return
 
     val nameReferenceExpression = element as? KtNameReferenceExpression ?: return

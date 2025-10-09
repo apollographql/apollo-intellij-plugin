@@ -5,6 +5,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.idea.refactoring.isInjectedFragment
 import org.jetbrains.kotlin.idea.references.KtSimpleNameReference
 import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.name.FqName
@@ -121,4 +122,9 @@ fun PsiReference.safeResolve(): PsiElement? = try {
   // But ControlFlowException is a normal thing to happen, so no need to log
   if (t !is ControlFlowException) logw(t, "Could not resolve $this")
   null
+}
+
+fun PsiElement.isInKotlinFile(): Boolean {
+  val containingKtFile = containingKtFile() ?: return false
+  return !containingKtFile.isInjectedFragment
 }

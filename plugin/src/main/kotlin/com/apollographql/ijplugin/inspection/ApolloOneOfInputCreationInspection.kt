@@ -10,6 +10,7 @@ import com.apollographql.ijplugin.util.canBeNull
 import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.className
 import com.apollographql.ijplugin.util.getCalleeExpressionIfAny
+import com.apollographql.ijplugin.util.isInKotlinFile
 import com.apollographql.ijplugin.util.safeResolve
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemHighlightType
@@ -36,6 +37,7 @@ class ApolloOneOfInputCreationInspection : LocalInspectionTool() {
       // For constructor calls
       override fun visitCallExpression(expression: KtCallExpression) {
         super.visitCallExpression(expression)
+        if (!expression.isInKotlinFile()) return
         if (!expression.project.apolloProjectService.apolloVersion.isAtLeastV4) return
         val reference = (expression.calleeExpression.cast<KtNameReferenceExpression>())
         if (reference?.isApolloInputClassReference() != true) return
@@ -58,6 +60,7 @@ class ApolloOneOfInputCreationInspection : LocalInspectionTool() {
       // For builder calls
       override fun visitDotQualifiedExpression(expression: KtDotQualifiedExpression) {
         super.visitDotQualifiedExpression(expression)
+        if (!expression.isInKotlinFile()) return
         if (!expression.project.apolloProjectService.apolloVersion.isAtLeastV4) return
         val expressionClass =
           expression.selectorExpression.getCalleeExpressionIfAny()?.mainReference?.safeResolve()?.parentOfType<KtClass>(withSelf = true)

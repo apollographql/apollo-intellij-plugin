@@ -89,6 +89,10 @@ tasks {
 
       // Enable K2 mode (can't be done in the UI in sandbox mode - see https://kotlin.github.io/analysis-api/testing-in-k2-locally.html)
       systemProperty("idea.kotlin.plugin.use.k2", "true")
+
+      jvmArgumentProviders += CommandLineArgumentProvider {
+        listOf("-Xmx4g")
+      }
     }
   }
 

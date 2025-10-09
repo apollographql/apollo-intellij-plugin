@@ -8,6 +8,7 @@ import com.apollographql.ijplugin.telemetry.TelemetryEvent
 import com.apollographql.ijplugin.telemetry.telemetryService
 import com.apollographql.ijplugin.util.cast
 import com.apollographql.ijplugin.util.getParameterNames
+import com.apollographql.ijplugin.util.isInKotlinFile
 import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils
 import com.intellij.openapi.editor.Editor
@@ -23,6 +24,7 @@ class ApolloInputConstructorChangeToBuilderIntention : PsiElementBaseIntentionAc
 
   override fun isAvailable(project: Project, editor: Editor?, element: PsiElement): Boolean {
     if (!element.project.apolloProjectService.apolloVersion.isAtLeastV4) return false
+    if (!element.isInKotlinFile()) return false
     val callExpression = (element as? LeafPsiElement)?.parent?.parent as? KtCallExpression ?: return false
     val reference = callExpression.calleeExpression.cast<KtNameReferenceExpression>() ?: return false
     return reference.isApolloInputClassReference()
