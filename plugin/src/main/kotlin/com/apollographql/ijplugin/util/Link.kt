@@ -8,6 +8,9 @@ import com.apollographql.apollo.ast.GQLDefinition
 import com.apollographql.apollo.ast.GQLDirectiveDefinition
 import com.apollographql.apollo.ast.GQLNamed
 import com.apollographql.apollo.ast.rawType
+import com.apollographql.ijplugin.graphql.ForeignSchemas
+import com.apollographql.ijplugin.graphql.importUrlName
+import com.apollographql.ijplugin.graphql.url
 import com.intellij.lang.jsgraphql.psi.GraphQLArrayValue
 import com.intellij.lang.jsgraphql.psi.GraphQLDirective
 import com.intellij.lang.jsgraphql.psi.GraphQLElement
@@ -65,7 +68,7 @@ private fun GraphQLFile.hasImportFor(name: String, isDirective: Boolean): Boolea
       // Default import is everything - see https://specs.apollo.dev/link/v1.0/#@link.url
       val asArgValue = directive.argumentValue("as") as? GraphQLStringValue
       // Default prefix is the name part of the url
-      val prefix = (asArgValue?.text?.unquoted() ?: "nullability") + "__"
+      val prefix = (asArgValue?.text?.unquoted() ?: directive.importUrlName() ?: "") + "__"
       if (name.startsWith(prefix)) return true
     } else {
       if (importArgValue.valueList.any { it.text == name.nameForImport(isDirective).quoted() }) {
@@ -74,6 +77,10 @@ private fun GraphQLFile.hasImportFor(name: String, isDirective: Boolean): Boolea
     }
   }
   return false
+}
+
+private fun GraphQLDirective.importUrlName(): String? {
+  return (argumentValue("url") as? GraphQLStringValue)?.valueAsString?.importUrlName()
 }
 
 private val String.nameWithoutPrefix get() = substringAfter("__")
@@ -100,10 +107,19 @@ fun createLinkDirectiveSchemaExtension(
         ?.filter { it in knownDefinitionNames }.orEmpty()
   }.toSet()
 
+  // Special case: if we're importing @typePolicy or @fieldPolicy, un-import kotlin_labs by linking to it with an empty import.
+  // This is because all the kotlin_labs/0.3 symbols (which includes @typePolicy or @fieldPolicy) are implicitly imported by the AK
+  // compiler, and therefore this would import these twice, which is an error.
+  val unimportKotlinLabs = if (importedNames.any { it == "@typePolicy" || it == "@fieldPolicy" }) {
+    "\n@link(url: \"${ForeignSchemas.lastestKotlinLabsForeignSchema.url}\")"
+  } else {
+    ""
+  }
+
   return GraphQLElementFactory.createFile(
       project,
       """
-        extend schema
+        extend schema$unimportKotlinLabs
         @link(
           url: "$definitionsUrl",
           import: [${(importedNames + additionalNames).joinToString { it.quoted() }}]
@@ -119,5 +135,5 @@ fun createLinkDirective(
     definitions: List<GQLDefinition>,
     definitionsUrl: String,
 ): GraphQLDirective {
-  return createLinkDirectiveSchemaExtension(project, importedNames, definitions, definitionsUrl).directives.single()
+  return createLinkDirectiveSchemaExtension(project, importedNames, definitions, definitionsUrl).directives.last()
 }
