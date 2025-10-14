@@ -2,8 +2,8 @@
 Possible values for the `@cacheControl` `scope` argument (unused on the client).
 """
 enum CacheControlScope {
-  PUBLIC
-  PRIVATE
+    PUBLIC
+    PRIVATE
 }
 
 """
@@ -20,21 +20,21 @@ For example:
 
 ```graphql
 type Query {
-me: User
-user(id: ID!): User @cacheControl(maxAge: 5)
+    me: User
+    user(id: ID!): User @cacheControl(maxAge: 5)
 }
 
 type User @cacheControl(maxAge: 10) {
-id: ID!
-email: String
+    id: ID!
+    email: String
 }
 ```
 `Query.me` is valid for 10 seconds, and `Query.user` for 5 seconds.
 """
 directive @cacheControl(
-  maxAge: Int
-  inheritMaxAge: Boolean
-  scope: CacheControlScope
+    maxAge: Int
+    inheritMaxAge: Boolean
+    scope: CacheControlScope
 ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 
 """
@@ -52,8 +52,8 @@ extend type User @cacheControlField(name: "email", maxAge: 20)
 `User.email` is valid for 20 seconds.
 """
 directive @cacheControlField(
-  name: String!
-  maxAge: Int
-  inheritMaxAge: Boolean
-  scope: CacheControlScope
+    name: String!
+    maxAge: Int
+    inheritMaxAge: Boolean
+    scope: CacheControlScope
 ) repeatable on OBJECT | INTERFACE

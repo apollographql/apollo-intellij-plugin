@@ -26,9 +26,9 @@ directive @typePolicy(
 
   ```graphql
   query {
-  product {
-  price
-  }
+      product {
+          price
+      }
   }
   ```
 
@@ -36,15 +36,15 @@ directive @typePolicy(
 
   ```graphql
   query {
-  product {
-  ... on Book {
-  isbn
-  }
-  ... on Movie {
-  id
-  }
-  price
-  }
+      product {
+          ... on Book {
+              isbn
+          }
+          ... on Movie {
+              id
+          }
+          price
+      }
   }
   ```
 
