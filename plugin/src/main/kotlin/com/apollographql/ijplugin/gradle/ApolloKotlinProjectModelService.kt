@@ -8,7 +8,6 @@ import com.apollographql.apollo.compiler.model.CompilationUnitModel
 import com.apollographql.apollo.compiler.model.ProjectModel
 import com.apollographql.apollo.compiler.model.toCompilationUnitModel
 import com.apollographql.apollo.compiler.model.toProjectModel
-import com.apollographql.apollo.compiler.toCodegenOptions
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
 import com.apollographql.apollo.tooling.model.TelemetryData
 import com.apollographql.apollo.tooling.model.toTelemetryData
