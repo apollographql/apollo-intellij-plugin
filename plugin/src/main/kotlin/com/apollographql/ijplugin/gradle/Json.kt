@@ -6,8 +6,8 @@ import com.apollographql.apollo.compiler.IrOptions
 import kotlinx.serialization.json.Json
 import java.io.File
 
+// We are linking with a version of apollo-compiler that may be outdated and we might read files that contain new (unknown at that time) fields
 private val json = Json {
-  classDiscriminator = "#class"
   ignoreUnknownKeys = true
   explicitNulls = false
   coerceInputValues = true
