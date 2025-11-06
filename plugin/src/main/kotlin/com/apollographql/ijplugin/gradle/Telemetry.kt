@@ -3,9 +3,6 @@ package com.apollographql.ijplugin.gradle
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.annotations.ApolloInternal
 import com.apollographql.apollo.compiler.TargetLanguage
-import com.apollographql.apollo.compiler.toCodegenOptions
-import com.apollographql.apollo.compiler.toCodegenSchemaOptions
-import com.apollographql.apollo.compiler.toIrOptions
 import com.apollographql.apollo.gradle.api.ApolloGradleToolingModel
 import com.apollographql.apollo.tooling.model.TelemetryData
 import com.apollographql.ijplugin.telemetry.TelemetryProperty
