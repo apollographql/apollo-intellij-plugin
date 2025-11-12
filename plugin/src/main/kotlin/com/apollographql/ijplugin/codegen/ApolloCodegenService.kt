@@ -167,6 +167,7 @@ class ApolloCodegenService(
 
           if (apolloKotlinService?.hasCompilerOptions == true) {
             // We can use the built-in Apollo compiler
+            apolloCompilerCodegenJob?.cancel()
             apolloCompilerCodegenJob = coroutineScope.launch {
               ApolloCompilerHelper(project).generateSources(apolloKotlinService)
             }

@@ -18,6 +18,8 @@ import com.apollographql.ijplugin.gradle.ApolloKotlinService.Id
 import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
+import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import java.io.File
@@ -63,7 +65,7 @@ class ApolloCompilerHelper(
           codegenSchemaOptionsFile = schemaService.codegenSchemaOptionsFile!!,
           codegenSchemaFile = codegenSchemaFile,
       )
-
+      ProgressManager.checkCanceled()
 
       val allUpstreamServiceIds = service.allUpstreamServiceIds()
       if (allUpstreamServiceIds == null) {
@@ -91,6 +93,7 @@ class ApolloCompilerHelper(
             irOptionsFile = service.irOptionsFile!!,
             irOperationsFile = irOperationsFile,
         )
+        ProgressManager.checkCanceled()
         irOperationsById[service.id] = irOperationsFile
       }
 
@@ -132,6 +135,7 @@ class ApolloCompilerHelper(
             outputDirectory = service.codegenOutputDir!!,
             metadataOutput = metadataOutput,
         )
+        ProgressManager.checkCanceled()
         upstreamMetadata.add(metadataOutput)
         outputDirs.add(service.codegenOutputDir)
       }
@@ -149,6 +153,7 @@ class ApolloCompilerHelper(
               codegenOptions = service.codegenOptionsFile!!,
               outputDirectory = service.dataBuildersOutputDir!!,
           )
+          ProgressManager.checkCanceled()
           outputDirs.add(service.dataBuildersOutputDir)
         }
       }
@@ -156,6 +161,10 @@ class ApolloCompilerHelper(
       logd("Apollo compiler sources generated for service ${service.id} at ${service.codegenOutputDir}")
       return outputDirs
     } catch (e: Exception) {
+      if (e is ProcessCanceledException) {
+        logd("Apollo compiler was canceled")
+        throw e
+      }
       logw(e, "Failed to generate sources for service ${service.id}")
     }
     return emptySet()
