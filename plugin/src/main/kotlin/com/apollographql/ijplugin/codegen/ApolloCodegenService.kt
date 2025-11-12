@@ -38,6 +38,7 @@ import com.intellij.openapi.util.CheckedDisposable
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.PsiDocumentManager
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.gradle.tooling.CancellationTokenSource
 import org.gradle.tooling.GradleConnector
@@ -54,6 +55,7 @@ class ApolloCodegenService(
   private var dirtyGqlDocument: Document? = null
 
   private var gradleCodegenCancellation: CancellationTokenSource? = null
+  private var apolloCompilerCodegenJob: Job? = null
 
   init {
     logd("project=${project.name}")
@@ -165,7 +167,10 @@ class ApolloCodegenService(
 
           if (apolloKotlinService?.hasCompilerOptions == true) {
             // We can use the built-in Apollo compiler
-            ApolloCompilerHelper(project).generateSources(apolloKotlinService)
+            apolloCompilerCodegenJob?.cancel()
+            apolloCompilerCodegenJob = coroutineScope.launch {
+              ApolloCompilerHelper(project).generateSources(apolloKotlinService)
+            }
           } else {
             // Fall back to the Gradle codegen task
             startGradleCodegen()
@@ -231,6 +236,8 @@ class ApolloCodegenService(
 
   private fun stopCodegen() {
     logd()
+    apolloCompilerCodegenJob?.cancel()
+    apolloCompilerCodegenJob = null
     gradleCodegenCancellation?.cancel()
     gradleCodegenCancellation = null
   }
@@ -257,7 +264,9 @@ class ApolloCodegenService(
   private fun startCodegen() {
     if (project.apolloKotlinProjectModelService.getApolloKotlinServices().any { it.hasCompilerOptions }) {
       logd("Using Apollo compiler for codegen")
-      ApolloCompilerHelper(project).generateAllSources()
+      apolloCompilerCodegenJob = coroutineScope.launch {
+        ApolloCompilerHelper(project).generateAllSources()
+      }
     } else {
       logd("Using Gradle codegen task")
       startGradleCodegen()
