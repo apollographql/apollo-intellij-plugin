@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.gradle
 
+import com.apollographql.ijplugin.settings.projectSettingsState
 import com.apollographql.ijplugin.util.logw
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.module.ModuleManager
@@ -42,7 +43,14 @@ fun runGradleBuild(
   val buildLauncher = configureBuildLauncher(
       connection.newBuild()
           .setJavaHome(executionSettings.javaHome?.let { File(it) })
-  )
+  ).let {
+    val additionalGradleJvmArguments = project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments
+    if (additionalGradleJvmArguments.isNotEmpty()) {
+      it.addJvmArguments(additionalGradleJvmArguments.split(' '))
+    } else {
+      it
+    }
+  }
   try {
     buildLauncher.run()
   } finally {
@@ -66,7 +74,14 @@ inline fun <reified T> getGradleModel(
   val modelBuilder = configureModelBuilder(
       connection.model(T::class.java)
           .setJavaHome(executionSettings.javaHome?.let { File(it) })
-  )
+  ).let {
+    val additionalGradleJvmArguments = project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments
+    if (additionalGradleJvmArguments.isNotEmpty()) {
+      it.addJvmArguments(additionalGradleJvmArguments.split(' '))
+    } else {
+      it
+    }
+  }
   try {
     return modelBuilder.get()
   } finally {

@@ -208,13 +208,6 @@ class ApolloCodegenService(
         runGradleBuild(project, gradleProjectPath) { buildLauncher ->
           buildLauncher.forTasks(CODEGEN_GRADLE_TASK_NAME)
               .withCancellationToken(cancellationToken)
-              .let {
-                if (project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments.isNotEmpty()) {
-                  it.addJvmArguments(project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments.split(' '))
-                } else {
-                  it
-                }
-              }
               .addProgressListener(object : SimpleProgressListener() {
                 override fun onSuccess() {
                   logd("Gradle codegen build success, marking generated source roots as dirty")

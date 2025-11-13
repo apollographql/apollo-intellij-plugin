@@ -198,7 +198,7 @@ data class ApolloKotlinServiceConfiguration(
 
 data class ProjectSettingsStateImpl(
     override var automaticCodegenTriggering: Boolean = true,
-    override var automaticCodegenAdditionalGradleJvmArguments: String = "-Xms64m -Xmx512m",
+    override var automaticCodegenAdditionalGradleJvmArguments: String = "",
     override var contributeConfigurationToGraphqlPlugin: Boolean = true,
     override var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration> = emptyList(),
     override var telemetryInstanceId: String = "",
