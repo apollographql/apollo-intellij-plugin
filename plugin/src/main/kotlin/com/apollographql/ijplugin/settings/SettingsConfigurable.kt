@@ -17,7 +17,7 @@ class SettingsConfigurable(private val project: Project) : Configurable {
 
   override fun isModified(): Boolean {
     return settingsComponent!!.automaticCodegenTriggering != project.projectSettingsState.automaticCodegenTriggering ||
-        settingsComponent!!.automaticCodegenAdditionalGradleJvmArguments != project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments ||
+        settingsComponent!!.additionalGradleJvmArguments != project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments ||
         settingsComponent!!.contributeConfigurationToGraphqlPlugin != project.projectSettingsState.contributeConfigurationToGraphqlPlugin ||
         settingsComponent!!.apolloKotlinServiceConfigurations != project.projectSettingsState.apolloKotlinServiceConfigurations ||
         settingsComponent!!.telemetryEnabled != appSettingsState.telemetryEnabled
@@ -26,7 +26,7 @@ class SettingsConfigurable(private val project: Project) : Configurable {
   override fun apply() {
     project.projectSettingsState.automaticCodegenTriggering = settingsComponent!!.automaticCodegenTriggering
     project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments =
-      settingsComponent!!.automaticCodegenAdditionalGradleJvmArguments
+      settingsComponent!!.additionalGradleJvmArguments
     project.projectSettingsState.contributeConfigurationToGraphqlPlugin = settingsComponent!!.contributeConfigurationToGraphqlPlugin
     project.projectSettingsState.apolloKotlinServiceConfigurations = settingsComponent!!.apolloKotlinServiceConfigurations
     appSettingsState.telemetryEnabled = settingsComponent!!.telemetryEnabled
@@ -34,7 +34,7 @@ class SettingsConfigurable(private val project: Project) : Configurable {
 
   override fun reset() {
     settingsComponent!!.automaticCodegenTriggering = project.projectSettingsState.automaticCodegenTriggering
-    settingsComponent!!.automaticCodegenAdditionalGradleJvmArguments =
+    settingsComponent!!.additionalGradleJvmArguments =
       project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments
     settingsComponent!!.contributeConfigurationToGraphqlPlugin = project.projectSettingsState.contributeConfigurationToGraphqlPlugin
     settingsComponent!!.apolloKotlinServiceConfigurations = project.projectSettingsState.apolloKotlinServiceConfigurations

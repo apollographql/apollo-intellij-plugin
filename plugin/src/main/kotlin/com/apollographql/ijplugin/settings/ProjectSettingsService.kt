@@ -138,6 +138,10 @@ class ProjectSettingsService(private val project: Project) : PersistentStateComp
 
 interface ProjectSettingsState {
   var automaticCodegenTriggering: Boolean
+
+  /**
+   * Note: despite the name this is not just used for codegen but also when fetching tooling models.
+   */
   var automaticCodegenAdditionalGradleJvmArguments: String
   var contributeConfigurationToGraphqlPlugin: Boolean
   var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration>
