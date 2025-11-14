@@ -138,6 +138,10 @@ class ProjectSettingsService(private val project: Project) : PersistentStateComp
 
 interface ProjectSettingsState {
   var automaticCodegenTriggering: Boolean
+
+  /**
+   * Note: despite the name this is not just used for codegen but also when fetching tooling models.
+   */
   var automaticCodegenAdditionalGradleJvmArguments: String
   var contributeConfigurationToGraphqlPlugin: Boolean
   var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration>
@@ -198,7 +202,7 @@ data class ApolloKotlinServiceConfiguration(
 
 data class ProjectSettingsStateImpl(
     override var automaticCodegenTriggering: Boolean = true,
-    override var automaticCodegenAdditionalGradleJvmArguments: String = "-Xms64m -Xmx512m",
+    override var automaticCodegenAdditionalGradleJvmArguments: String = "",
     override var contributeConfigurationToGraphqlPlugin: Boolean = true,
     override var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration> = emptyList(),
     override var telemetryInstanceId: String = "",

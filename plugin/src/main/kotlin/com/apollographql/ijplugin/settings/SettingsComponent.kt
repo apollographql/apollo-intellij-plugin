@@ -20,12 +20,12 @@ import javax.swing.JPanel
 class SettingsComponent(private val project: Project) {
   private val propertyGraph = PropertyGraph()
   private val automaticCodegenTriggeringProperty = propertyGraph.property(false)
-  private val automaticCodegenAdditionalGradleJvmArgumentsProperty = propertyGraph.property("")
+  private val additionalGradleJvmArgumentsProperty = propertyGraph.property("")
   private val contributeConfigurationToGraphqlPluginProperty = propertyGraph.property(false)
   private val telemetryEnabledProperty = propertyGraph.property(false)
 
   var automaticCodegenTriggering: Boolean by automaticCodegenTriggeringProperty
-  var automaticCodegenAdditionalGradleJvmArguments: String by automaticCodegenAdditionalGradleJvmArgumentsProperty
+  var additionalGradleJvmArguments: String by additionalGradleJvmArgumentsProperty
   var contributeConfigurationToGraphqlPlugin: Boolean by contributeConfigurationToGraphqlPluginProperty
   var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration>
     get() = addEditRemovePanel?.data?.toList() ?: emptyList()
@@ -45,15 +45,6 @@ class SettingsComponent(private val project: Project) {
             .comment(ApolloBundle.message("settings.codegen.automaticCodegenTriggering.comment"))
             .bindSelected(automaticCodegenTriggeringProperty)
             .component
-      }
-      row {
-        label(ApolloBundle.message("settings.codegen.additionalGradleJvmArguments.text"))
-        textField()
-            .align(AlignX.FILL)
-            .bindText(automaticCodegenAdditionalGradleJvmArgumentsProperty)
-            .applyToComponent {
-              font = Font(Font.MONOSPACED, font.style, font.size)
-            }
       }
     }.visible(isKotlinPluginPresent && isGradlePluginPresent)
     group(ApolloBundle.message("settings.graphqlPlugin.title")) {
@@ -116,10 +107,21 @@ class SettingsComponent(private val project: Project) {
       }
     }.visible(isKotlinPluginPresent && isGradlePluginPresent)
 
-    group(ApolloBundle.message("settings.telemetry.telemetryEnabled.title")) {
+    group(ApolloBundle.message("settings.advanced.title")) {
       row {
-        checkBox(ApolloBundle.message("settings.telemetry.telemetryEnabled.text"))
-            .comment(ApolloBundle.message("settings.telemetry.telemetryEnabled.comment"))
+        label(ApolloBundle.message("settings.advanced.additionalGradleJvmArguments.text"))
+        textField()
+            .align(AlignX.FILL)
+            .bindText(additionalGradleJvmArgumentsProperty)
+            .applyToComponent {
+              font = Font(Font.MONOSPACED, font.style, font.size)
+              emptyText.text = "e.g. -Xmx2048m -Dsome.property=someValue"
+            }
+            .comment(ApolloBundle.message("settings.advanced.additionalGradleJvmArguments.comment"))
+      }.visible(isKotlinPluginPresent && isGradlePluginPresent)
+      row {
+        checkBox(ApolloBundle.message("settings.advanced.telemetryEnabled.text"))
+            .comment(ApolloBundle.message("settings.advanced.telemetryEnabled.comment"))
             .bindSelected(telemetryEnabledProperty)
       }
     }
