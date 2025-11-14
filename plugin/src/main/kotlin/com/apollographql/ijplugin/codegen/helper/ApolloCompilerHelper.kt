@@ -57,6 +57,7 @@ class ApolloCompilerHelper(
       }
 
       val codegenSchemaFile = File.createTempFile("codegenSchemaFile", null)
+      logd("buildCodegenSchema (${service.id})")
       EntryPoints.buildCodegenSchema(
           plugins = schemaService.loadPlugins(),
           logger = logger,
@@ -83,6 +84,7 @@ class ApolloCompilerHelper(
       for (serviceId in allServiceIds) {
         val service = service(serviceId)!!
         val irOperationsFile = File.createTempFile("irOperationsFile", null)
+        logd("buildIr (${service.id})")
         EntryPoints.buildIr(
             plugins = service.loadPlugins(),
             logger = logger,
@@ -122,6 +124,7 @@ class ApolloCompilerHelper(
 
         service.operationManifestFile!!.parentFile.mkdirs()
         val metadataOutput = File.createTempFile("metadataOutput", null)
+        logd("buildSourcesFromIr (${service.id})")
         EntryPoints.buildSourcesFromIr(
             plugins = service.loadPlugins(),
             logger = logger,
@@ -143,6 +146,7 @@ class ApolloCompilerHelper(
       for (serviceId in allServiceIds) {
         val service = service(serviceId)!!
         if (service.codegenSchemaOptionsFile!!.toCodegenSchemaOptions().generateDataBuilders) {
+          logd("buildDataBuilders (${service.id})")
           EntryPoints.buildDataBuilders(
               plugins = service.loadPlugins(),
               arguments = service.pluginArguments!!,
