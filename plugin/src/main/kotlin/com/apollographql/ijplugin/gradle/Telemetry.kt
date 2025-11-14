@@ -110,7 +110,6 @@ fun ApolloKotlinService.toTelemetryProperties(): Set<TelemetryProperty> {
   return buildSet {
     irOptions.codegenModels?.let { add(ApolloCodegenModels(it)) }
     codegenOptions.operationManifestFormat?.let { add(ApolloOperationManifestFormat(it)) }
-    irOptions.warnOnDeprecatedUsages?.let { add(ApolloWarnOnDeprecatedUsages(it)) }
     irOptions.failOnWarnings?.let { add(ApolloFailOnWarnings(it)) }
     codegenOptions.targetLanguage?.let { add(ApolloGenerateKotlinModels(it != TargetLanguage.JAVA)) }
     codegenOptions.targetLanguage?.let {
@@ -135,6 +134,5 @@ fun ApolloKotlinService.toTelemetryProperties(): Set<TelemetryProperty> {
     codegenOptions.jsExport?.let { add(ApolloJsExport(it)) }
     irOptions.addTypename?.let { add(ApolloAddTypename(it)) }
     irOptions.flattenModels?.let { add(ApolloFlattenModels(it)) }
-    irOptions.fieldsOnDisjointTypesMustMerge?.let { add(ApolloFieldsOnDisjointTypesMustMerge(it)) }
   }
 }

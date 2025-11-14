@@ -53,10 +53,9 @@ fun File.toCodegenSchemaOptions(): CodegenSchemaOptions = runCatching { parseFro
 
 fun File.toIrOptions(): IrOptions = runCatching { parseFromJson<IrOptions>() }.getOrElse {
   IrOptions(
-      fieldsOnDisjointTypesMustMerge = null,
       decapitalizeFields = null,
       flattenModels = null,
-      warnOnDeprecatedUsages = null,
+      issueSeverities = null,
       failOnWarnings = null,
       addTypename = null,
       generateOptionalOperationVariables = null,
