@@ -218,7 +218,8 @@ class PullFromDeviceDialog(
 
                     is Client -> {
                       val packageName = client.clientData.packageName
-                      val databasesDir = listOf(client.clientData.dataDir + "/databases", client.clientData.dataDir + "/cache")
+                      val databasesDir =
+                        listOf(client.clientData.dataDir + "/databases", client.clientData.dataDir + "/cache", client.clientData.dataDir + "/no_backup")
                       DatabasePackageNode(
                           project = project,
                           parent = this@DeviceNode,
@@ -271,7 +272,7 @@ class PullFromDeviceDialog(
                     parent = this,
                     device = device,
                     packageName = packageName,
-                    databasesDirs = listOf("/data/data/$packageName/databases", "/data/data/$packageName/cache"),
+                    databasesDirs = listOf("/data/data/$packageName/databases", "/data/data/$packageName/cache", "/data/data/$packageName/no_backup"),
                     computeChildrenOn = ComputeChildrenOn.EXPANDED,
                     autoExpand = false,
                 )
