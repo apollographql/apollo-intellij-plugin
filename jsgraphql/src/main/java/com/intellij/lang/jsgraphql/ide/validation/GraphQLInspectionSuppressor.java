@@ -39,7 +39,7 @@ public final class GraphQLInspectionSuppressor implements InspectionSuppressor {
   }
 
   @Override
-  public SuppressQuickFix @NotNull [] getSuppressActions(@Nullable PsiElement element,
+  public SuppressQuickFix[] getSuppressActions(@Nullable PsiElement element,
                                                          @NotNull String toolId) {
     if (element == null) return SuppressQuickFix.EMPTY_ARRAY;
 

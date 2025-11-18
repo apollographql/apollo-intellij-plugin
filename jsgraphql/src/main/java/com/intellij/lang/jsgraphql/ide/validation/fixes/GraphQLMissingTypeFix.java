@@ -25,7 +25,6 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiEditorUtil;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -104,7 +103,7 @@ public class GraphQLMissingTypeFix extends LocalQuickFixAndIntentionActionOnPsiE
   }
 
   @Override
-  public @Nls(capitalization = Nls.Capitalization.Sentence) @NotNull String getFamilyName() {
+  public @NotNull String getFamilyName() {
     return GraphQLBundle.message("graphql.intention.create.missing.type.definition.family.name");
   }
 

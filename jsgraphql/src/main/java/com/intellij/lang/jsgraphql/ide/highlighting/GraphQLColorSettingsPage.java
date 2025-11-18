@@ -134,12 +134,12 @@ public final class GraphQLColorSettingsPage implements ColorSettingsPage {
   }
 
   @Override
-  public AttributesDescriptor @NotNull [] getAttributeDescriptors() {
+  public AttributesDescriptor[] getAttributeDescriptors() {
     return DESCRIPTORS;
   }
 
   @Override
-  public @NotNull ColorDescriptor @NotNull [] getColorDescriptors() {
+  public @NotNull ColorDescriptor[] getColorDescriptors() {
     return ColorDescriptor.EMPTY_ARRAY;
   }
 
