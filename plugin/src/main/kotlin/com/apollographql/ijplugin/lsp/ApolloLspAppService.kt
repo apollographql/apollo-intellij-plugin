@@ -88,7 +88,7 @@ class ApolloLspProjectService(private val project: Project) : Disposable {
     project.messageBus.connect(this).subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
       override fun after(events: MutableList<out VFileEvent>) {
         for (event in events) {
-          val vFile = event.file!!
+          val vFile = event.file ?: continue
           val isSupergraphYaml = vFile == project.guessProjectDir()?.findChild("supergraph.yaml") ||
               vFile.path == project.projectSettingsState.lspPathToSuperGraphYaml
           if (isSupergraphYaml) {
