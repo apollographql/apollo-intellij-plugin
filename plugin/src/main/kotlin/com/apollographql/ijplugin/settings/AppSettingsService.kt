@@ -52,6 +52,12 @@ class AppSettingsService : PersistentStateComponent<AppSettingsStateImpl>, AppSe
       notifySettingsChanged()
     }
 
+  override var hasDefaultedToLspMode: Boolean
+    get() = _state.hasDefaultedToLspMode
+    set(value) {
+      _state.hasDefaultedToLspMode = value
+    }
+
   private var lastNotifiedState: AppSettingsState? = null
   private fun notifySettingsChanged() {
     if (lastNotifiedState != _state) {
@@ -61,10 +67,12 @@ class AppSettingsService : PersistentStateComponent<AppSettingsStateImpl>, AppSe
   }
 
   override fun initializeComponent() {
-    // Running in an IDE without the Java or Kotlin plugin (e.g. RustRover): the user is most likely not an Apollo Kotlin developer.
+    // Running in an IDE without the Java or Kotlin plugin (e.g. RustRover, WebStorm): the user is most likely *not* an Apollo Kotlin developer.
     // In that case, the LSP mode (if available) is the best default.
-    if (isLspAvailable && (!isJavaPluginPresent || !isKotlinPluginPresent)) {
+    if (!hasDefaultedToLspMode && isLspAvailable && (!isJavaPluginPresent || !isKotlinPluginPresent)) {
       lspModeEnabled = true
+      // Do this only once
+      hasDefaultedToLspMode = true
     }
   }
 }
@@ -73,12 +81,14 @@ interface AppSettingsState {
   var hasShownTelemetryOptOutDialog: Boolean
   var telemetryEnabled: Boolean
   var lspModeEnabled: Boolean
+  var hasDefaultedToLspMode: Boolean
 }
 
 data class AppSettingsStateImpl(
     override var hasShownTelemetryOptOutDialog: Boolean = false,
     override var telemetryEnabled: Boolean = true,
     override var lspModeEnabled: Boolean = false,
+    override var hasDefaultedToLspMode: Boolean = false,
 ) : AppSettingsState
 
 val appSettingsState get(): AppSettingsState = service<AppSettingsService>()
