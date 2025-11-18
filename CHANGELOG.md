@@ -2,6 +2,28 @@
 
 PUT_CHANGELOG_HERE
 
+# Version 5.0.1
+
+_2025-11-18_
+
+This is a patch release that addresses a few issues and crashes.
+Also, it improves support for Gradle-less code generation with Apollo Kotlin v5 by invoking the same version of the Apollo Compiler as the one used by the project.
+
+- Invoke ApolloCompilerHelper dynamically with project's dependencies (#72)
+- Run apollo-compiler in the background (#83)
+- Use additional Gradle arguments when fetching models (#86)
+- Don't rely on apollo-compiler when reading JSON fils for telemetry (#81)
+- Add cache v0.3 support (#79)
+- Cache viewer: look for dbs in `no_backup` (#92)
+- Cache viewer: pull dbs from both databases and cache folders (#90)
+- Default to LSP mode only once (#91)
+- Tweak issue reporter (#77)
+- Disable Kotlin inspections in non Kotlin files, because `resolve()` sometimes crashes in this case. (#78)
+- Fix crash in LSP service (#93)
+- Try to not crash when resolve throws (#73)
+- Ignore some exception sometimes happening in inspections (#71)
+- Do not crash when sourceLocation is null (#88)
+
 # Version 5.0.0
 
 _2025-09-01_
