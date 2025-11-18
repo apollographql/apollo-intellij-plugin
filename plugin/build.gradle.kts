@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.extensions.excludeCoroutines
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INTERNAL_API_USAGES
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INVALID_PLUGIN
@@ -152,6 +153,7 @@ dependencies {
   // IntelliJ Platform dependencies must be declared before the intellijPlatform block
   // See https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1784
   intellijPlatform {
+    // See also https://blog.jetbrains.com/platform/2025/11/intellij-platform-2025-3-what-plugin-developers-should-know/
     intellijIdeaUltimate(libs.versions.intellij.platform.version.get()) {
       useCache = true
     }
@@ -172,7 +174,7 @@ dependencies {
     // e.g. for the Android plugin: https://plugins.jetbrains.com/plugin/22989-android/versions/stable
     plugins(
         listOf(
-            "org.jetbrains.android:251.25410.131",
+            "org.jetbrains.android:252.25557.131",
         )
     )
 
@@ -190,19 +192,19 @@ dependencies {
   // Coroutines must be excluded to avoid a conflict with the version bundled with the IDE
   // See https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#coroutinesLibraries
   implementation(libs.apollo.gradle.plugin) {
-    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    excludeCoroutines()
   }
   implementation(libs.apollo.ast)
   implementation(libs.apollo.tooling) {
-    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    excludeCoroutines()
   }
   implementation(libs.apollo.normalized.cache.sqlite.classic)
   implementation(libs.sqlite.jdbc)
   implementation(libs.apollo.normalized.cache.sqlite.new) {
-    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    excludeCoroutines()
   }
   implementation(libs.apollo.runtime) {
-    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    excludeCoroutines()
   }
   implementation(libs.apollo.compiler)
 

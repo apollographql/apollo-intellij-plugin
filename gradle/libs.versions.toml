@@ -1,6 +1,6 @@
 [versions]
 kotlin-plugin = "2.1.21"
-intellij-platform-plugin = "2.8.0"
+intellij-platform-plugin = "2.10.4"
 apollo = "5.0.0-alpha.3"
 grammarkit-plugin = "2022.3.2.2"
 changelog-plugin = "2.2.1"
@@ -13,12 +13,13 @@ atlassian-commonmark = "0.17.0"
 
 # XXX Do update the supported versions in the README.md, and in docs/source/testing/android-studio-plugin.mdx file when updating these values!
 # See https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for insight into build numbers and IntelliJ Platform versions.
-sinceBuild = "251"
+# See also https://blog.jetbrains.com/platform/2025/11/intellij-platform-2025-3-what-plugin-developers-should-know/
+sinceBuild = "252"
 
-# Corresponds to AS Narwhal 2025.1.1 -> https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html
+# Corresponds to AS Otter 2025.2.1 -> https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html
 # and https://developer.android.com/studio/archive (more up to date)
 # See also https://plugins.jetbrains.com/docs/intellij/android-studio.html
-intellij-platform-version = "2025.1.1"
+intellij-platform-version = "2025.2.1"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-plugin" }

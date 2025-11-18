@@ -53,7 +53,7 @@ public abstract class GraphQLDirectiveLocationMixin extends GraphQLElementImpl i
                 }
 
                 @Override
-                public @NotNull Object @NotNull [] getVariants() {
+                public @NotNull Object[] getVariants() {
                   return PsiReference.EMPTY_ARRAY;
                 }
               });
