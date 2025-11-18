@@ -56,6 +56,24 @@ fun IDevice.getDatabaseList(packageName: String, databasesDir: String): Result<L
   return Result.success(result.output.filter { it.isDatabaseFileName() }.sorted())
 }
 
+fun IDevice.getDatabaseList(packageName: String, databasesDirs: List<String>): Result<List<Pair<String, String>>> {
+  val allDatabases = mutableListOf<Pair<String, String>>()
+  var atLeastOneSuccess = false
+  for (databasesDir in databasesDirs) {
+    val result = getDatabaseList(packageName, databasesDir)
+    if (result.isFailure) {
+      continue
+    }
+    atLeastOneSuccess = true
+    allDatabases.addAll(result.getOrThrow().map { databasesDir to it })
+  }
+  return if (atLeastOneSuccess) {
+    Result.success(allDatabases)
+  } else {
+    Result.failure(Exception("Could not list databases from any of the provided directories"))
+  }
+}
+
 suspend fun pullFile(device: IDevice, appPackageName: String, remoteDirName: String, remoteFileName: String): Result<File> {
   val remoteFilePath = "$remoteDirName/$remoteFileName"
   val localFile = File.createTempFile(remoteFileName.substringBeforeLast(".") + "-tmp", ".db")
