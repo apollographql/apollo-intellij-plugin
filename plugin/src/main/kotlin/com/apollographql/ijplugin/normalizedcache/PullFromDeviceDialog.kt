@@ -218,13 +218,13 @@ class PullFromDeviceDialog(
 
                     is Client -> {
                       val packageName = client.clientData.packageName
-                      val databasesDir = client.clientData.dataDir + "/databases"
+                      val databasesDir = listOf(client.clientData.dataDir + "/databases", client.clientData.dataDir + "/cache")
                       DatabasePackageNode(
                           project = project,
                           parent = this@DeviceNode,
                           device = device,
                           packageName = packageName,
-                          databasesDir = databasesDir,
+                          databasesDirs = databasesDir,
                           computeChildrenOn = ComputeChildrenOn.INIT,
                           autoExpand = autoExpand,
                       )
@@ -271,7 +271,7 @@ class PullFromDeviceDialog(
                     parent = this,
                     device = device,
                     packageName = packageName,
-                    databasesDir = "/data/data/$packageName/databases",
+                    databasesDirs = listOf("/data/data/$packageName/databases", "/data/data/$packageName/cache"),
                     computeChildrenOn = ComputeChildrenOn.EXPANDED,
                     autoExpand = false,
                 )
@@ -287,7 +287,7 @@ class PullFromDeviceDialog(
       parent: DynamicNode,
       private val device: IDevice,
       private val packageName: String,
-      private val databasesDir: String,
+      private val databasesDirs: List<String>,
       computeChildrenOn: ComputeChildrenOn,
       private val autoExpand: Boolean,
   ) : DynamicNode(project, parent, computeChildrenOn) {
@@ -297,7 +297,7 @@ class PullFromDeviceDialog(
     }
 
     override fun computeChildren() {
-      device.getDatabaseList(packageName, databasesDir).onFailure {
+      device.getDatabaseList(packageName, databasesDirs).onFailure {
         logw(it, "Could not list databases")
         updateChild(ErrorNode(ApolloBundle.message("normalizedCacheViewer.pullFromDevice.listDatabases.error")))
       }.onSuccess {
@@ -306,7 +306,7 @@ class PullFromDeviceDialog(
         } else {
           updateChildren(
               it
-                  .map { databaseFileName ->
+                  .map { (databasesDir, databaseFileName) ->
                     DatabaseNode(
                         device = device,
                         packageName = packageName,
