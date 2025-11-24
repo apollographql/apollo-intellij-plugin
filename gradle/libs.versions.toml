@@ -7,7 +7,7 @@ changelog-plugin = "2.2.1"
 sqlite-jdbc = "3.43.2.0"
 apollo-normalizedcache = "1.0.0-alpha.3"
 slf4j = "2.0.13"
-google-testparameterinjector = "1.11"
+google-testparameterinjector = "1.20"
 cdimascio-dotenv = "6.4.1"
 atlassian-commonmark = "0.17.0"
 
