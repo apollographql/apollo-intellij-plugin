@@ -17,3 +17,5 @@ fun String.decapitalizeFirstLetter() = replaceFirstChar { if (it.isUpperCase()) 
 fun String.urlEncoded(): String = URLEncoder.encode(this, "UTF-8")
 
 fun String.toCamelCase() = split("_").joinToString("") { it.capitalizeFirstLetter() }.decapitalizeFirstLetter()
+
+fun String.escapeShell(): String = this.replace("'", "'\\''")

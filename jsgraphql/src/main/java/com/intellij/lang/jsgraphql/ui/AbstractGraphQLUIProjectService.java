@@ -23,11 +23,9 @@ import com.intellij.lang.jsgraphql.GraphQLBundle;
 import com.intellij.lang.jsgraphql.GraphQLFileType;
 import com.intellij.lang.jsgraphql.GraphQLParserDefinition;
 import com.intellij.lang.jsgraphql.ide.actions.GraphQLExecuteEditorAction;
-import com.intellij.lang.jsgraphql.ide.actions.GraphQLOpenConfigAction;
 import com.intellij.lang.jsgraphql.ide.actions.GraphQLToggleVariablesAction;
 import com.intellij.lang.jsgraphql.ide.config.GraphQLConfigListener;
 import com.intellij.lang.jsgraphql.ide.config.GraphQLConfigProvider;
-import com.intellij.lang.jsgraphql.ide.config.env.GraphQLEditEnvironmentVariablesAction;
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLConfigEndpoint;
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLConfigSecurity;
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLProjectConfig;
@@ -35,8 +33,6 @@ import com.intellij.lang.jsgraphql.ide.highlighting.query.GraphQLQueryContext;
 import com.intellij.lang.jsgraphql.ide.highlighting.query.GraphQLQueryContextHighlightVisitor;
 import com.intellij.lang.jsgraphql.ide.introspection.GraphQLIntrospectionService;
 import com.intellij.lang.jsgraphql.ide.introspection.GraphQLIntrospectionUtil;
-import com.intellij.lang.jsgraphql.ide.introspection.GraphQLOpenIntrospectionSchemaAction;
-import com.intellij.lang.jsgraphql.ide.introspection.GraphQLRunIntrospectionQueryAction;
 import com.intellij.lang.jsgraphql.ide.introspection.remote.GraphQLRemoteSchemasRegistry;
 import com.intellij.lang.jsgraphql.ide.introspection.source.GraphQLGeneratedSourcesManager;
 import com.intellij.lang.jsgraphql.ide.notifications.GraphQLNotificationUtil;
@@ -260,9 +256,6 @@ abstract public class AbstractGraphQLUIProjectService implements GraphQLUIProjec
 
     // variables & settings actions
     final DefaultActionGroup settingsActions = new DefaultActionGroup();
-    settingsActions.add(new GraphQLOpenConfigAction());
-    settingsActions.add(ActionManager.getInstance().getAction(GraphQLEditEnvironmentVariablesAction.ACTION_ID));
-    settingsActions.addSeparator();
     settingsActions.add(new GraphQLToggleVariablesAction());
 
     final JComponent settingsToolbar = createToolbar(settingsActions, headerComponent);
@@ -273,10 +266,9 @@ abstract public class AbstractGraphQLUIProjectService implements GraphQLUIProjec
     final AnAction executeGraphQLAction = ActionManager.getInstance().getAction(GraphQLExecuteEditorAction.ACTION_ID);
     queryActions.add(executeGraphQLAction);
     queryActions.addSeparator();
-    queryActions.add(new GraphQLRunIntrospectionQueryAction());
-    queryActions.add(new GraphQLOpenIntrospectionSchemaAction());
-    queryActions.addSeparator();
-    queryActions.add(getOpenInSandboxAction());
+    for (AnAction action : getAdditionalActions()) {
+      queryActions.add(action);
+    }
     final JComponent queryToolbar = createToolbar(queryActions, headerComponent);
 
     // configured endpoints combo box

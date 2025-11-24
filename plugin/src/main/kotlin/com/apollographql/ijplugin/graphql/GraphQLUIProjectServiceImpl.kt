@@ -1,6 +1,8 @@
 package com.apollographql.ijplugin.graphql
 
-import com.apollographql.ijplugin.studio.sandbox.OpenInSandboxAction
+import com.apollographql.ijplugin.action.CopyOperationAsCurlToClipboardAction
+import com.apollographql.ijplugin.action.CopyOperationToClipboardAction
+import com.apollographql.ijplugin.action.OpenInSandboxAction
 import com.intellij.lang.jsgraphql.ui.AbstractGraphQLUIProjectService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.editor.Editor
@@ -11,7 +13,11 @@ class GraphQLUIProjectServiceImpl(project: Project) : AbstractGraphQLUIProjectSe
     return stripApolloClientDirectives(editor, query)
   }
 
-  override fun getOpenInSandboxAction(): AnAction {
-    return OpenInSandboxAction()
+  override fun getAdditionalActions(): List<AnAction> {
+    return listOf(
+        OpenInSandboxAction(),
+        CopyOperationToClipboardAction(),
+        CopyOperationAsCurlToClipboardAction(),
+    )
   }
 }
