@@ -11,7 +11,6 @@ import com.intellij.openapi.util.NlsContexts.NotificationTitle
 const val NOTIFICATION_GROUP_ID_MAIN = "apollo.main"
 const val NOTIFICATION_GROUP_ID_TELEMETRY = "apollo.telemetry"
 
-@Suppress("UnstableApiUsage")
 fun createNotification(
     notificationGroupId: String = NOTIFICATION_GROUP_ID_MAIN,
     @NotificationTitle title: String = "",
@@ -27,29 +26,13 @@ fun createNotification(
       }
     }
 
-@Suppress("UnstableApiUsage")
 fun showNotification(
     project: Project,
     @NotificationTitle title: String = "",
     @NotificationContent content: String,
     type: NotificationType,
     vararg actions: AnAction,
-) = createNotification(
-    notificationGroupId = NOTIFICATION_GROUP_ID_MAIN,
-    title = title,
-    content = content,
-    type = type,
-    actions = actions,
-).notify(project)
-
-@Suppress("UnstableApiUsage")
-fun showNotification(
-    project: Project,
-    notificationGroupId: String,
-    @NotificationTitle title: String = "",
-    @NotificationContent content: String,
-    type: NotificationType,
-    vararg actions: AnAction,
+    notificationGroupId: String = NOTIFICATION_GROUP_ID_MAIN,
 ) = createNotification(
     notificationGroupId = notificationGroupId,
     title = title,

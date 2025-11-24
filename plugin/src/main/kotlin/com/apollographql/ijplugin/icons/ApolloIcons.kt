@@ -19,6 +19,8 @@ object ApolloIcons {
     // This one cannot be lazy because it's referenced from plugin.xml
     @JvmField
     val ApolloColor = load("/icons/action-apollo-color.svg")
+
+    val Curl by lazy { load("/icons/action-curl.svg") }
   }
 
   object ToolWindow {

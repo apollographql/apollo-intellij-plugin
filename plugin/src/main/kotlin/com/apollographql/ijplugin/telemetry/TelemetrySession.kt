@@ -355,6 +355,16 @@ sealed class TelemetryEvent(
   class ApolloIjOpenInApolloSandbox : TelemetryEvent("akij_open_in_apollo_sandbox", null)
 
   /**
+   * User used the 'Copy Operation to Clipboard' Apollo IntelliJ plugin action.
+   */
+  class ApolloIjCopyOperationToClipboard : TelemetryEvent("akij_copy_operation_to_clipboard", null)
+
+  /**
+   * User used the 'Copy Operation as Curl to Clipboard' Apollo IntelliJ plugin action.
+   */
+  class ApolloIjCopyOperationAsCurlToClipboard : TelemetryEvent("akij_copy_operation_as_curl_to_clipboard", null)
+
+  /**
    * User used the 'Download schema' Apollo IntelliJ plugin action.
    */
   class ApolloIjDownloadSchema : TelemetryEvent("akij_download_schema", null)

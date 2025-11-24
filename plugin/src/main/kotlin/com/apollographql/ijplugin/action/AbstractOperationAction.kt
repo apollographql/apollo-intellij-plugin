@@ -1,12 +1,9 @@
-package com.apollographql.ijplugin.studio.sandbox
+package com.apollographql.ijplugin.action
 
-import com.apollographql.ijplugin.ApolloBundle
-import com.apollographql.ijplugin.icons.ApolloIcons
 import com.apollographql.ijplugin.telemetry.TelemetryEvent
 import com.apollographql.ijplugin.telemetry.telemetryService
 import com.apollographql.ijplugin.util.logd
-import com.apollographql.ijplugin.util.urlEncoded
-import com.intellij.ide.BrowserUtil
+import com.apollographql.ijplugin.util.toJsonObject
 import com.intellij.lang.jsgraphql.GraphQLFileType
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLConfigEndpoint
 import com.intellij.lang.jsgraphql.ide.introspection.promptForEnvVariables
@@ -18,26 +15,22 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.NlsActions
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.parentOfType
+import kotlinx.serialization.json.JsonObject
+import java.util.function.Supplier
+import javax.swing.Icon
 
-class OpenInSandboxAction : AnAction(
-    ApolloBundle.messagePointer("SandboxService.OpenInSandboxAction.text"),
-    ApolloIcons.Action.Apollo
-) {
-
-  companion object {
-    val ACTION_ID: String = OpenInSandboxAction::class.java.simpleName
-  }
+abstract class AbstractOperationAction(dynamicText: Supplier<@NlsActions.ActionText String>, icon: Icon) : AnAction(dynamicText, icon) {
 
   override fun update(e: AnActionEvent) {
     // Only care about GraphQL files
     val isGraphQLFile = e.getData(CommonDataKeys.VIRTUAL_FILE)?.let { file ->
-      e.project?.let { project ->
-        GraphQLFileType.isGraphQLFile(file)
-      }
+      e.project != null && GraphQLFileType.isGraphQLFile(file)
     } == true
     e.presentation.isEnabled = isGraphQLFile
 
@@ -45,10 +38,12 @@ class OpenInSandboxAction : AnAction(
     e.presentation.isVisible = isGraphQLFile || e.getData(CommonDataKeys.EDITOR) != null
   }
 
+  abstract val telemetryEvent: TelemetryEvent
+
   override fun actionPerformed(e: AnActionEvent) {
     logd()
     val project = e.project ?: return
-    project.telemetryService.logEvent(TelemetryEvent.ApolloIjOpenInApolloSandbox())
+    project.telemetryService.logEvent(telemetryEvent)
 
     // Editor will be present if the action is triggered from the editor toolbar, the main menu, the Open In popup inside the editor
     // Otherwise it will be null, and we fallback to the File (but no endpoint / variables)
@@ -58,36 +53,35 @@ class OpenInSandboxAction : AnAction(
           PsiManager.getInstance(project).findFile(virtualFile)
         }
         ?: return
-    val contents = contentsWithReferencedFragments(psiFile).urlEncoded()
-
+    val contents = contentsWithReferencedFragments(psiFile)
     val endpointsModel = editor?.getUserData(GraphQLUIProjectService.GRAPH_QL_ENDPOINTS_MODEL)
     val graphQLConfigEndpoint: GraphQLConfigEndpoint? = endpointsModel?.let { promptForEnvVariables(project, it.selectedItem) }
-    val selectedEndpointUrl = graphQLConfigEndpoint?.url?.urlEncoded()
-    val headers = graphQLConfigEndpoint?.headers?.formatAsJson()?.urlEncoded()
-
+    val selectedEndpointUrl = graphQLConfigEndpoint?.url
+    val headers = graphQLConfigEndpoint?.headers?.mapValues { (_, v) -> v.toString() }
     val variablesEditor = editor?.getUserData(GraphQLUIProjectService.GRAPH_QL_VARIABLES_EDITOR)
-    val variables = variablesEditor?.document?.text?.urlEncoded()
+    val variablesJson = variablesEditor?.document?.text?.let { it.ifBlank { null } }?.toJsonObject()
 
-    // See https://www.apollographql.com/docs/graphos/explorer/sandbox/#url-parameters
-    val url = buildString {
-      append("https://studio.apollographql.com/sandbox/explorer?document=$contents")
-      if (selectedEndpointUrl != null) {
-        append("&endpoint=$selectedEndpointUrl")
-      }
-      if (!variables.isNullOrBlank()) {
-        append("&variables=$variables")
-      }
-      if (!headers.isNullOrBlank()) {
-        append("&headers=$headers")
-      }
-    }
-    BrowserUtil.browse(url, project)
+    doAction(
+        project = project,
+        contents = contents,
+        endpointUrl = selectedEndpointUrl,
+        headers = headers,
+        variablesJson = variablesJson,
+    )
   }
+
+  abstract fun doAction(
+      project: Project,
+      contents: String,
+      endpointUrl: String?,
+      headers: Map<String, String>?,
+      variablesJson: JsonObject?,
+  )
 
   /**
    * Get contents of the file, including all referenced fragments, recursively, if they belong to a different file
    */
-  private fun contentsWithReferencedFragments(psiFile: PsiFile, fragmentDefinition: GraphQLFragmentDefinition? = null): String {
+  protected fun contentsWithReferencedFragments(psiFile: PsiFile, fragmentDefinition: GraphQLFragmentDefinition? = null): String {
     val contents = StringBuilder(fragmentDefinition?.text ?: psiFile.text)
     val visitor = object : GraphQLRecursiveVisitor() {
       override fun visitFragmentSpread(o: GraphQLFragmentSpread) {
@@ -109,5 +103,3 @@ class OpenInSandboxAction : AnAction(
 
   override fun getActionUpdateThread() = ActionUpdateThread.BGT
 }
-
-private fun Map<String, Any?>.formatAsJson() = "{" + map { (key, value) -> """"$key": "$value"""" }.joinToString() + "}"

@@ -11,6 +11,7 @@ import org.apache.http.HttpRequest;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.List;
 import java.util.Map;
 
 public interface GraphQLUIProjectService {
@@ -45,7 +46,7 @@ public interface GraphQLUIProjectService {
 
   String stripClientDirectives(@NotNull Editor editor, String query);
 
-  AnAction getOpenInSandboxAction();
+  List<AnAction> getAdditionalActions();
 
   static GraphQLUIProjectService getInstance(@NotNull Project project) {
     return project.getService(GraphQLUIProjectService.class);

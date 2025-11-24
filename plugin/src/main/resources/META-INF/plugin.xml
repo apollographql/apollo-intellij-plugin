@@ -402,7 +402,27 @@
     <!-- Tools / Apollo / Open in Apollo Sandbox -->
     <action
         id="OpenInSandboxAction"
-        class="com.apollographql.ijplugin.studio.sandbox.OpenInSandboxAction"
+        class="com.apollographql.ijplugin.action.OpenInSandboxAction"
+    >
+      <add-to-group group-id="ApolloToolsActionGroup" />
+      <add-to-group group-id="RevealGroup" />
+      <override-text place="RevealInPopup" />
+    </action>
+
+    <!-- Tools / Apollo / Copy Operation to Clipboard -->
+    <action
+        id="CopyOperationToClipboardAction"
+        class="com.apollographql.ijplugin.action.CopyOperationToClipboardAction"
+    >
+      <add-to-group group-id="ApolloToolsActionGroup" />
+      <add-to-group group-id="RevealGroup" />
+      <override-text place="RevealInPopup" />
+    </action>
+
+    <!-- Tools / Apollo / Copy Operation as Curl Command -->
+    <action
+        id="CopyOperationAsCurlToClipboardAction"
+        class="com.apollographql.ijplugin.action.CopyOperationAsCurlToClipboardAction"
     >
       <add-to-group group-id="ApolloToolsActionGroup" />
       <add-to-group group-id="RevealGroup" />

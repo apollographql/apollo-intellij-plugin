@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.util
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -21,3 +22,9 @@ fun JsonElement.toAny(): Any? = when (this) {
     }
   }
 }
+
+fun String.toJsonObject(): JsonObject? {
+  return runCatching { Json.parseToJsonElement(this) as? JsonObject }.getOrNull()
+}
+
+fun JsonObject.toJsonString() = Json.encodeToString(this)
