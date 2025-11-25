@@ -56,9 +56,9 @@ class GraphQLBreadcrumbsProvider : BreadcrumbsProvider {
       // Executable
       is GraphQLTypedOperationDefinition -> "${element.operationType.text} ${element.name ?: "<anonymous>"}"
       is GraphQLFragmentDefinition -> "fragment ${element.name ?: "<unnamed>"}"
-      is GraphQLField -> element.name.orEmpty()
+      is GraphQLField -> element.alias?.identifier?.referenceName ?: element.name.orEmpty()
       is GraphQLFragmentSpread -> "...${element.name}"
-      is GraphQLInlineFragment -> element.typeCondition?.typeName?.name.let { if (it != null) "... on $it" else "..."}
+      is GraphQLInlineFragment -> element.typeCondition?.typeName?.name.let { if (it != null) "... on $it" else "..." }
 
       // Schema
       is GraphQLFieldsDefinition -> (element.parent as GraphQLNamedTypeDefinition).typeNameDefinition?.name ?: "<unknown>"
