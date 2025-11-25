@@ -58,7 +58,7 @@ class GraphQLBreadcrumbsProvider : BreadcrumbsProvider {
       is GraphQLFragmentDefinition -> "fragment ${element.name ?: "<unnamed>"}"
       is GraphQLField -> element.name.orEmpty()
       is GraphQLFragmentSpread -> "...${element.name}"
-      is GraphQLInlineFragment -> "... on ${element.typeCondition?.typeName?.name ?: "<unknown>"}"
+      is GraphQLInlineFragment -> element.typeCondition?.typeName?.name.let { if (it != null) "... on $it" else "..."}
 
       // Schema
       is GraphQLFieldsDefinition -> (element.parent as GraphQLNamedTypeDefinition).typeNameDefinition?.name ?: "<unknown>"
