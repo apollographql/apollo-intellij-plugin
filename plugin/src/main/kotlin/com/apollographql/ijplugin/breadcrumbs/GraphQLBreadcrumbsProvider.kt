@@ -54,7 +54,7 @@ class GraphQLBreadcrumbsProvider : BreadcrumbsProvider {
   override fun getElementInfo(element: PsiElement): @NlsSafe String {
     return when (element) {
       // Executable
-      is GraphQLTypedOperationDefinition -> "${element.operationType.text} ${element.name ?: "<anonymous>"}"
+      is GraphQLTypedOperationDefinition -> if (element.name != null) "${element.operationType.text} ${element.name}" else element.operationType.text
       is GraphQLFragmentDefinition -> "fragment ${element.name ?: "<unnamed>"}"
       is GraphQLField -> element.alias?.identifier?.referenceName ?: element.name.orEmpty()
       is GraphQLFragmentSpread -> "...${element.name}"
