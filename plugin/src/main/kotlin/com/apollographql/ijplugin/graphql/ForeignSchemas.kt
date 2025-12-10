@@ -14,6 +14,7 @@ import okio.source
 
 object ForeignSchemas {
   val foreignSchemas = listOf(
+      foreignSchema(GraphQLLibraryTypes.CACHE_V0_4.identifier),
       foreignSchema(GraphQLLibraryTypes.CACHE_V0_3.identifier),
       foreignSchema(GraphQLLibraryTypes.CACHE_V0_1.identifier),
 
@@ -25,8 +26,6 @@ object ForeignSchemas {
 
       foreignSchema(GraphQLLibraryTypes.FAKES_V0_0.identifier),
   )
-
-  val lastestKotlinLabsForeignSchema = foreignSchema(GraphQLLibraryTypes.KOTLIN_LABS_V0_5.identifier)
 
   fun getForeignSchemaForDirective(name: String): ForeignSchema? {
     return foreignSchemas.firstOrNull { foreignSchema ->
