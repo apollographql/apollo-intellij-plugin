@@ -27,8 +27,6 @@ object ForeignSchemas {
       foreignSchema(GraphQLLibraryTypes.FAKES_V0_0.identifier),
   )
 
-  val lastestKotlinLabsForeignSchema = foreignSchema(GraphQLLibraryTypes.KOTLIN_LABS_V0_5.identifier)
-
   fun getForeignSchemaForDirective(name: String): ForeignSchema? {
     return foreignSchemas.firstOrNull { foreignSchema ->
       foreignSchema.definitions.directives().any { it.name == name.withoutPrefix() }

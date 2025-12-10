@@ -8,9 +8,7 @@ import com.apollographql.apollo.ast.GQLDefinition
 import com.apollographql.apollo.ast.GQLDirectiveDefinition
 import com.apollographql.apollo.ast.GQLNamed
 import com.apollographql.apollo.ast.rawType
-import com.apollographql.ijplugin.graphql.ForeignSchemas
 import com.apollographql.ijplugin.graphql.importUrlName
-import com.apollographql.ijplugin.graphql.url
 import com.intellij.lang.jsgraphql.psi.GraphQLArrayValue
 import com.intellij.lang.jsgraphql.psi.GraphQLDirective
 import com.intellij.lang.jsgraphql.psi.GraphQLElement
@@ -107,19 +105,10 @@ fun createLinkDirectiveSchemaExtension(
         ?.filter { it in knownDefinitionNames }.orEmpty()
   }.toSet()
 
-  // Special case: if we're importing @typePolicy or @fieldPolicy, un-import kotlin_labs by linking to it with an empty import.
-  // This is because all the kotlin_labs/0.3 symbols (which includes @typePolicy or @fieldPolicy) are implicitly imported by the AK
-  // compiler, and therefore this would import these twice, which is an error.
-  val unimportKotlinLabs = if (importedNames.any { it == "@typePolicy" || it == "@fieldPolicy" }) {
-    "\n@link(url: \"${ForeignSchemas.lastestKotlinLabsForeignSchema.url}\")"
-  } else {
-    ""
-  }
-
   return GraphQLElementFactory.createFile(
       project,
       """
-        extend schema$unimportKotlinLabs
+        extend schema
         @link(
           url: "$definitionsUrl",
           import: [${(importedNames + additionalNames).joinToString { it.quoted() }}]
