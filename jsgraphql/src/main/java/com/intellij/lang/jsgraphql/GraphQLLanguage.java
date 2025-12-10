@@ -15,4 +15,8 @@ public class GraphQLLanguage extends Language {
   private GraphQLLanguage() {
     super(GraphQLConstants.GraphQL);
   }
+
+  @Override public boolean isCaseSensitive() {
+    return true;
+  }
 }
