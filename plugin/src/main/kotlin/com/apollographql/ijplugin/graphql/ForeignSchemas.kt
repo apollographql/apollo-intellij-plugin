@@ -14,6 +14,7 @@ import okio.source
 
 object ForeignSchemas {
   val foreignSchemas = listOf(
+      foreignSchema(GraphQLLibraryTypes.CACHE_V0_4.identifier),
       foreignSchema(GraphQLLibraryTypes.CACHE_V0_3.identifier),
       foreignSchema(GraphQLLibraryTypes.CACHE_V0_1.identifier),
 

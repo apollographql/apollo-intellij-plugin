@@ -155,9 +155,10 @@ class GraphQLLibraryManager(private val myProject: Project) {
 
         GraphQLLibraryTypes.NULLABILITY_V0_4 to "nullability-v0.4.graphqls",
 
-        GraphQLLibraryTypes.CACHE_V0_1 to "cache-v0.1.graphqls",
         // Note: the cache library never supported v0.2 so the plugin doesn't either
+        GraphQLLibraryTypes.CACHE_V0_1 to "cache-v0.1.graphqls",
         GraphQLLibraryTypes.CACHE_V0_3 to "cache-v0.3.graphqls",
+        GraphQLLibraryTypes.CACHE_V0_4 to "cache-v0.4.graphqls",
 
         GraphQLLibraryTypes.FAKES_V0_0 to "fakes-v0.0.graphqls",
     )
