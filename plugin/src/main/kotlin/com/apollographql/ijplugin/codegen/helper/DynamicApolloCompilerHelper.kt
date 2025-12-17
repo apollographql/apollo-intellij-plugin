@@ -1,6 +1,8 @@
 package com.apollographql.ijplugin.codegen.helper
 
 import com.apollographql.ijplugin.gradle.ApolloKotlinService
+import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
+import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.intellij.openapi.project.Project
 import java.io.File
@@ -15,32 +17,33 @@ class DynamicApolloCompilerHelper(
     private val project: Project,
     private val apolloTasksDependencies: Set<String>,
 ) {
-  private lateinit var apolloCompilerHelperClass: Class<*>
-  private lateinit var instance: Any
-
-  private fun init() {
-    if (this::instance.isInitialized && this::apolloCompilerHelperClass.isInitialized) return
-    val dependencies = apolloTasksDependencies.map { File(it.trim()).toURI().toURL() }
+  private fun getApolloCompilerHelperClassAndInstance(pluginDependencies: Set<String>): Pair<Class<*>, Any> {
+    val dependencies = (apolloTasksDependencies + pluginDependencies).map { File(it.trim()).toURI().toURL() }
     val classLoader = ChildFirstClassLoader(dependencies.toTypedArray<URL>(), ApolloCompilerHelper::class.java.classLoader)
-    apolloCompilerHelperClass = classLoader.loadClass(ApolloCompilerHelper::class.java.name)
-    instance = apolloCompilerHelperClass.getDeclaredConstructor(Project::class.java).newInstance(project)
+    val apolloCompilerHelperClass = classLoader.loadClass(ApolloCompilerHelper::class.java.name)
+    val instance = apolloCompilerHelperClass.getDeclaredConstructor(Project::class.java).newInstance(project)
+    return Pair(apolloCompilerHelperClass, instance)
   }
 
   fun generateAllSources() {
+    logd("Generating sources for all services")
+    val allPluginDependencies =
+      project.apolloKotlinProjectModelService.getApolloKotlinServices().flatMap { it.pluginDependencies.orEmpty() }.toSet()
     try {
-      init()
+      val (apolloCompilerHelperClass, apolloCompilerHelperInstance) = getApolloCompilerHelperClassAndInstance(allPluginDependencies)
       val method = apolloCompilerHelperClass.getMethod("generateAllSources")
-      method.invoke(instance)
+      method.invoke(apolloCompilerHelperInstance)
     } catch (e: Exception) {
       logw(e, "Failed to generate sources for all services")
     }
   }
 
   fun generateSources(service: ApolloKotlinService) {
+    logd("Generating sources for service ${service.id}")
     try {
-      init()
+      val (apolloCompilerHelperClass, apolloCompilerHelperInstance) = getApolloCompilerHelperClassAndInstance(service.pluginDependencies.orEmpty())
       val method = apolloCompilerHelperClass.getMethod("generateSources", ApolloKotlinService::class.java)
-      method.invoke(instance, service)
+      method.invoke(apolloCompilerHelperInstance, service)
     } catch (e: Exception) {
       logw(e, "Failed to generate sources for service ${service.id}")
     }
