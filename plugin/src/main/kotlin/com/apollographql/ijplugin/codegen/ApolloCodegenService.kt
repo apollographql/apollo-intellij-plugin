@@ -166,13 +166,16 @@ class ApolloCodegenService(
             }
           }
 
+          logd("apolloKotlinService?.hasCompilerOptions=${apolloKotlinService?.hasCompilerOptions}, apolloTasksDependencies=${project.apolloKotlinProjectModelService.apolloTasksDependencies}")
           if (apolloKotlinService?.hasCompilerOptions == true && project.apolloKotlinProjectModelService.apolloTasksDependencies != null) {
             // We can use the built-in Apollo compiler
+            logd("Using Apollo compiler for codegen of service ${apolloKotlinService.id}")
             apolloCompilerCodegenJob?.cancel()
             apolloCompilerCodegenJob = coroutineScope.launch {
               DynamicApolloCompilerHelper(project, project.apolloKotlinProjectModelService.apolloTasksDependencies!!).generateSources(apolloKotlinService)
             }
           } else {
+            logd("Fall back to using Gradle task for codegen")
             // Fall back to the Gradle codegen task
             startGradleCodegen()
           }
@@ -256,6 +259,11 @@ class ApolloCodegenService(
   }
 
   private fun startCodegen() {
+    logd("Apollo Kotlin services=${
+      project.apolloKotlinProjectModelService.getApolloKotlinServices()
+          .map { "(id=${it.id} / hasCompilerOptions=${it.hasCompilerOptions})" }
+    }"
+    )
     if (project.apolloKotlinProjectModelService.getApolloKotlinServices()
             .any { it.hasCompilerOptions } && project.apolloKotlinProjectModelService.apolloTasksDependencies != null
     ) {
