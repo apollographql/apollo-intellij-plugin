@@ -41,6 +41,7 @@ import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloUsedOptions
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.ApolloWarnOnDeprecatedUsages
 import com.apollographql.ijplugin.telemetry.TelemetryProperty.GradleVersion
 import com.apollographql.ijplugin.util.toCamelCase
+import java.io.File
 
 fun ApolloGradleToolingModel.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
   // telemetryData was introduced in 1.2, accessing it on an older version will throw an exception
@@ -104,9 +105,9 @@ fun TelemetryData.toTelemetryProperties(): Set<TelemetryProperty> = buildSet {
 
 @OptIn(ApolloExperimental::class)
 fun ApolloKotlinService.toTelemetryProperties(): Set<TelemetryProperty> {
-  val irOptions = irOptionsFile!!.toIrOptions()
-  val codegenOptions = codegenOptionsFile!!.toCodegenOptions()
-  val codegenSchemaOptions = codegenSchemaOptionsFile!!.toCodegenSchemaOptions()
+  val irOptions = File(irOptionsFilePath!!).toIrOptions()
+  val codegenOptions = File(codegenOptionsFilePath!!).toCodegenOptions()
+  val codegenSchemaOptions = File(codegenSchemaOptionsFilePath!!).toCodegenSchemaOptions()
   return buildSet {
     irOptions.codegenModels?.let { add(ApolloCodegenModels(it)) }
     codegenOptions.operationManifestFormat?.let { add(ApolloOperationManifestFormat(it)) }

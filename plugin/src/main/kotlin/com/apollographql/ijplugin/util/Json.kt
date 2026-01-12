@@ -27,4 +27,10 @@ fun String.toJsonObject(): JsonObject? {
   return runCatching { Json.parseToJsonElement(this) as? JsonObject }.getOrNull()
 }
 
-fun JsonObject.toJsonString() = Json.encodeToString(this)
+fun JsonObject.toJsonString(): String = Json.encodeToString(this)
+
+fun Map<String, JsonElement>.toJsonString(): String = JsonObject(this).toJsonString()
+
+fun String.toMapOfAny(): Map<String, Any?> {
+  return toJsonObject()!!.mapValues { it.value.toAny() }
+}

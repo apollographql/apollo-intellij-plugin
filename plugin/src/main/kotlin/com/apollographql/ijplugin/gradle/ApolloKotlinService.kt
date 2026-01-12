@@ -4,7 +4,6 @@ import com.intellij.util.messages.Topic
 import com.intellij.util.xmlb.annotations.Attribute
 import com.intellij.util.xmlb.annotations.Transient
 import com.intellij.util.xmlb.annotations.XCollection
-import java.io.File
 
 interface ApolloKotlinServiceListener {
   companion object {
@@ -66,29 +65,29 @@ data class ApolloKotlinService(
     @Attribute
     val useSemanticNaming: Boolean = true,
 
-    @Transient
-    val codegenSchemaOptionsFile: File? = null,
+    @Attribute
+    val codegenSchemaOptionsFilePath: String? = null,
 
-    @Transient
-    val irOptionsFile: File? = null,
+    @Attribute
+    val irOptionsFilePath: String? = null,
 
-    @Transient
-    val codegenOptionsFile: File? = null,
+    @Attribute
+    val codegenOptionsFilePath: String? = null,
 
-    @Transient
-    val pluginDependencies: Set<String>? = null,
+    @XCollection
+    val pluginDependencies: List<String>? = null,
 
-    @Transient
-    val pluginArguments: Map<String, Any?>? = null,
+    @Attribute
+    val pluginArgumentsJson: String? = null,
 
-    @Transient
-    val codegenOutputDir: File? = null,
+    @Attribute
+    val codegenOutputDirPath: String? = null,
 
-    @Transient
-    val operationManifestFile: File? = null,
+    @Attribute
+    val operationManifestFilePath: String? = null,
 
-    @Transient
-    val dataBuildersOutputDir: File? = null,
+    @Attribute
+    val dataBuildersOutputDirPath: String? = null,
 ) {
   data class Id(
       @Attribute
@@ -116,5 +115,5 @@ data class ApolloKotlinService(
 
   val hasCompilerOptions
     @Transient
-    get() = codegenOptionsFile != null && irOptionsFile != null && codegenSchemaOptionsFile != null && operationManifestFile != null
+    get() = codegenOptionsFilePath != null && irOptionsFilePath != null && codegenSchemaOptionsFilePath != null && operationManifestFilePath != null
 }
