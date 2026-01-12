@@ -18,6 +18,7 @@ import com.apollographql.ijplugin.gradle.ApolloKotlinService.Id
 import com.apollographql.ijplugin.gradle.apolloKotlinProjectModelService
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
+import com.apollographql.ijplugin.util.toMapOfAny
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
@@ -61,9 +62,9 @@ class ApolloCompilerHelper(
       EntryPoints.buildCodegenSchema(
           plugins = schemaService.loadPlugins(),
           logger = logger,
-          arguments = schemaService.pluginArguments!!,
+          arguments = schemaService.pluginArgumentsJson!!.toMapOfAny(),
           normalizedSchemaFiles = schemaService.schemaPaths.map { File(it) }.toInputFiles(),
-          codegenSchemaOptionsFile = schemaService.codegenSchemaOptionsFile!!,
+          codegenSchemaOptionsFile = File(schemaService.codegenSchemaOptionsFilePath!!),
           codegenSchemaFile = codegenSchemaFile,
       )
       ProgressManager.checkCanceled()
@@ -88,11 +89,11 @@ class ApolloCompilerHelper(
         EntryPoints.buildIr(
             plugins = service.loadPlugins(),
             logger = logger,
-            arguments = service.pluginArguments!!,
+            arguments = service.pluginArgumentsJson!!.toMapOfAny(),
             graphqlFiles = service.executableFiles().toInputFiles(),
             codegenSchemaFiles = listOf(codegenSchemaFile).toInputFiles(),
             upstreamIrOperations = irOperationsById.values.toInputFiles(),
-            irOptionsFile = service.irOptionsFile!!,
+            irOptionsFile = File(service.irOptionsFilePath!!),
             irOperationsFile = irOperationsFile,
         )
         ProgressManager.checkCanceled()
@@ -122,47 +123,47 @@ class ApolloCompilerHelper(
           return outputDirs
         }
 
-        service.operationManifestFile!!.parentFile.mkdirs()
+        File(service.operationManifestFilePath!!).parentFile.mkdirs()
         val metadataOutput = File.createTempFile("metadataOutput", null)
         logd("buildSourcesFromIr (${service.id})")
         EntryPoints.buildSourcesFromIr(
             plugins = service.loadPlugins(),
             logger = logger,
-            arguments = service.pluginArguments!!,
+            arguments = service.pluginArgumentsJson!!.toMapOfAny(),
             codegenSchemas = listOf(codegenSchemaFile).toInputFiles(),
             upstreamMetadata = upstreamMetadata.toInputFiles(),
             irOperations = irOperationsById[service.id]!!,
             usedCoordinates = usedCoordinatesFile,
-            codegenOptions = service.codegenOptionsFile!!,
-            operationManifest = service.operationManifestFile,
-            outputDirectory = service.codegenOutputDir!!,
+            codegenOptions = File(service.codegenOptionsFilePath!!),
+            operationManifest = File(service.operationManifestFilePath),
+            outputDirectory = File(service.codegenOutputDirPath!!),
             metadataOutput = metadataOutput,
         )
         ProgressManager.checkCanceled()
         upstreamMetadata.add(metadataOutput)
-        outputDirs.add(service.codegenOutputDir)
+        outputDirs.add(File(service.codegenOutputDirPath))
       }
 
       for (serviceId in allServiceIds) {
         val service = service(serviceId)!!
-        if (service.codegenSchemaOptionsFile!!.toCodegenSchemaOptions().generateDataBuilders) {
+        if (File(service.codegenSchemaOptionsFilePath!!).toCodegenSchemaOptions().generateDataBuilders) {
           logd("buildDataBuilders (${service.id})")
           EntryPoints.buildDataBuilders(
               plugins = service.loadPlugins(),
-              arguments = service.pluginArguments!!,
+              arguments = service.pluginArgumentsJson!!.toMapOfAny(),
               logger = logger,
               codegenSchemas = listOf(codegenSchemaFile).toInputFiles(),
               upstreamMetadatas = upstreamMetadata.toInputFiles(),
               downstreamUsedCoordinates = usedCoordinatesFile,
-              codegenOptions = service.codegenOptionsFile!!,
-              outputDirectory = service.dataBuildersOutputDir!!,
+              codegenOptions = File(service.codegenOptionsFilePath!!),
+              outputDirectory = File(service.dataBuildersOutputDirPath!!),
           )
           ProgressManager.checkCanceled()
-          outputDirs.add(service.dataBuildersOutputDir)
+          outputDirs.add(File(service.dataBuildersOutputDirPath))
         }
       }
 
-      logd("Apollo compiler sources generated for service ${service.id} at ${service.codegenOutputDir}")
+      logd("Apollo compiler sources generated for service ${service.id} at ${service.codegenOutputDirPath}")
       return outputDirs
     } catch (e: Exception) {
       if (e is ProcessCanceledException) {
@@ -236,7 +237,7 @@ class ApolloCompilerHelper(
 
   private fun ApolloKotlinService.loadPlugins(): List<ApolloCompilerPlugin> {
     val classLoader = URLClassLoader(
-        pluginDependencies!!.map { File(it).toURI().toURL() }.toTypedArray(),
+        pluginDependencies.orEmpty().map { File(it).toURI().toURL() }.toTypedArray(),
         ApolloCompilerPlugin::class.java.classLoader
     )
     val plugins = ServiceLoader.load(ApolloCompilerPlugin::class.java, classLoader).toMutableList()
@@ -244,7 +245,7 @@ class ApolloCompilerHelper(
       @Suppress("DEPRECATION")
       ServiceLoader.load(com.apollographql.apollo.compiler.ApolloCompilerPluginProvider::class.java, classLoader).toList()
     for (pluginProvider in pluginProviders) {
-      plugins.add(pluginProvider.create(ApolloCompilerPluginEnvironment(pluginArguments!!, logger)))
+      plugins.add(pluginProvider.create(ApolloCompilerPluginEnvironment(pluginArgumentsJson.orEmpty().toMapOfAny(), logger)))
     }
     return plugins
   }

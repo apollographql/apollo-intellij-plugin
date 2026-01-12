@@ -80,6 +80,12 @@ class ProjectSettingsService(private val project: Project) : PersistentStateComp
       _state.apolloKotlinServices = value
     }
 
+  override var apolloTasksDependencies: List<String>
+    get() = _state.apolloTasksDependencies
+    set(value) {
+      _state.apolloTasksDependencies = value
+    }
+
   override var lspPassPathToSuperGraphYaml: Boolean
     get() = _state.lspPassPathToSuperGraphYaml
     set(value) {
@@ -152,6 +158,7 @@ interface ProjectSettingsState {
    * @see com.apollographql.ijplugin.gradle.ApolloKotlinProjectModelService
    */
   var apolloKotlinServices: List<ApolloKotlinService>
+  var apolloTasksDependencies: List<String>
   var lspPassPathToSuperGraphYaml: Boolean
   var lspPathToSuperGraphYaml: String
   var lspPassAdditionalArguments: Boolean
@@ -207,6 +214,7 @@ data class ProjectSettingsStateImpl(
     override var apolloKotlinServiceConfigurations: List<ApolloKotlinServiceConfiguration> = emptyList(),
     override var telemetryInstanceId: String = "",
     override var apolloKotlinServices: List<ApolloKotlinService> = emptyList(),
+    override var apolloTasksDependencies: List<String> = emptyList(),
     override var lspPassPathToSuperGraphYaml: Boolean = true,
     override var lspPathToSuperGraphYaml: String = "",
     override var lspPassAdditionalArguments: Boolean = false,

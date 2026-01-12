@@ -95,8 +95,6 @@ class ApolloCodegenService(
       startObserveDocumentChanges()
       startObserveFileEditorChanges()
 
-      startCodegen()
-
       // A Gradle sync is a good indicator that Gradle files have changed - trigger a codegen build when that happens.
       startObserveGradleHasSynced()
     } else {
@@ -166,13 +164,13 @@ class ApolloCodegenService(
             }
           }
 
-          logd("apolloKotlinService?.hasCompilerOptions=${apolloKotlinService?.hasCompilerOptions}, apolloTasksDependencies=${project.apolloKotlinProjectModelService.apolloTasksDependencies}")
-          if (apolloKotlinService?.hasCompilerOptions == true && project.apolloKotlinProjectModelService.apolloTasksDependencies != null) {
+          logd("apolloKotlinService?.hasCompilerOptions=${apolloKotlinService?.hasCompilerOptions}, apolloTasksDependencies=${project.projectSettingsState.apolloTasksDependencies}")
+          if (apolloKotlinService?.hasCompilerOptions == true) {
             // We can use the built-in Apollo compiler
             logd("Using Apollo compiler for codegen of service ${apolloKotlinService.id}")
             apolloCompilerCodegenJob?.cancel()
             apolloCompilerCodegenJob = coroutineScope.launch {
-              DynamicApolloCompilerHelper(project, project.apolloKotlinProjectModelService.apolloTasksDependencies!!).generateSources(apolloKotlinService)
+              DynamicApolloCompilerHelper(project, project.projectSettingsState.apolloTasksDependencies.toSet()).generateSources(apolloKotlinService)
             }
           } else {
             logd("Fall back to using Gradle task for codegen")
@@ -265,11 +263,11 @@ class ApolloCodegenService(
     }"
     )
     if (project.apolloKotlinProjectModelService.getApolloKotlinServices()
-            .any { it.hasCompilerOptions } && project.apolloKotlinProjectModelService.apolloTasksDependencies != null
+            .any { it.hasCompilerOptions }
     ) {
       logd("Using Apollo compiler for codegen")
       apolloCompilerCodegenJob = coroutineScope.launch {
-        DynamicApolloCompilerHelper(project, project.apolloKotlinProjectModelService.apolloTasksDependencies!!).generateAllSources()
+        DynamicApolloCompilerHelper(project, project.projectSettingsState.apolloTasksDependencies.toSet()).generateAllSources()
       }
     } else {
       logd("Using Gradle codegen task")

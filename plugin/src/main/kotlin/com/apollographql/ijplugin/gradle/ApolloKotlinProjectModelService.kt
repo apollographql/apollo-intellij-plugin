@@ -23,7 +23,7 @@ import com.apollographql.ijplugin.util.isNotDisposed
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.apollographql.ijplugin.util.newDisposable
-import com.apollographql.ijplugin.util.toAny
+import com.apollographql.ijplugin.util.toJsonString
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -58,14 +58,10 @@ class ApolloKotlinProjectModelService(
   private var apolloKotlinServices: Map<ApolloKotlinService.Id, ApolloKotlinService> =
     project.projectSettingsState.apolloKotlinServices.associateBy { it.id }
 
-  var apolloTasksDependencies: Set<String>? = null
-    private set
-
   init {
     logd("project=${project.name}")
     startObserveApolloProject()
     startOrStopObserveGradleHasSynced()
-    startOrAbortFetchProjectModel()
     startObserveSettings()
 
     logd("shouldFetchProjectModel=${shouldFetchProjectModel()}")
@@ -249,6 +245,7 @@ class ApolloKotlinProjectModelService(
 
     private fun readProjectModels(allApolloGradleProjects: List<GradleProject>): Boolean {
       val allCompilationUnitModels = mutableListOf<CompilationUnitModelWithOptions>()
+      var apolloTasksDependencies: Set<String> = emptySet()
       val allTelemetryData = mutableListOf<TelemetryData>()
       for (gradleProject in allApolloGradleProjects) {
         val projectDirectory = gradleProject.projectDirectory
@@ -280,7 +277,7 @@ class ApolloKotlinProjectModelService(
       project.telemetryService.telemetryProperties = allTelemetryData.flatMap { it.toTelemetryProperties() }.toSet() +
           apolloKotlinServices.flatMap { it.toTelemetryProperties() }.toSet()
 
-      saveApolloKotlinServices(apolloKotlinServices)
+      saveApolloKotlinServices(apolloKotlinServices, apolloTasksDependencies)
       return true
     }
 
@@ -379,7 +376,7 @@ class ApolloKotlinProjectModelService(
       if (isAbortRequested()) return
 
       val apolloKotlinServices = toolingModelsToApolloKotlinServices(allToolingModels)
-      saveApolloKotlinServices(apolloKotlinServices)
+      saveApolloKotlinServices(apolloKotlinServices, emptySet())
     }
 
     private fun getAllApolloGradleProjects(): List<GradleProject>? {
@@ -457,15 +454,15 @@ class ApolloKotlinProjectModelService(
             downstreamServiceIds = compilationUnitModel.downstreamGradleProjectPaths.map { downstreamProjectPath -> ApolloKotlinService.Id(downstreamProjectPath, serviceName) },
             useSemanticNaming = compilationUnitModelWithOptions.codegenOptionsFile.toCodegenOptions().useSemanticNaming ?: true,
 
-            codegenSchemaOptionsFile = compilationUnitModelWithOptions.codegenSchemaOptionsFile,
-            irOptionsFile = compilationUnitModelWithOptions.irOptionsFile,
-            codegenOptionsFile = compilationUnitModelWithOptions.codegenOptionsFile,
-            pluginDependencies = compilationUnitModelWithOptions.compilationUnitModel.pluginDependencies,
-            pluginArguments = compilationUnitModelWithOptions.compilationUnitModel.pluginArguments.mapValues { (_, v) -> v.toAny() },
+            codegenSchemaOptionsFilePath = compilationUnitModelWithOptions.codegenSchemaOptionsFile.path,
+            irOptionsFilePath = compilationUnitModelWithOptions.irOptionsFile.path,
+            codegenOptionsFilePath = compilationUnitModelWithOptions.codegenOptionsFile.path,
+            pluginDependencies = compilationUnitModelWithOptions.compilationUnitModel.pluginDependencies.toList(),
+            pluginArgumentsJson = compilationUnitModelWithOptions.compilationUnitModel.pluginArguments.toJsonString(),
 
-            codegenOutputDir = compilationUnitModelWithOptions.codegenOutputDir,
-            operationManifestFile = compilationUnitModelWithOptions.operationManifestFile,
-            dataBuildersOutputDir = compilationUnitModelWithOptions.dataBuildersOutputDir,
+            codegenOutputDirPath = compilationUnitModelWithOptions.codegenOutputDir.path,
+            operationManifestFilePath = compilationUnitModelWithOptions.operationManifestFile.path,
+            dataBuildersOutputDirPath = compilationUnitModelWithOptions.dataBuildersOutputDir.path,
         )
       }
     }
@@ -523,10 +520,11 @@ class ApolloKotlinProjectModelService(
     return apolloKotlinServices
   }
 
-  private fun saveApolloKotlinServices(apolloKotlinServices: List<ApolloKotlinService>) {
+  private fun saveApolloKotlinServices(apolloKotlinServices: List<ApolloKotlinService>, apolloTasksDependencies: Set<String>) {
     this@ApolloKotlinProjectModelService.apolloKotlinServices = apolloKotlinServices.associateBy { it.id }
     // Cache the ApolloKotlinServices into the project settings
     project.projectSettingsState.apolloKotlinServices = apolloKotlinServices
+    project.projectSettingsState.apolloTasksDependencies = apolloTasksDependencies.toList()
 
     // Services are available, notify interested parties
     project.messageBus.syncPublisher(ApolloKotlinServiceListener.TOPIC).apolloKotlinServicesAvailable()

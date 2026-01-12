@@ -41,7 +41,9 @@ class DynamicApolloCompilerHelper(
   fun generateSources(service: ApolloKotlinService) {
     logd("Generating sources for service ${service.id}")
     try {
-      val (apolloCompilerHelperClass, apolloCompilerHelperInstance) = getApolloCompilerHelperClassAndInstance(service.pluginDependencies.orEmpty())
+      val (apolloCompilerHelperClass, apolloCompilerHelperInstance) = getApolloCompilerHelperClassAndInstance(service.pluginDependencies.orEmpty()
+          .toSet()
+      )
       val method = apolloCompilerHelperClass.getMethod("generateSources", ApolloKotlinService::class.java)
       method.invoke(apolloCompilerHelperInstance, service)
     } catch (e: Exception) {
