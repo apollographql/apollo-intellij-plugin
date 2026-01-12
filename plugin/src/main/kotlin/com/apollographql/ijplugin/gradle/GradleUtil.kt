@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin.gradle
 
 import com.apollographql.ijplugin.settings.projectSettingsState
+import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.module.ModuleManager
@@ -32,6 +33,7 @@ fun runGradleBuild(
     gradleProjectPath: String,
     configureBuildLauncher: (BuildLauncher) -> BuildLauncher,
 ) {
+  logd("Running Gradle build for project at $gradleProjectPath, with additional JVM args: '${project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments}'")
   val executionSettings = ExternalSystemApiUtil.getExecutionSettings<GradleExecutionSettings>(
       project,
       gradleProjectPath,
@@ -63,6 +65,7 @@ inline fun <reified T> getGradleModel(
     gradleProjectPath: String,
     configureModelBuilder: (ModelBuilder<T>) -> ModelBuilder<T>,
 ): T? {
+  logd("Getting Gradle model ${T::class.java.simpleName} for project at $gradleProjectPath, with additional JVM args: '${project.projectSettingsState.automaticCodegenAdditionalGradleJvmArguments}'")
   val executionSettings = ExternalSystemApiUtil.getExecutionSettings<GradleExecutionSettings>(
       project,
       gradleProjectPath,

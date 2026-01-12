@@ -68,6 +68,7 @@ class ApolloKotlinProjectModelService(
     startOrAbortFetchProjectModel()
     startObserveSettings()
 
+    logd("shouldFetchProjectModel=${shouldFetchProjectModel()}")
     if (shouldFetchProjectModel()) {
       // Contribute immediately, even though the ApolloKotlinServices are not available yet. They will be contributed later when available.
       // This avoids falling back to the default schema discovery of the GraphQL plugin which can be problematic (see https://github.com/apollographql/apollo-kotlin/issues/6219)
