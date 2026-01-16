@@ -336,11 +336,9 @@ class NormalizedCacheWindowPanel(
         var tabName = ""
         val normalizedCacheResult = when (cacheSource) {
           is LocalFile -> {
-            runBlocking {
               DatabaseNormalizedCacheProvider().provide(cacheSource.file).also {
                 tabName = cacheSource.file.name
               }
-            }
           }
 
           is DeviceFile -> {

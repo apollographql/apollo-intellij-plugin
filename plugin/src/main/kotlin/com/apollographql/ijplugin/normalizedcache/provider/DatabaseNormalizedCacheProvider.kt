@@ -3,6 +3,7 @@ package com.apollographql.ijplugin.normalizedcache.provider
 import com.apollographql.apollo.api.Error
 import com.apollographql.apollo.api.json.JsonNumber
 import com.apollographql.cache.normalized.api.CacheKey
+import com.apollographql.cache.normalized.sql.SqlNormalizedCache
 import com.apollographql.ijplugin.normalizedcache.NormalizedCache
 import com.apollographql.ijplugin.normalizedcache.NormalizedCache.Field
 import com.apollographql.ijplugin.normalizedcache.NormalizedCache.FieldValue
@@ -14,8 +15,10 @@ import com.apollographql.ijplugin.normalizedcache.NormalizedCache.FieldValue.Nul
 import com.apollographql.ijplugin.normalizedcache.NormalizedCache.FieldValue.NumberValue
 import com.apollographql.ijplugin.normalizedcache.NormalizedCache.FieldValue.Reference
 import com.apollographql.ijplugin.normalizedcache.NormalizedCache.FieldValue.StringValue
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.sql.DriverManager
+import java.util.Properties
 import com.apollographql.apollo.cache.normalized.api.CacheKey as ApolloClassicCacheKey
 import com.apollographql.apollo.cache.normalized.api.NormalizedCache as ApolloClassicNormalizedCache
 import com.apollographql.apollo.cache.normalized.api.Record as ApolloClassicRecord
@@ -94,8 +97,12 @@ class DatabaseNormalizedCacheProvider : NormalizedCacheProvider<File> {
   }
 
   private fun readModernDb(url: String): NormalizedCache {
-    val apolloNormalizedCache: ApolloModernNormalizedCache = ApolloModernSqlNormalizedCacheFactory(url).create()
-    val apolloRecords: Map<CacheKey, ApolloModernRecord> = apolloNormalizedCache.dump().values.first()
+    val apolloNormalizedCache: ApolloModernNormalizedCache = ApolloModernSqlNormalizedCacheFactory(url, Properties()).create()
+    val apolloRecords: Map<CacheKey, ApolloModernRecord> = runBlocking {
+      val dump = apolloNormalizedCache.dump()
+      (apolloNormalizedCache as SqlNormalizedCache).close()
+      dump
+    }.values.first()
     return NormalizedCache(
         apolloRecords.map { (key, apolloRecord) ->
           NormalizedCache.Record(
