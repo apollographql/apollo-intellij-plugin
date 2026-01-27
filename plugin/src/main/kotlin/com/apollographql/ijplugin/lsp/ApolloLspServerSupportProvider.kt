@@ -6,6 +6,7 @@ import com.apollographql.ijplugin.icons.ApolloIcons
 import com.apollographql.ijplugin.rover.RoverHelper
 import com.apollographql.ijplugin.settings.appSettingsState
 import com.apollographql.ijplugin.settings.lsp.LspSettingsConfigurable
+import com.apollographql.ijplugin.util.logw
 import com.intellij.openapi.application.runInEdt
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
@@ -47,7 +48,13 @@ private class ApolloLspServerDescriptor(project: Project) : ProjectWideLspServer
 fun restartApolloLsp() {
   runInEdt {
     for (project in ProjectManager.getInstance().openProjects) {
-      LspServerManager.getInstance(project).stopAndRestartIfNeeded(ApolloLspServerSupportProvider::class.java)
+      try {
+        LspServerManager.getInstance(project).stopAndRestartIfNeeded(ApolloLspServerSupportProvider::class.java)
+      } catch (t: Throwable) {
+        // See https://github.com/apollographql/apollo-intellij-plugin/issues/84
+        // Not sure why this happens, I cannot reproduce it, but let's not crash the IDE because of that
+        logw(t, "Failed to restart Apollo LSP for project ${project.name}")
+      }
     }
   }
 }
