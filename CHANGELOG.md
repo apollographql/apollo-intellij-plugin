@@ -2,6 +2,18 @@
 
 PUT_CHANGELOG_HERE
 
+# Version 5.1.0
+
+_2026-02-05_
+
+This release adds a few features, fixes a few issues, and updates the dependencies.
+
+- Add actions to copy GraphQL operations to clipboard and as Curl command (#98)
+- Add breadcrumbs to GraphQL editor (#99)
+- Add support for cache v0.4 (#103)
+- Cache AK v5 project model. Also do not launch model fetch or codegen on project open, but only after Gradle sync. (#106)
+- Don't crash when `ApolloLspServerSupportProvider` can't be loaded (#110)
+
 # Version 5.0.1
 
 _2025-11-18_
