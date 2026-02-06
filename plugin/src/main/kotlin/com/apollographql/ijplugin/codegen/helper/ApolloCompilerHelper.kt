@@ -133,7 +133,7 @@ class ApolloCompilerHelper(
             codegenSchemas = listOf(codegenSchemaFile).toInputFiles(),
             upstreamMetadata = upstreamMetadata.toInputFiles(),
             irOperations = irOperationsById[service.id]!!,
-            usedCoordinates = usedCoordinatesFile,
+            downstreamUsedCoordinates = usedCoordinatesFile,
             codegenOptions = File(service.codegenOptionsFilePath!!),
             operationManifest = File(service.operationManifestFilePath),
             outputDirectory = File(service.codegenOutputDirPath!!),
@@ -155,6 +155,7 @@ class ApolloCompilerHelper(
               codegenSchemas = listOf(codegenSchemaFile).toInputFiles(),
               upstreamMetadatas = upstreamMetadata.toInputFiles(),
               downstreamUsedCoordinates = usedCoordinatesFile,
+              irOperations = irOperationsById[service.id]!!,
               codegenOptions = File(service.codegenOptionsFilePath!!),
               outputDirectory = File(service.dataBuildersOutputDirPath!!),
           )
