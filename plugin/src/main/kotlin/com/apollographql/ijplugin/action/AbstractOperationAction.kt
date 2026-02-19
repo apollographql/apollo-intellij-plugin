@@ -81,22 +81,40 @@ abstract class AbstractOperationAction(dynamicText: Supplier<@NlsActions.ActionT
   /**
    * Get contents of the file, including all referenced fragments, recursively, if they belong to a different file
    */
-  protected fun contentsWithReferencedFragments(psiFile: PsiFile, fragmentDefinition: GraphQLFragmentDefinition? = null): String {
-    val contents = StringBuilder(fragmentDefinition?.text ?: psiFile.text)
+  protected fun contentsWithReferencedFragments(
+      psiFile: PsiFile?,
+      fragmentDefinition: GraphQLFragmentDefinition? = null,
+      visitedFragmentDefinitions: MutableList<GraphQLFragmentDefinition> = mutableListOf(),
+  ): String {
+    val contents = StringBuilder()
+    if (psiFile != null) {
+      contents.append(psiFile.text)
+    } else if (fragmentDefinition != null) {
+      if (fragmentDefinition !in visitedFragmentDefinitions) {
+        contents.append("\n\n# From ${fragmentDefinition.containingFile.virtualFile.name}\n")
+        contents.append(fragmentDefinition.text)
+        visitedFragmentDefinitions.add(fragmentDefinition)
+      }
+    }
     val visitor = object : GraphQLRecursiveVisitor() {
       override fun visitFragmentSpread(o: GraphQLFragmentSpread) {
         super.visitFragmentSpread(o)
         val referencedFragmentDefinition = o.nameIdentifier.reference?.resolve()?.parentOfType<GraphQLFragmentDefinition>() ?: return
         if (referencedFragmentDefinition.containingFile != psiFile) {
-          contents.append("\n\n# From ${referencedFragmentDefinition.containingFile.virtualFile.name}\n")
-          contents.append(contentsWithReferencedFragments(referencedFragmentDefinition.containingFile, referencedFragmentDefinition))
+          contents.append(
+              contentsWithReferencedFragments(
+                  psiFile = null,
+                  fragmentDefinition = referencedFragmentDefinition,
+                  visitedFragmentDefinitions = visitedFragmentDefinitions,
+              )
+          )
         }
       }
     }
     if (fragmentDefinition != null) {
       visitor.visitFragmentDefinition(fragmentDefinition)
     } else {
-      visitor.visitFile(psiFile)
+      visitor.visitFile(psiFile!!)
     }
     return contents.toString()
   }
