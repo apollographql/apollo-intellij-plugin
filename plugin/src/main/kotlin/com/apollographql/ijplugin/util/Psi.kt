@@ -126,5 +126,5 @@ fun PsiReference.safeResolve(): PsiElement? = try {
 
 fun PsiElement.isInKotlinFile(): Boolean {
   val containingKtFile = containingKtFile() ?: return false
-  return InjectedLanguageManager.getInstance(project).isInjectedFragment(containingKtFile)
+  return !InjectedLanguageManager.getInstance(project).isInjectedFragment(containingKtFile)
 }
