@@ -1,7 +1,8 @@
 package com.apollographql.ijplugin.apollodebugserver
 
-import com.android.ddmlib.IDevice
-import com.android.tools.idea.adb.AdbShellCommandsUtil
+import com.android.adblib.ConnectedDevice
+import com.android.adblib.SocketSpec
+import com.android.adblib.selector
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.ApolloRequest
 import com.apollographql.apollo.api.ApolloResponse
@@ -10,18 +11,20 @@ import com.apollographql.apollo.network.NetworkTransport
 import com.apollographql.apollo.network.http.LoggingInterceptor
 import com.apollographql.ijplugin.util.apollo3
 import com.apollographql.ijplugin.util.apollo4
-import com.apollographql.ijplugin.util.executeCatching
+import com.apollographql.ijplugin.util.executeShellCommandCatching
+import com.apollographql.ijplugin.util.isError
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.runBlocking
 import java.io.Closeable
 
 private const val SOCKET_NAME_PREFIX = "apollo_debug_"
 private const val BASE_PORT = 12200
 
 class ApolloDebugClient(
-    private val device: IDevice,
+    private val device: ConnectedDevice,
     val packageName: String,
 ) : Closeable {
   companion object {
@@ -31,8 +34,8 @@ class ApolloDebugClient(
       return BASE_PORT + uniquePort++
     }
 
-    private fun IDevice.getApolloDebugPackageList(): Result<List<String>> {
-      val commandResult = AdbShellCommandsUtil.create(this).executeCatching("cat /proc/net/unix | grep $SOCKET_NAME_PREFIX | cat")
+    private fun ConnectedDevice.getApolloDebugPackageList(): Result<List<String>> {
+      val commandResult = executeShellCommandCatching("cat /proc/net/unix | grep $SOCKET_NAME_PREFIX | cat")
       if (commandResult.isFailure) {
         val e = commandResult.exceptionOrNull()!!
         logw(e, "Could not list Apollo Debug packages")
@@ -40,13 +43,13 @@ class ApolloDebugClient(
       }
       val result = commandResult.getOrThrow()
       if (result.isError) {
-        val message = "Could not list Apollo Debug packages: ${result.output.joinToString()}"
+        val message = "Could not list Apollo Debug packages: ${result.stderr}"
         logw(message)
         return Result.failure(Exception(message))
       }
       // Results are in the form:
       // 0000000000000000: 00000002 00000000 00010000 0001 01 116651 @apollo_debug_com.example.myapplication
-      val packageList = result.output
+      val packageList = result.stdout.lines()
           .filter { it.contains(SOCKET_NAME_PREFIX) }
           .map { it.substringAfterLast(SOCKET_NAME_PREFIX) }
           .sorted()
@@ -54,7 +57,7 @@ class ApolloDebugClient(
       return Result.success(packageList)
     }
 
-    fun IDevice.getApolloDebugClients(): Result<List<ApolloDebugClient>> {
+    fun ConnectedDevice.getApolloDebugClients(): Result<List<ApolloDebugClient>> {
       return getApolloDebugPackageList().map { packageNames ->
         packageNames.map { packageName ->
           ApolloDebugClient(this, packageName)
@@ -80,10 +83,14 @@ class ApolloDebugClient(
       })
       .build()
 
-  private fun createPortForward() {
+  private suspend fun createPortForward() {
     logd("Creating port forward to $port for $packageName")
     try {
-      device.createForward(port, "$SOCKET_NAME_PREFIX$packageName", IDevice.DeviceUnixSocketNamespace.ABSTRACT)
+      device.session.hostServices.forward(
+          device = device.selector,
+          local = SocketSpec.Tcp(port),
+          remote = SocketSpec.LocalAbstract("$SOCKET_NAME_PREFIX$packageName"),
+      )
     } catch (e: Exception) {
       logw(e, "Could not create port forward to $port for $packageName")
       throw e
@@ -91,17 +98,17 @@ class ApolloDebugClient(
     hasPortForward = true
   }
 
-  private fun removePortForward() {
+  private suspend fun removePortForward() {
     logd("Removing port forward to $port for $packageName")
     try {
-      device.removeForward(port)
+      device.session.hostServices.killForward(device.selector, SocketSpec.Tcp(port))
     } catch (e: Exception) {
       logw(e, "Could not remove port forward to $port for $packageName")
     }
     hasPortForward = false
   }
 
-  private fun ensurePortForward() {
+  private suspend fun ensurePortForward() {
     if (!hasPortForward) {
       createPortForward()
     }
@@ -117,13 +124,14 @@ class ApolloDebugClient(
       normalizedCacheId: String,
   ): Result<GetNormalizedCacheQuery.NormalizedCache> = runCatching {
     ensurePortForward()
-    apolloClient.query(GetNormalizedCacheQuery(apolloClientId, normalizedCacheId)).execute().dataOrThrow().apolloClient?.normalizedCache
+    apolloClient.query(GetNormalizedCacheQuery(apolloClientId, normalizedCacheId)).execute()
+        .dataOrThrow().apolloClient?.normalizedCache
         ?: error("No normalized cache returned by server")
   }
 
   override fun close() {
     if (hasPortForward) {
-      removePortForward()
+      runBlocking { removePortForward() }
     }
     apolloClient.close()
   }

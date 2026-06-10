@@ -2,7 +2,7 @@ package com.apollographql.ijplugin.util
 
 val isLspAvailable = runCatching { Class.forName("com.intellij.platform.lsp.api.LspServerManager") }.isSuccess
 
-val isAndroidPluginPresent = runCatching { Class.forName("com.android.ddmlib.AndroidDebugBridge") }.isSuccess
+val isAndroidPluginPresent = runCatching { Class.forName("com.android.adblib.AdbSession") }.isSuccess
 
 val isJavaPluginPresent = runCatching { Class.forName("com.intellij.psi.PsiJavaFile") }.isSuccess
 
