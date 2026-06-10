@@ -1,8 +1,9 @@
 package com.apollographql.ijplugin.normalizedcache
 
 import android.annotation.SuppressLint
-import com.android.ddmlib.Client
-import com.android.ddmlib.IDevice
+import com.android.adblib.ConnectedDevice
+import com.android.adblib.deviceInfo
+import com.android.adblib.serialNumber
 import com.apollographql.ijplugin.ApolloBundle
 import com.apollographql.ijplugin.apollodebugserver.ApolloDebugClient
 import com.apollographql.ijplugin.apollodebugserver.ApolloDebugClient.Companion.getApolloDebugClients
@@ -174,70 +175,41 @@ class PullFromDeviceDialog(
     }
   }
 
-  private inner class DeviceNode(project: Project, parent: DynamicNode, private val device: IDevice) : DynamicNode(project, parent) {
+  private inner class DeviceNode(project: Project, parent: DynamicNode, private val device: ConnectedDevice) :
+    DynamicNode(project, parent) {
     init {
-      myName = device.name
-      icon = if (device.isEmulator) StudioIcons.DeviceExplorer.VIRTUAL_DEVICE_PHONE else StudioIcons.DeviceExplorer.PHYSICAL_DEVICE_PHONE
+      myName = device.deviceInfo.model?.let { model -> "${device.serialNumber} ($model)" } ?: device.serialNumber
+      icon =
+        if (myName.contains("emulator", ignoreCase = true)) StudioIcons.DeviceExplorer.VIRTUAL_DEVICE_PHONE else StudioIcons.DeviceExplorer.PHYSICAL_DEVICE_PHONE
     }
 
     override fun computeChildren() {
       val apolloDebugClients: List<ApolloDebugClient> = device.getApolloDebugClients().getOrDefault(emptyList())
       apolloDebugClientsToClose.addAll(apolloDebugClients)
-      val clients: List<Client> = device.clients
-          .filter { client ->
-            client.isValid &&
-                client.clientData.packageName != null &&
-                // If a package has the Apollo Debug running, don't show it as a database package
-                client.clientData.packageName !in apolloDebugClients.map { it.packageName }
-          }
-          .sortedBy { it.clientData.packageName }
-
-      val allClients = (apolloDebugClients + clients).sortedBy {
-        when (it) {
-          is ApolloDebugClient -> it.packageName
-          is Client -> it.clientData.packageName
-          else -> throw IllegalStateException()
-        }
-      }
+      val apolloDebugPackageNames = apolloDebugClients.map { it.packageName }.toSet()
+      val autoExpand = apolloDebugClients.size <= 4
 
       updateChildren(
           buildList {
-            val autoExpand = allClients.size <= 4
-
-            // Add running apps
             addAll(
-                allClients.map { client ->
-                  when (client) {
-                    is ApolloDebugClient -> ApolloDebugPackageNode(
-                        project = project,
-                        parent = this@DeviceNode,
-                        apolloDebugClient = client,
-                        computeChildrenOn = ComputeChildrenOn.INIT,
-                        autoExpand = autoExpand,
-                    )
-
-                    is Client -> {
-                      val packageName = client.clientData.packageName
-                      val databasesDir =
-                        listOf(client.clientData.dataDir + "/databases", client.clientData.dataDir + "/cache", client.clientData.dataDir + "/no_backup")
-                      DatabasePackageNode(
-                          project = project,
-                          parent = this@DeviceNode,
-                          device = device,
-                          packageName = packageName,
-                          databasesDirs = databasesDir,
-                          computeChildrenOn = ComputeChildrenOn.INIT,
-                          autoExpand = autoExpand,
-                      )
-                    }
-
-                    else -> throw IllegalStateException()
-                  }
+                apolloDebugClients.map { client ->
+                  ApolloDebugPackageNode(
+                      project = project,
+                      parent = this@DeviceNode,
+                      apolloDebugClient = client,
+                      computeChildrenOn = ComputeChildrenOn.INIT,
+                      autoExpand = autoExpand,
+                  )
                 }
             )
-
-            // Add other debuggable apps
-            add(DebuggablePackagesNode(project, this@DeviceNode, device))
+            add(
+                DebuggablePackagesNode(
+                    project = project,
+                    parent = this@DeviceNode,
+                    device = device,
+                    excludePackageNames = apolloDebugPackageNames
+                )
+            )
           }
       )
     }
@@ -250,7 +222,8 @@ class PullFromDeviceDialog(
   private inner class DebuggablePackagesNode(
       project: Project,
       parent: DynamicNode,
-      private val device: IDevice,
+      private val device: ConnectedDevice,
+      private val excludePackageNames: Set<String> = emptySet(),
   ) : DynamicNode(project, parent) {
     init {
       myName = ApolloBundle.message("normalizedCacheViewer.pullFromDevice.listDebuggablePackages.title")
@@ -261,12 +234,13 @@ class PullFromDeviceDialog(
       device.getDebuggablePackageList().onFailure {
         logw(it, "Could not list debuggable packages")
         updateChild(ErrorNode((ApolloBundle.message("normalizedCacheViewer.pullFromDevice.listDebuggablePackages.error"))))
-      }.onSuccess {
-        if (it.isEmpty()) {
+      }.onSuccess { allPackages ->
+        val packages = allPackages.filterNot { it in excludePackageNames }
+        if (packages.isEmpty()) {
           updateChild(EmptyNode(ApolloBundle.message("normalizedCacheViewer.pullFromDevice.listDebuggablePackages.empty")))
         } else {
           updateChildren(
-              it.map { packageName ->
+              packages.map { packageName ->
                 DatabasePackageNode(
                     project = project,
                     parent = this,
@@ -286,7 +260,7 @@ class PullFromDeviceDialog(
   private inner class DatabasePackageNode(
       project: Project,
       parent: DynamicNode,
-      private val device: IDevice,
+      private val device: ConnectedDevice,
       private val packageName: String,
       private val databasesDirs: List<String>,
       computeChildrenOn: ComputeChildrenOn,
@@ -369,7 +343,7 @@ class PullFromDeviceDialog(
   }
 
   private inner class DatabaseNode(
-      val device: IDevice,
+      val device: ConnectedDevice,
       val packageName: String,
       val databasesDir: String,
       val databaseFileName: String,

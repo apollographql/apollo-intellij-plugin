@@ -33,9 +33,10 @@ import javax.swing.Action
 class ApolloProjectActivity : ProjectActivity {
   override suspend fun execute(project: Project) {
     logd()
-    val descriptor = PluginManagerCore.getPlugin(PluginId.getId("com.intellij.lang.jsgraphql"))
-    logd("com.intellij.lang.jsgraphql isEnabled=${descriptor?.isEnabled}")
-    if (descriptor?.isEnabled == true) {
+    val isJsgraphqlPluginInstalled = PluginManagerCore.isPluginInstalled(PluginId.getId("com.intellij.lang.jsgraphql"))
+    val isJsgraphqlPluginDisabled = PluginManagerCore.isDisabled(PluginId.getId("com.intellij.lang.jsgraphql"))
+    logd("isJsgraphqlPluginInstalled=$isJsgraphqlPluginInstalled isJsgraphqlPluginDisabled=$isJsgraphqlPluginDisabled")
+    if (isJsgraphqlPluginInstalled && !isJsgraphqlPluginDisabled) {
       runInEdt {
         IncompatiblePluginDialog(project).show()
       }

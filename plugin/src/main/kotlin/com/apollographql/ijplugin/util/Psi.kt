@@ -1,11 +1,11 @@
 package com.apollographql.ijplugin.util
 
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
-import org.jetbrains.kotlin.idea.refactoring.isInjectedFragment
 import org.jetbrains.kotlin.idea.references.KtSimpleNameReference
 import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.name.FqName
@@ -126,5 +126,5 @@ fun PsiReference.safeResolve(): PsiElement? = try {
 
 fun PsiElement.isInKotlinFile(): Boolean {
   val containingKtFile = containingKtFile() ?: return false
-  return !containingKtFile.isInjectedFragment
+  return !InjectedLanguageManager.getInstance(project).isInjectedFragment(containingKtFile)
 }

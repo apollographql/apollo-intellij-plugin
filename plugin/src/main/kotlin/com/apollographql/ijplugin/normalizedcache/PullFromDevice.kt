@@ -1,25 +1,28 @@
 package com.apollographql.ijplugin.normalizedcache
 
+import com.android.adblib.ConnectedDevice
 import com.android.adblib.DeviceSelector
+import com.android.adblib.connectedDevicesTracker
+import com.android.adblib.serialNumber
 import com.android.adblib.syncRecv
-import com.android.ddmlib.AndroidDebugBridge
-import com.android.ddmlib.IDevice
-import com.android.tools.idea.adb.AdbShellCommandsUtil
 import com.android.tools.idea.adblib.AdbLibApplicationService
-import com.apollographql.ijplugin.util.execute
-import com.apollographql.ijplugin.util.executeCatching
+import com.apollographql.ijplugin.util.executeShellCommand
+import com.apollographql.ijplugin.util.executeShellCommandCatching
+import com.apollographql.ijplugin.util.isError
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import java.io.File
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
-fun getConnectedDevices(): List<IDevice> {
-  return AndroidDebugBridge.createBridge(1, TimeUnit.SECONDS).devices.sortedBy { it.name }
+fun getConnectedDevices(): List<ConnectedDevice> {
+  return AdbLibApplicationService.instance.session
+      .connectedDevicesTracker
+      .connectedDevices.value
+      .sortedBy { it.serialNumber }
 }
 
-fun IDevice.getDebuggablePackageList(): Result<List<String>> {
-  val commandResult = AdbShellCommandsUtil.create(this).executeCatching(
+fun ConnectedDevice.getDebuggablePackageList(): Result<List<String>> {
+  val commandResult = executeShellCommandCatching(
       // List all packages, and try run-as on them - if it succeeds, the package is debuggable
       "for p in \$(pm list packages -3 | cut -d : -f 2); do (run-as \$p true >/dev/null 2>&1 && echo \$p); done; true"
   )
@@ -30,15 +33,15 @@ fun IDevice.getDebuggablePackageList(): Result<List<String>> {
   }
   val result = commandResult.getOrThrow()
   if (result.isError) {
-    val message = "Could not list debuggable packages: ${result.output.joinToString()}"
+    val message = "Could not list debuggable packages: ${result.stderr}"
     logw(message)
     return Result.failure(Exception(message))
   }
-  return Result.success(result.output.filterNot { it.isEmpty() }.sorted())
+  return Result.success(result.stdout.lines().filterNot { it.isEmpty() }.sorted())
 }
 
-fun IDevice.getDatabaseList(packageName: String, databasesDir: String): Result<List<String>> {
-  val commandResult = AdbShellCommandsUtil.create(this).executeCatching("run-as $packageName ls -1 $databasesDir")
+fun ConnectedDevice.getDatabaseList(packageName: String, databasesDir: String): Result<List<String>> {
+  val commandResult = executeShellCommandCatching("run-as $packageName ls -1 $databasesDir")
   if (commandResult.isFailure) {
     val e = commandResult.exceptionOrNull()!!
     logw(e, "Could not list databases")
@@ -46,17 +49,17 @@ fun IDevice.getDatabaseList(packageName: String, databasesDir: String): Result<L
   }
   val result = commandResult.getOrThrow()
   if (result.isError) {
-    if (result.output.any { it.contains("No such file or directory") }) {
+    if (result.stderr.contains("No such file or directory") || result.stdout.contains("No such file or directory")) {
       return Result.success(emptyList())
     }
-    val message = "Could not list databases: ${result.output.joinToString()}"
+    val message = "Could not list databases: ${result.stderr}"
     logw(message)
     return Result.failure(Exception(message))
   }
-  return Result.success(result.output.filter { it.isDatabaseFileName() }.sorted())
+  return Result.success(result.stdout.lines().filter { it.isDatabaseFileName() }.sorted())
 }
 
-fun IDevice.getDatabaseList(packageName: String, databasesDirs: List<String>): Result<List<Pair<String, String>>> {
+fun ConnectedDevice.getDatabaseList(packageName: String, databasesDirs: List<String>): Result<List<Pair<String, String>>> {
   val allDatabases = mutableListOf<Pair<String, String>>()
   var atLeastOneSuccess = false
   for (databasesDir in databasesDirs) {
@@ -74,18 +77,17 @@ fun IDevice.getDatabaseList(packageName: String, databasesDirs: List<String>): R
   }
 }
 
-suspend fun pullFile(device: IDevice, appPackageName: String, remoteDirName: String, remoteFileName: String): Result<File> {
+suspend fun pullFile(device: ConnectedDevice, appPackageName: String, remoteDirName: String, remoteFileName: String): Result<File> {
   val remoteFilePath = "$remoteDirName/$remoteFileName"
   val localFile = File.createTempFile(remoteFileName.substringBeforeLast(".") + "-tmp", ".db")
   logd("Pulling $remoteFilePath to ${localFile.absolutePath}")
   val intermediateRemoteFilePath = "/data/local/tmp/${localFile.name}"
-  val shellCommandsUtil = AdbShellCommandsUtil.create(device)
   return runCatching {
-    var commandResult = shellCommandsUtil.execute("touch $intermediateRemoteFilePath")
+    var commandResult = device.executeShellCommand("touch $intermediateRemoteFilePath")
     if (commandResult.isError) {
       throw Exception("'touch' command failed")
     }
-    commandResult = shellCommandsUtil.execute("run-as $appPackageName sh -c 'cp $remoteFilePath $intermediateRemoteFilePath'")
+    commandResult = device.executeShellCommand("run-as $appPackageName sh -c 'cp $remoteFilePath $intermediateRemoteFilePath'")
     if (commandResult.isError) {
       throw Exception("'copy' command failed")
     }
@@ -96,7 +98,7 @@ suspend fun pullFile(device: IDevice, appPackageName: String, remoteDirName: Str
         adbLibSession.deviceServices.syncRecv(DeviceSelector.fromSerialNumber(device.serialNumber), intermediateRemoteFilePath, fileChannel)
       }
     } finally {
-      commandResult = shellCommandsUtil.execute("rm $intermediateRemoteFilePath")
+      commandResult = device.executeShellCommand("rm $intermediateRemoteFilePath")
       if (commandResult.isError) {
         logw("'rm' command failed")
       }

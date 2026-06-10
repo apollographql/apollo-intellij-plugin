@@ -1,6 +1,6 @@
 package com.apollographql.ijplugin.normalizedcache
 
-import com.android.ddmlib.IDevice
+import com.android.adblib.ConnectedDevice
 import com.apollographql.ijplugin.apollodebugserver.ApolloDebugClient
 import java.io.File
 
@@ -8,7 +8,7 @@ sealed interface NormalizedCacheSource {
   data class LocalFile(val file: File) : NormalizedCacheSource
 
   data class DeviceFile(
-      val device: IDevice,
+      val device: ConnectedDevice,
       val packageName: String,
       val remoteDirName: String,
       val remoteFileName: String,

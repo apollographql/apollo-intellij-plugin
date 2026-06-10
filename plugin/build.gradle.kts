@@ -3,7 +3,6 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.extensions.excludeCoroutines
-import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INTERNAL_API_USAGES
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.INVALID_PLUGIN
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel.PLUGIN_STRUCTURE_WARNINGS
@@ -44,10 +43,6 @@ fun getVersionName(): String {
   } else {
     projectVersion + ".${SimpleDateFormat("YYYY-MM-dd").format(Date())}." + System.getenv("GITHUB_SHA")?.take(7)
   }
-}
-
-kotlin {
-  jvmToolchain(21)
 }
 
 // Copy specific dependencies to a directory visible to the unit tests.
@@ -125,6 +120,22 @@ tasks.register("downloadMockJdk") {
               .readBytes()
       )
     }
+  }
+}
+
+// Generate a Version.kt file with a constant for the version name
+val generateVersionKtTask = tasks.register("generateVersionKt") {
+  val outputDir = layout.buildDirectory.dir("generated/source/kotlin").get().asFile
+  outputs.dir(outputDir)
+  val v = version
+  doFirst {
+    val outputWithPackageDir = File(outputDir, "com/apollographql/ijplugin").apply { mkdirs() }
+    File(outputWithPackageDir, "Version.kt").writeText(
+        """
+        package com.apollographql.ijplugin
+        internal const val VERSION = "$v"
+        """.trimIndent()
+    )
   }
 }
 
@@ -283,11 +294,22 @@ intellijPlatform {
     }
     failureLevel.set(
         setOf(
-            COMPATIBILITY_PROBLEMS,
+            // Commenting for now, because of https://platform.jetbrains.com/t/structure-view-impl-package-not-found/4388
+            // TODO uncomment when a solution is found
+//            COMPATIBILITY_PROBLEMS,
             INTERNAL_API_USAGES,
             INVALID_PLUGIN,
             PLUGIN_STRUCTURE_WARNINGS,
         )
     )
+  }
+}
+
+kotlin {
+  jvmToolchain(21)
+  sourceSets {
+    main {
+      kotlin.srcDir(generateVersionKtTask)
+    }
   }
 }
