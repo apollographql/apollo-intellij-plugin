@@ -19,7 +19,7 @@ import com.intellij.lang.jsgraphql.psi.GraphQLInputObjectTypeDefinition
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.util.findTopmostParentOfType
 import com.intellij.psi.util.parentOfType
-import org.jetbrains.kotlin.idea.intentions.branchedTransformations.isNullExpression
+import org.jetbrains.kotlin.idea.base.psi.isNullExpression
 import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtClass

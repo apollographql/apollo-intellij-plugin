@@ -283,6 +283,8 @@ intellijPlatform {
     }
     failureLevel.set(
         setOf(
+            // Commenting for now, because of https://platform.jetbrains.com/t/structure-view-impl-package-not-found/4388
+            // TODO uncomment when a solution is found
             COMPATIBILITY_PROBLEMS,
             INTERNAL_API_USAGES,
             INVALID_PLUGIN,
