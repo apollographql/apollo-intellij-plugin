@@ -45,10 +45,6 @@ fun getVersionName(): String {
   }
 }
 
-kotlin {
-  jvmToolchain(21)
-}
-
 // Copy specific dependencies to a directory visible to the unit tests.
 // See ApolloTestCase.kt.
 configurations {
@@ -124,6 +120,22 @@ tasks.register("downloadMockJdk") {
               .readBytes()
       )
     }
+  }
+}
+
+// Generate a Version.kt file with a constant for the version name
+val generateVersionKtTask = tasks.register("generateVersionKt") {
+  val outputDir = layout.buildDirectory.dir("generated/source/kotlin").get().asFile
+  outputs.dir(outputDir)
+  val v = version
+  doFirst {
+    val outputWithPackageDir = File(outputDir, "com/apollographql/ijplugin").apply { mkdirs() }
+    File(outputWithPackageDir, "Version.kt").writeText(
+        """
+        package com.apollographql.ijplugin
+        internal const val VERSION = "$v"
+        """.trimIndent()
+    )
   }
 }
 
@@ -290,5 +302,14 @@ intellijPlatform {
             PLUGIN_STRUCTURE_WARNINGS,
         )
     )
+  }
+}
+
+kotlin {
+  jvmToolchain(21)
+  sourceSets {
+    main {
+      kotlin.srcDir(generateVersionKtTask)
+    }
   }
 }

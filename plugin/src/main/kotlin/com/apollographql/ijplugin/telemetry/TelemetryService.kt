@@ -1,6 +1,7 @@
 package com.apollographql.ijplugin.telemetry
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.VERSION
 import com.apollographql.ijplugin.icons.ApolloIcons
 import com.apollographql.ijplugin.project.ApolloProjectListener
 import com.apollographql.ijplugin.project.ApolloProjectService.ApolloVersion
@@ -26,7 +27,6 @@ import com.apollographql.ijplugin.util.getLibraryMavenCoordinates
 import com.apollographql.ijplugin.util.logd
 import com.apollographql.ijplugin.util.logw
 import com.intellij.ide.BrowserUtil
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
@@ -34,7 +34,6 @@ import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.application.ex.ApplicationInfoEx
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.profile.codeInspection.ProjectInspectionProfileManager
 import com.intellij.util.application
@@ -130,7 +129,7 @@ class TelemetryService(
     }
     add(IdeVersion(appName))
     System.getProperties().getProperty("os.name")?.let { add(TelemetryProperty.IdeOS(it)) }
-    PluginManagerCore.getPlugin(PluginId.getId("com.apollographql.ijplugin"))?.version?.let { add(ApolloIjPluginVersion(it)) }
+    add(ApolloIjPluginVersion(VERSION))
     add(ApolloIjPluginAutomaticCodegenTriggering(project.projectSettingsState.automaticCodegenTriggering))
     add(ApolloIjPluginContributeConfigurationToGraphqlPlugin(project.projectSettingsState.contributeConfigurationToGraphqlPlugin))
     add(ApolloIjPluginHasConfiguredGraphOsApiKeys(project.projectSettingsState.apolloKotlinServiceConfigurations.isNotEmpty()))

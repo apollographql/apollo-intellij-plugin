@@ -1,14 +1,13 @@
 package com.apollographql.ijplugin.error
 
 import com.apollographql.ijplugin.ApolloBundle
+import com.apollographql.ijplugin.VERSION
 import com.apollographql.ijplugin.util.urlEncoded
 import com.intellij.ide.BrowserUtil
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ex.ApplicationInfoEx
 import com.intellij.openapi.diagnostic.ErrorReportSubmitter
 import com.intellij.openapi.diagnostic.IdeaLoggingEvent
 import com.intellij.openapi.diagnostic.SubmittedReportInfo
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.Consumer
 import java.awt.Component
@@ -31,7 +30,7 @@ class GitHubIssueErrorReportSubmitter : ErrorReportSubmitter() {
     val ideNameAndVersion = ApplicationInfoEx.getInstanceEx().let { appInfo ->
       appInfo.fullApplicationName + "  " + "Build #" + appInfo.build.asString()
     }
-    val pluginVersion = PluginManagerCore.getPlugin(PluginId.getId("com.apollographql.ijplugin"))?.version ?: "unknown"
+    val pluginVersion = VERSION
     val properties = System.getProperties()
     val jdk = properties.getProperty("java.version", "unknown") +
         "; VM: " + properties.getProperty("java.vm.name", "unknown") +
