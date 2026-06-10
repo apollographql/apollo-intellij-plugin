@@ -5,7 +5,7 @@
 build
 
 .idea/*
-!.idea/codeStyles/*
-!.idea/runConfigurations/*
+!.idea/codeStyles/
+!.idea/runConfigurations/
 
 .DS_Store
