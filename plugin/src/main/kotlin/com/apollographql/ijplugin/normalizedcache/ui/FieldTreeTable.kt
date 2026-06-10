@@ -72,7 +72,7 @@ class FieldTreeTable(selectRecord: (String) -> Unit) : JBTreeTable(FieldTreeTabl
               }
 
               1 -> {
-                val receivedDate = value.metadata?.get(ApolloCacheHeaders.RECEIVED_DATE) as? Int
+                val receivedDate = (value.metadata?.get(ApolloCacheHeaders.RECEIVED_DATE) as? Number)?.toLong()
                 if (receivedDate != null) {
                   append(receivedDateFormat.format(Date(receivedDate * 1000L)))
                 }
