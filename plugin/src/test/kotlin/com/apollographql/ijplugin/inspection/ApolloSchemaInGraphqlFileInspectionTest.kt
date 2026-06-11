@@ -29,6 +29,6 @@ class ApolloSchemaInGraphqlFileInspectionTest : ApolloTestCase() {
     val quickFixAction = myFixture.findSingleIntention("Rename file to SchemaInGraphqlFile.graphqls")
     assertNotNull(quickFixAction)
     myFixture.launchAction(quickFixAction)
-    TestCase.assertEquals("SchemaInGraphqlFile.graphqls", myFixture.editor.cast<EditorEx>()!!.virtualFile.name)
+    TestCase.assertEquals("SchemaInGraphqlFile.graphqls", myFixture.editor.cast<EditorEx>()!!.virtualFile!!.name)
   }
 }

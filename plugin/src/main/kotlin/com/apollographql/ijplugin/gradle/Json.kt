@@ -62,5 +62,6 @@ fun File.toIrOptions(): IrOptions = runCatching { parseFromJson<IrOptions>() }.g
       alwaysGenerateTypesMatching = null,
       codegenModels = null,
       allowFragmentArguments = null,
+      allowDirectivesOnDirectives = null,
   )
 }
