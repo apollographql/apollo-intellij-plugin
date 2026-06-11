@@ -50,8 +50,6 @@ dependencies {
             "com.intellij.modules.json",
             "org.jetbrains.plugins.yaml",
             "JavaScript",
-            // See also https://blog.jetbrains.com/platform/2025/11/intellij-platform-2025-3-what-plugin-developers-should-know/
-            "org.intellij.intelliLang",
         )
     )
   }

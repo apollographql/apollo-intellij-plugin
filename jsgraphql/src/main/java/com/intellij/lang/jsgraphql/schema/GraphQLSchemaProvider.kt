@@ -48,7 +48,6 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.time.measureTimedValue
 
 private const val BUILD_TIMEOUT_MS = 500L
 
@@ -201,31 +200,26 @@ class GraphQLSchemaProvider(private val project: Project, private val coroutineS
     val registryInfo = getRegistryInfo(scope, modificationStamp)
     val schemaInfo = try {
       LOG.debug { "Schema build started (scope=${scope.scopeId}, stamp=$modificationStamp)" }
-      val (schema, duration) = blockingContext {
-        measureTimedValue {
-          val schema = UnExecutableSchemaGenerator.makeUnExecutableSchema(registryInfo.typeDefinitionRegistry)
-          val validationErrors = SchemaValidator().validateSchema(schema)
-          val errors = if (validationErrors.isEmpty())
-            emptyList()
-          else
-            listOf<GraphQLException>(InvalidSchemaException(validationErrors))
-          GraphQLSchemaInfo(schema, errors, registryInfo)
-        }
+      val schema = blockingContext {
+        val schema = UnExecutableSchemaGenerator.makeUnExecutableSchema(registryInfo.typeDefinitionRegistry)
+        val validationErrors = SchemaValidator().validateSchema(schema)
+        val errors = if (validationErrors.isEmpty())
+          emptyList()
+        else
+          listOf<GraphQLException>(InvalidSchemaException(validationErrors))
+        GraphQLSchemaInfo(schema, errors, registryInfo)
       }
-      LOG.info("Schema was built in ${duration} (scope=${scope.scopeId}, stamp=$modificationStamp)")
       schema
-    }
-    catch (e: CancellationException) {
+    } catch (e: CancellationException) {
       LOG.info("Schema build cancelled (scope=${scope.scopeId}, stamp=$modificationStamp)")
       throw e
-    }
-    catch (e: Exception) {
+    } catch (e: Exception) {
       LOG.error("Schema build error (scope=${scope.scopeId}, stamp=$modificationStamp): ", e) // should never happen
 
       GraphQLSchemaInfo(
-        emptySchema.value,
-        listOfNotNull(e as? GraphQLException ?: GraphQLException(e)),
-        registryInfo
+          emptySchema.value,
+          listOfNotNull(e as? GraphQLException ?: GraphQLException(e)),
+          registryInfo
       )
     }
 
@@ -246,18 +240,15 @@ class GraphQLSchemaProvider(private val project: Project, private val coroutineS
     checkCanceled()
 
     LOG.debug { "Registry build started (scope=${scope.scopeId}, stamp=$modificationStamp)" }
-    val (registry, duration) = measureTimedValue {
-      val documentsProcessor = smartReadAction(project) { processSchemaDocuments(scope) }
+    val documentsProcessor = smartReadAction(project) { processSchemaDocuments(scope) }
 
-      blockingContext {
-        val compositeRegistry = GraphQLCompositeRegistry()
-        documentsProcessor.documents.forEach {
-          compositeRegistry.addFromDocument(it)
-        }
-        GraphQLRegistryInfo(compositeRegistry.build(), documentsProcessor.isTooComplex)
+    val registry = blockingContext {
+      val compositeRegistry = GraphQLCompositeRegistry()
+      documentsProcessor.documents.forEach {
+        compositeRegistry.addFromDocument(it)
       }
+      GraphQLRegistryInfo(compositeRegistry.build(), documentsProcessor.isTooComplex)
     }
-    LOG.info("Registry was built in ${duration} (scope=${scope.scopeId}, stamp=$modificationStamp)")
     return registry
   }
 

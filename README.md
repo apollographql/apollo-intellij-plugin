@@ -29,8 +29,8 @@ This plugin for Android Studio and IntelliJ helps you work with the
 
 The plugin is supported on:
 
-- IntelliJ 2025.2.5 and above
-- Android Studio Otter 3 Feature Drop 2025.2.3 and above
+- IntelliJ 2025.3.4 and above
+- Android Studio Panda 4 2025.3.4 and above
 
 ## Installation instructions
 

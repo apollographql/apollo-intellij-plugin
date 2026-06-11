@@ -185,7 +185,7 @@ dependencies {
     // e.g. for the Android plugin: https://plugins.jetbrains.com/plugin/22989-android/versions/stable
     plugins(
         listOf(
-            "org.jetbrains.android:252.25557.131",
+            "org.jetbrains.android:253.32098.101",
         )
     )
 

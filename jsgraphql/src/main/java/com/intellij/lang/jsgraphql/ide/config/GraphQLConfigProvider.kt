@@ -70,7 +70,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.time.Duration.Companion.milliseconds
 
 
 @Service(Service.Level.PROJECT)
@@ -86,7 +85,7 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
     private val CONFIG_OVERRIDE_PATH_KEY =
       Key.create<CachedValue<GraphQLConfigOverridePath?>>("graphql.config.override.path")
 
-    private const val CONFIG_RELOAD_DELAY = 500
+    private const val CONFIG_RELOAD_DELAY = 500L
 
     @JvmStatic
     fun getInstance(project: Project) = project.service<GraphQLConfigProvider>()
@@ -143,7 +142,7 @@ class GraphQLConfigProvider(private val project: Project, cs: CoroutineScope) : 
     project.messageBus.connect(cs).subscribe(GraphQLConfigEnvironmentListener.TOPIC, this)
 
     cs.launch {
-      reloadConfigAlarm.debounce(CONFIG_RELOAD_DELAY.milliseconds).collectLatest {
+      reloadConfigAlarm.debounce(CONFIG_RELOAD_DELAY).collectLatest {
         reload()
       }
     }
