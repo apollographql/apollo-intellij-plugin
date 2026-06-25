@@ -2,6 +2,16 @@
 
 PUT_CHANGELOG_HERE
 
+# Version 5.1.1
+
+_2026-06-25_
+
+This is a patch release that addresses 2 issues, and fixes an incompatibility with Android Studio Quail
+
+- Exporting document: fragments are duplicated if used more than once (#112)
+- Fix received date not visible when opening db file (#129)
+- Avoid `com.android.tools.idea.adb` APIs, prefer `adblib` ones (#128)
+
 # Version 5.1.0
 
 _2026-02-05_
