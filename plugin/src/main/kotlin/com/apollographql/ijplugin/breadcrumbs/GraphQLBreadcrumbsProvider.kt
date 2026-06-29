@@ -16,6 +16,7 @@ import com.intellij.lang.jsgraphql.psi.GraphQLFragmentSpread
 import com.intellij.lang.jsgraphql.psi.GraphQLInlineFragment
 import com.intellij.lang.jsgraphql.psi.GraphQLInterfaceTypeExtensionDefinition
 import com.intellij.lang.jsgraphql.psi.GraphQLNamedTypeDefinition
+import com.intellij.lang.jsgraphql.psi.GraphQLNamedTypeExtension
 import com.intellij.lang.jsgraphql.psi.GraphQLObjectTypeExtensionDefinition
 import com.intellij.lang.jsgraphql.psi.GraphQLScalarTypeDefinition
 import com.intellij.lang.jsgraphql.psi.GraphQLSchemaExtension
@@ -61,9 +62,11 @@ class GraphQLBreadcrumbsProvider : BreadcrumbsProvider {
       is GraphQLInlineFragment -> element.typeCondition?.typeName?.name.let { if (it != null) "... on $it" else "..." }
 
       // Schema
-      is GraphQLFieldsDefinition -> (element.parent as GraphQLNamedTypeDefinition).typeNameDefinition?.name ?: "<unknown>"
+      is GraphQLFieldsDefinition -> (element.parent as? GraphQLNamedTypeDefinition)?.typeNameDefinition?.name
+          ?: (element.parent as? GraphQLNamedTypeExtension)?.typeName?.name ?: "<unknown>"
       is GraphQLFieldDefinition -> element.name.orEmpty()
-      is GraphQLEnumValueDefinitions -> (element.parent as? GraphQLEnumTypeDefinition)?.typeNameDefinition?.name ?: "<unknown>"
+      is GraphQLEnumValueDefinitions -> (element.parent as? GraphQLEnumTypeDefinition)?.typeNameDefinition?.name
+          ?: (element.parent as? GraphQLEnumTypeExtensionDefinition)?.typeName?.name ?: "<unknown>"
       is GraphQLEnumValue -> element.name.orEmpty()
       is GraphQLDirectiveDefinition -> "@${element.nameIdentifier?.text.orEmpty()}"
       is GraphQLScalarTypeDefinition -> "${element.typeNameDefinition}"
