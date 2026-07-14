@@ -1,7 +1,7 @@
 [versions]
 # See https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#bundled-stdlib-versions
 kotlin-plugin = "2.2.20"
-intellij-platform-plugin = "2.16.0"
+intellij-platform-plugin = "2.18.1"
 apollo = "5.0.0"
 grammarkit-plugin = "2023.3.0.1"
 changelog-plugin = "2.5.0"
