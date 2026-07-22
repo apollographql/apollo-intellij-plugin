@@ -2,6 +2,7 @@
 
 [![Version](https://img.shields.io/jetbrains/plugin/v/20645.svg)](https://plugins.jetbrains.com/plugin/20645)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/20645.svg)](https://plugins.jetbrains.com/plugin/20645)
+[![Revved up by Develocity](https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A)](https://community.develocity.cloud/scans?search.rootProjectNames=apollo-intellij-plugin)
 
 <!-- Plugin description -->
 
