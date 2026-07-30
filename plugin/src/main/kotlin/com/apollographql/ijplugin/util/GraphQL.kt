@@ -90,7 +90,7 @@ fun GraphQLElement.schemaFiles(): List<GraphQLFile> {
   val containingFile = containingFile ?: return emptyList()
   val projectConfig = GraphQLConfigProvider.getInstance(project).resolveProjectConfig(containingFile) ?: return emptyList()
   return projectConfig.schema.mapNotNull { schema ->
-    schema.filePath?.let { path -> project.findPsiFileByUrl(schema.dir.url + "/" + path) } as? GraphQLFile
+    schema.outputPath?.let { project.findPsiFileByPath(it) } as? GraphQLFile
   }
 }
 
