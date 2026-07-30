@@ -5,5 +5,7 @@
     <!-- Listen to Gradle sync -->
     <externalSystemTaskNotificationListener implementation="com.apollographql.ijplugin.gradle.GradleListener" />
 
+    <additionalLibraryRootsProvider implementation="com.apollographql.ijplugin.graphql.ApolloExternalSchemaLibraryRootsProvider" />
+
   </extensions>
 </idea-plugin>

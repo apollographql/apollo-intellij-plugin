@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import org.gradle.tooling.CancellationTokenSource
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.model.GradleProject
+import org.jetbrains.annotations.TestOnly
 import java.io.File
 
 const val GENERATE_PROJECT_MODEL_TASK_NAME = "generateApolloProjectModel"
@@ -544,6 +545,13 @@ class ApolloKotlinProjectModelService(
 
   fun getApolloKotlinServices(): List<ApolloKotlinService> {
     return apolloKotlinServices.values.toList()
+  }
+
+  @TestOnly
+  internal fun replaceApolloKotlinServicesForTest(apolloKotlinServices: List<ApolloKotlinService>) {
+    this.apolloKotlinServices = apolloKotlinServices.associateBy { it.id }
+    project.projectSettingsState.apolloKotlinServices = apolloKotlinServices
+    project.messageBus.syncPublisher(ApolloKotlinServiceListener.TOPIC).apolloKotlinServicesAvailable()
   }
 
   fun getApolloKotlinService(id: ApolloKotlinService.Id): ApolloKotlinService? {
