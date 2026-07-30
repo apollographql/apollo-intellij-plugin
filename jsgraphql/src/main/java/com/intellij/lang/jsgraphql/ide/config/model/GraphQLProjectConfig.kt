@@ -80,9 +80,11 @@ class GraphQLProjectConfig(
 
   private val outOfScopePaths: List<String> by lazy {
     schema.asSequence()
-      .mapNotNull { it.filePath }
-      .filter { it.startsWith("..") }
-      .map { FileUtil.toCanonicalPath(FileUtil.join(dir.path, FileUtil.toSystemIndependentName(it))) }
+      .filterNot { it.isRemote }
+      .mapNotNull { it.outputPath }
+      .map(FileUtil::toCanonicalPath)
+      .filter { FileUtil.isAncestor(dir.path, it, false) == false }
+      .distinct()
       .toList()
   }
 
