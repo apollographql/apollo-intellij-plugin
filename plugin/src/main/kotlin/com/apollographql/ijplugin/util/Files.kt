@@ -2,7 +2,6 @@ package com.apollographql.ijplugin.util
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.GeneratedSourcesFilter
-import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiFile
@@ -19,11 +18,7 @@ fun Project.findPsiFilesByName(fileName: String, searchScope: GlobalSearchScope)
 }
 
 fun Project.findPsiFileByPath(path: String): PsiFile? {
-  val nioPath = Path.of(path)
-  val virtualFile = VirtualFileManager.getInstance().findFileByNioPath(nioPath)
-      ?: FilenameIndex.getVirtualFilesByName(nioPath.fileName.toString(), GlobalSearchScope.allScope(this))
-          .firstOrNull { FileUtil.pathsEqual(it.path, path) }
-  return virtualFile?.let { PsiManager.getInstance(this).findFile(it) }
+  return VirtualFileManager.getInstance().findFileByNioPath(Path.of(path))?.let { PsiManager.getInstance(this).findFile(it) }
 }
 
 fun File.toVirtualFile(): VirtualFile? {

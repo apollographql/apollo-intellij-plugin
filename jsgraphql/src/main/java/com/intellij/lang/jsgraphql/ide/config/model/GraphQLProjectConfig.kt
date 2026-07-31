@@ -83,7 +83,7 @@ class GraphQLProjectConfig(
       .filterNot { it.isRemote }
       .mapNotNull { it.outputPath }
       .map(FileUtil::toCanonicalPath)
-      .filter { FileUtil.isAncestor(dir.path, it, false) == false }
+      .filterNot { FileUtil.isAncestor(dir.path, it, false) }
       .distinct()
       .toList()
   }

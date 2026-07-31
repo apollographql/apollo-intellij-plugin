@@ -19,6 +19,7 @@ import com.intellij.lang.jsgraphql.psi.GraphQLType
 import com.intellij.lang.jsgraphql.psi.GraphQLTypeName
 import com.intellij.lang.jsgraphql.psi.GraphQLValue
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiManager
 import com.intellij.psi.util.parentOfType
 import com.intellij.psi.util.parentOfTypes
 
@@ -89,9 +90,14 @@ private fun matchingFieldCoordinates(
 fun GraphQLElement.schemaFiles(): List<GraphQLFile> {
   val containingFile = containingFile ?: return emptyList()
   val projectConfig = GraphQLConfigProvider.getInstance(project).resolveProjectConfig(containingFile) ?: return emptyList()
-  return projectConfig.schema.mapNotNull { schema ->
-    schema.outputPath?.let { project.findPsiFileByPath(it) } as? GraphQLFile
-  }
+  return projectConfig.schema.asSequence()
+      .filterNot { it.isRemote }
+      .mapNotNull { schema ->
+        schema.outputPath
+            ?.let(schema.dir.fileSystem::findFileByPath)
+            ?.let(PsiManager.getInstance(project)::findFile) as? GraphQLFile
+      }
+      .toList()
 }
 
 /**
