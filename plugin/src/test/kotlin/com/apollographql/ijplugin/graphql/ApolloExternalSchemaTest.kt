@@ -13,6 +13,7 @@ import com.intellij.lang.jsgraphql.ide.config.model.GraphQLConfig
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLProjectConfig
 import com.intellij.lang.jsgraphql.psi.GraphQLFile
 import com.intellij.lang.jsgraphql.psi.GraphQLIdentifier
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
@@ -141,7 +142,13 @@ class ApolloExternalSchemaTest : CodeInsightFixtureTestCase<EmptyModuleFixtureBu
     val externalSchema = createFile(tempDirectory.resolve("shared/schema.graphqls"))
     val internalSchema = myFixture.addFileToProject("graphql/schema.graphqls", "type Query { field: String }")
     val operation = myFixture.addFileToProject("graphql/operation.graphql", "query Test { field }") as GraphQLFile
-    contributeConfig(operation.virtualFile.parent, externalSchema.path, "schema.graphqls")
+    contributeGraphQLConfig(
+        project,
+        testRootDisposable,
+        operation.virtualFile.parent,
+        externalSchema.path,
+        "schema.graphqls",
+    )
 
     val schemaFiles = operation.schemaFiles()
 
@@ -149,30 +156,6 @@ class ApolloExternalSchemaTest : CodeInsightFixtureTestCase<EmptyModuleFixtureBu
         listOf(externalSchema.path, internalSchema.virtualFile.path),
         schemaFiles.map { it.virtualFile.path },
     )
-  }
-
-  private fun contributeConfig(configDir: VirtualFile, vararg schemaPaths: String) {
-    val contributor = object : GraphQLConfigContributor {
-      override fun contributeConfigs(project: Project): Collection<GraphQLConfig> {
-        return listOf(
-            GraphQLConfig(
-                project = project,
-                dir = configDir,
-                file = null,
-                rawData = GraphQLRawConfig(
-                    projects = mapOf(
-                        "service" to GraphQLRawProjectConfig(
-                            schema = schemaPaths.map(::GraphQLRawSchemaPointer),
-                        )
-                    )
-                ),
-            )
-        )
-      }
-    }
-    ExtensionTestUtil.maskExtensions(GraphQLConfigContributor.EP_NAME, listOf(contributor), testRootDisposable)
-    GraphQLConfigProvider.getInstance(project).invalidate()
-    EDT.dispatchAllInvocationEvents()
   }
 
   private fun projectConfig(vararg schemaPaths: String): GraphQLProjectConfig {
@@ -209,7 +192,12 @@ class ApolloExternalSchemaVirtualFileSystemTest : BasePlatformTestCase() {
     val schema = myFixture.addFileToProject("excluded/schema.graphqls", "type Query { field: String }") as GraphQLFile
     val operation = myFixture.addFileToProject("graphql/operation.graphql", "query Test { field }") as GraphQLFile
     PsiTestUtil.addExcludedRoot(myFixture.module, checkNotNull(schema.virtualFile.parent))
-    contributeConfig(operation.virtualFile.parent, "../excluded/schema.graphqls")
+    contributeGraphQLConfig(
+        project,
+        testRootDisposable,
+        operation.virtualFile.parent,
+        "../excluded/schema.graphqls",
+    )
     val configProvider = GraphQLConfigProvider.getInstance(project)
 
     assertNotNull(configProvider.getForConfigFile(operation.virtualFile.parent))
@@ -222,28 +210,33 @@ class ApolloExternalSchemaVirtualFileSystemTest : BasePlatformTestCase() {
 
     assertEquals(listOf(schema.virtualFile.path), schemaFiles.map { it.virtualFile.path })
   }
+}
 
-  private fun contributeConfig(configDir: VirtualFile, vararg schemaPaths: String) {
-    val contributor = object : GraphQLConfigContributor {
-      override fun contributeConfigs(project: Project): Collection<GraphQLConfig> {
-        return listOf(
-            GraphQLConfig(
-                project = project,
-                dir = configDir,
-                file = null,
-                rawData = GraphQLRawConfig(
-                    projects = mapOf(
-                        "service" to GraphQLRawProjectConfig(
-                            schema = schemaPaths.map(::GraphQLRawSchemaPointer),
-                        )
-                    )
-                ),
-            )
-        )
-      }
+private fun contributeGraphQLConfig(
+    project: Project,
+    parentDisposable: Disposable,
+    configDir: VirtualFile,
+    vararg schemaPaths: String,
+) {
+  val contributor = object : GraphQLConfigContributor {
+    override fun contributeConfigs(project: Project): Collection<GraphQLConfig> {
+      return listOf(
+          GraphQLConfig(
+              project = project,
+              dir = configDir,
+              file = null,
+              rawData = GraphQLRawConfig(
+                  projects = mapOf(
+                      "service" to GraphQLRawProjectConfig(
+                          schema = schemaPaths.map(::GraphQLRawSchemaPointer),
+                      )
+                  )
+              ),
+          )
+      )
     }
-    ExtensionTestUtil.maskExtensions(GraphQLConfigContributor.EP_NAME, listOf(contributor), testRootDisposable)
-    GraphQLConfigProvider.getInstance(project).invalidate()
-    EDT.dispatchAllInvocationEvents()
   }
+  ExtensionTestUtil.maskExtensions(GraphQLConfigContributor.EP_NAME, listOf(contributor), parentDisposable)
+  GraphQLConfigProvider.getInstance(project).invalidate()
+  EDT.dispatchAllInvocationEvents()
 }

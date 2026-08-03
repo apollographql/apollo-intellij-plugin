@@ -549,9 +549,10 @@ class ApolloKotlinProjectModelService(
 
   @TestOnly
   internal fun replaceApolloKotlinServicesForTest(apolloKotlinServices: List<ApolloKotlinService>) {
-    this.apolloKotlinServices = apolloKotlinServices.associateBy { it.id }
-    project.projectSettingsState.apolloKotlinServices = apolloKotlinServices
-    project.messageBus.syncPublisher(ApolloKotlinServiceListener.TOPIC).apolloKotlinServicesAvailable()
+    saveApolloKotlinServices(
+        apolloKotlinServices,
+        project.projectSettingsState.apolloTasksDependencies.toSet(),
+    )
   }
 
   fun getApolloKotlinService(id: ApolloKotlinService.Id): ApolloKotlinService? {

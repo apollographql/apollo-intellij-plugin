@@ -1,5 +1,6 @@
 package com.apollographql.ijplugin.graphql
 
+import com.intellij.openapi.components.serviceIfCreated
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.AdditionalLibraryRootsProvider
 import com.intellij.openapi.roots.SyntheticLibrary
@@ -26,7 +27,7 @@ class ApolloExternalSchemaLibraryRootsProvider : AdditionalLibraryRootsProvider(
   }
 
   private fun snapshot(project: Project): ApolloExternalSchemaSnapshot {
-    return project.getServiceIfCreated(GraphQLConfigService::class.java)?.externalSchemaSnapshot
+    return project.serviceIfCreated<GraphQLConfigService>()?.externalSchemaSnapshot
         ?: ApolloExternalSchemaSnapshot.EMPTY
   }
 

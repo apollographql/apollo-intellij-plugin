@@ -43,6 +43,9 @@ internal data class ApolloExternalSchemaSnapshot(
   }
 }
 
+private fun String.toParentSystemIndependentPath(): String? =
+  File(this).parentFile?.absolutePath?.let(FileUtil::toSystemIndependentName)
+
 /**
  *  Listens to availability of Tooling model, and notifies the GraphQL plugin.
  */
@@ -181,13 +184,11 @@ class GraphQLConfigService(
           .filter { it.isValid && !it.isDirectory && !projectFileIndex.isInContent(it) }
           .sortedBy { it.path }
       val watchRootPaths = configuredSchemaPaths
-          .mapNotNull { File(it).parentFile?.absolutePath }
-          .map(FileUtil::toSystemIndependentName)
+          .mapNotNull { it.toParentSystemIndependentPath() }
           .distinct()
           .filter { path ->
-            val closestExistingFile = generateSequence(path) {
-              File(it).parentFile?.absolutePath?.let(FileUtil::toSystemIndependentName)
-            }.mapNotNull(localFileSystem::findFileByPath)
+            val closestExistingFile = generateSequence(path) { it.toParentSystemIndependentPath() }
+                .mapNotNull(localFileSystem::findFileByPath)
                 .firstOrNull { it.isValid }
             closestExistingFile == null || !projectFileIndex.isInContent(closestExistingFile)
           }
