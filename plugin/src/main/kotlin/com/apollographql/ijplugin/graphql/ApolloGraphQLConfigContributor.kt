@@ -13,8 +13,8 @@ import com.intellij.lang.jsgraphql.ide.config.loader.GraphQLRawSchemaPointer
 import com.intellij.lang.jsgraphql.ide.config.model.GraphQLConfig
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
-import com.intellij.openapi.vfs.VfsUtilCore
-import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
 
 class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
@@ -33,16 +33,16 @@ class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
             file = null,
             rawData = GraphQLRawConfig(
                 projects = project.apolloKotlinProjectModelService.getApolloKotlinServices().associate { apolloKotlinService ->
-                  apolloKotlinService.id.toString() to apolloKotlinService.toGraphQLRawProjectConfig(project)
+                  apolloKotlinService.id.toString() to apolloKotlinService.toGraphQLRawProjectConfig(projectDir)
                 }
             )
         )
     )
   }
 
-  private fun ApolloKotlinService.toGraphQLRawProjectConfig(project: Project) = GraphQLRawProjectConfig(
-      schema = allSchemaPaths.map { GraphQLRawSchemaPointer(it.toProjectRelativePath(project)) },
-      include = allOperationPaths.map { "${it.toProjectRelativePath(project)}/**/*.graphql" },
+  private fun ApolloKotlinService.toGraphQLRawProjectConfig(projectDir: VirtualFile) = GraphQLRawProjectConfig(
+      schema = allSchemaPaths.map { GraphQLRawSchemaPointer(it.toGraphQLConfigPath(projectDir)) },
+      include = allOperationPaths.map { "${it.toGraphQLConfigPath(projectDir)}/**/*.graphql" },
       extensions = mapOf(EXTENSION_APOLLO_KOTLIN_SERVICE_ID to this.id.toString()) +
           (endpointUrl?.let {
             mapOf(
@@ -63,8 +63,7 @@ class ApolloGraphQLConfigContributor : GraphQLConfigContributor {
   }
 }
 
-private fun String.toProjectRelativePath(project: Project): String {
-  val projectDir = project.guessProjectDir() ?: return ""
-  val virtualFile = VirtualFileManager.getInstance().findFileByNioPath(File(this).toPath()) ?: return ""
-  return VfsUtilCore.getRelativeLocation(virtualFile, projectDir) ?: ""
+internal fun String.toGraphQLConfigPath(projectDir: VirtualFile): String {
+  val relativePath = FileUtil.getRelativePath(File(projectDir.path), File(this))
+  return FileUtil.toSystemIndependentName(relativePath ?: File(this).absolutePath)
 }
