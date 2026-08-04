@@ -8,8 +8,8 @@ import com.apollographql.ijplugin.settings.projectSettingsState
 import com.apollographql.ijplugin.util.logd
 import com.intellij.lang.jsgraphql.ide.config.GraphQLConfigProvider
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -28,7 +28,6 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileMoveEvent
 import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
 import java.io.File
-import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import org.jetbrains.annotations.TestOnly
 
@@ -112,7 +111,7 @@ class GraphQLConfigService(
     }
     if (!externalSchemaSnapshotRefreshScheduled.compareAndSet(false, true)) return
 
-    ApplicationManager.getApplication().invokeLater {
+    invokeLater {
       externalSchemaSnapshotRefreshScheduled.set(false)
       if (project.isDisposed) return@invokeLater
 
@@ -165,12 +164,11 @@ class GraphQLConfigService(
   private fun computeConfiguredSchemaPaths(): List<String> {
     if (!project.projectSettingsState.contributeConfigurationToGraphqlPlugin) return emptyList()
 
-    val paths = project.apolloKotlinProjectModelService.getApolloKotlinServices()
+    return project.apolloKotlinProjectModelService.getApolloKotlinServices()
         .flatMap { it.allSchemaPaths }
         .map { FileUtil.toSystemIndependentName(File(it).absolutePath) }
         .distinct()
         .sorted()
-    return Collections.unmodifiableList(paths)
   }
 
   private fun computeExternalSchemaSnapshot(configuredSchemaPaths: List<String>): ApolloExternalSchemaSnapshot {
@@ -199,9 +197,9 @@ class GraphQLConfigService(
           .sortedBy { it.path }
       ApolloExternalSchemaSnapshot(
           configuredSchemaPaths = configuredSchemaPaths,
-          externalSchemaRoots = Collections.unmodifiableSet(LinkedHashSet(externalRoots)),
-          watchRootPaths = Collections.unmodifiableList(watchRootPaths),
-          watchRoots = Collections.unmodifiableList(watchRoots),
+          externalSchemaRoots = externalRoots.toSet(),
+          watchRootPaths = watchRootPaths,
+          watchRoots = watchRoots,
       )
     }
   }
