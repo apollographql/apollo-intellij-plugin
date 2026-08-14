@@ -3,7 +3,7 @@
 kotlin-plugin = "2.2.20"
 intellij-platform-plugin = "2.16.0"
 apollo = "5.0.0"
-grammarkit-plugin = "2023.3.0.1"
+grammarkit-plugin = "2023.3.0.4"
 changelog-plugin = "2.5.0"
 sqlite-jdbc = "3.53.2.0"
 apollo-normalizedcache = "1.0.3"
