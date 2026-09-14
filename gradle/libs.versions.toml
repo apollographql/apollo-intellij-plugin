@@ -1,13 +1,11 @@
 [versions]
 # See https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#bundled-stdlib-versions
 kotlin-plugin = "2.2.20"
-intellij-platform-plugin = "2.16.0"
-apollo = "5.0.0"
-grammarkit-plugin = "2023.3.0.1"
+apollo = "5.1.0"
 changelog-plugin = "2.5.0"
-sqlite-jdbc = "3.53.2.0"
-apollo-normalizedcache = "1.0.3"
-slf4j = "2.0.18"
+sqlite-jdbc = "3.53.4.0"
+apollo-normalizedcache = "1.0.7"
+slf4j = "2.0.19"
 google-testparameterinjector = "1.22"
 cdimascio-dotenv = "6.5.1"
 atlassian-commonmark = "0.17.0"
@@ -24,10 +22,11 @@ intellij-platform-version = "2025.3.4"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-plugin" }
-intellij-platform = { id = "org.jetbrains.intellij.platform", version.ref = "intellij-platform-plugin" }
-intellij-platform-module = { id = "org.jetbrains.intellij.platform.module", version.ref = "intellij-platform-plugin" }
+# Note: the version of the intellij-platform plugin is set in settings.gradle.kts
+intellij-platform = { id = "org.jetbrains.intellij.platform" }
+intellij-platform-module = { id = "org.jetbrains.intellij.platform.module" }
+intellij-platform-grammarkit = { id = "org.jetbrains.intellij.platform.grammarkit" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
-grammarkit = { id = "org.jetbrains.grammarkit", version.ref = "grammarkit-plugin" }
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog-plugin" }
 
 [libraries]

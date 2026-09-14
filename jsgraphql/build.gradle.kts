@@ -1,7 +1,7 @@
 plugins {
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.intellij.platform.module)
-  alias(libs.plugins.grammarkit)
+  alias(libs.plugins.intellij.platform.grammarkit)
 }
 
 repositories {
